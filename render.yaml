@@ -7,6 +7,7 @@ services:
     startCommand: node server.js
     env: node
     nodeVersion: 18.19.1
+    rootDirectory: ./
     envVars:
       - key: NODE_ENV
         value: production
