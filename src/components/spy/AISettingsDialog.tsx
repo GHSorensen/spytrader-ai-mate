@@ -63,6 +63,15 @@ export const AISettingsDialog = ({
     onOpenChange(false);
   };
 
+  const handleResetSettings = () => {
+    setSettings(DEFAULT_SETTINGS);
+    toast({
+      title: "Settings Reset",
+      description: "All settings have been reset to default values",
+      variant: "default",
+    });
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[800px] max-h-[90vh] p-0 overflow-hidden">
@@ -123,6 +132,7 @@ export const AISettingsDialog = ({
           <AISettingsFooter 
             onCancel={() => onOpenChange(false)}
             onSave={handleSaveSettings}
+            onReset={handleResetSettings}
             activeTab={activeTab}
             onPrevious={() => {
               const tabs = ['strategy', 'risk', 'market', 'backtest', 'advanced'];
