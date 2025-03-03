@@ -105,12 +105,16 @@ export function processTechnicalSignals(
           id: uuidv4(),
           signalId: highestConfidenceSignal.id,
           timestamp: new Date(),
-          actionType,
+          type: actionType, // Changed from actionType to type
           tradeIds: callTrades.map(t => t.id),
           description: `${actionType.replace('_', ' ')} for ${callTrades.length} CALL trades based on bearish technical signal`,
           parameters: {
             signalStrength: highestConfidenceSignal.strength,
             signalDescription: highestConfidenceSignal.description
+          },
+          expectedImpact: { // Added expectedImpact object
+            profitPotential: 0,
+            riskReduction: riskReduction * 100
           },
           previousRisk: 1.0,
           newRisk: 1.0 - riskReduction,
@@ -131,13 +135,17 @@ export function processTechnicalSignals(
         id: uuidv4(),
         signalId: highestConfidenceSignal.id,
         timestamp: new Date(),
-        actionType: 'adjust_take_profit',
+        type: 'adjust_take_profit', // Changed from actionType to type
         tradeIds: profitablePutTrades.map(t => t.id),
         description: `Adjust take profit for ${profitablePutTrades.length} profitable PUT trades based on bearish technical signal`,
         parameters: {
           signalStrength: highestConfidenceSignal.strength,
           signalDescription: highestConfidenceSignal.description,
           adjustmentFactor: 0.8 // Tighten take profit to 80% of original target
+        },
+        expectedImpact: { // Added expectedImpact object
+          profitPotential: 20,
+          riskReduction: 0
         },
         previousRisk: 1.0,
         newRisk: 1.0,
@@ -196,12 +204,16 @@ export function processTechnicalSignals(
           id: uuidv4(),
           signalId: highestConfidenceSignal.id,
           timestamp: new Date(),
-          actionType,
+          type: actionType, // Changed from actionType to type
           tradeIds: putTrades.map(t => t.id),
           description: `${actionType.replace('_', ' ')} for ${putTrades.length} PUT trades based on bullish technical signal`,
           parameters: {
             signalStrength: highestConfidenceSignal.strength,
             signalDescription: highestConfidenceSignal.description
+          },
+          expectedImpact: { // Added expectedImpact object
+            profitPotential: 0,
+            riskReduction: riskReduction * 100
           },
           previousRisk: 1.0,
           newRisk: 1.0 - riskReduction,
@@ -222,13 +234,17 @@ export function processTechnicalSignals(
         id: uuidv4(),
         signalId: highestConfidenceSignal.id,
         timestamp: new Date(),
-        actionType: 'adjust_take_profit',
+        type: 'adjust_take_profit', // Changed from actionType to type
         tradeIds: profitableCallTrades.map(t => t.id),
         description: `Adjust take profit for ${profitableCallTrades.length} profitable CALL trades based on bullish technical signal`,
         parameters: {
           signalStrength: highestConfidenceSignal.strength,
           signalDescription: highestConfidenceSignal.description,
           adjustmentFactor: 0.8 // Tighten take profit to 80% of original target
+        },
+        expectedImpact: { // Added expectedImpact object
+          profitPotential: 20,
+          riskReduction: 0
         },
         previousRisk: 1.0,
         newRisk: 1.0,
@@ -284,13 +300,17 @@ export function processVolatilitySignals(
           id: uuidv4(),
           signalId: highestConfidenceSignal.id,
           timestamp: new Date(),
-          actionType,
+          type: actionType, // Changed from actionType to type
           tradeIds: activeTrades.map(t => t.id),
           description: `${actionType.replace('_', ' ')} for ${activeTrades.length} active trades based on high volatility`,
           parameters: {
             signalStrength: highestConfidenceSignal.strength,
             signalDescription: highestConfidenceSignal.description,
             vix: highestConfidenceSignal.dataPoints?.vix
+          },
+          expectedImpact: { // Added expectedImpact object
+            profitPotential: 0,
+            riskReduction: 50
           },
           previousRisk: 1.0,
           newRisk: 0.5,

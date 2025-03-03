@@ -60,12 +60,12 @@ export function learnFromOutcomes(
     const actionTypeCounts: Record<RiskActionType, { count: number, profit: number }> = {} as any;
     
     for (const action of actions) {
-      if (!actionTypeCounts[action.actionType]) {
-        actionTypeCounts[action.actionType] = { count: 0, profit: 0 };
+      if (!actionTypeCounts[action.type]) {  // Changed from actionType to type
+        actionTypeCounts[action.type] = { count: 0, profit: 0 };  // Changed from actionType to type
       }
       
-      actionTypeCounts[action.actionType].count++;
-      actionTypeCounts[action.actionType].profit += action.profitImpact || 0;
+      actionTypeCounts[action.type].count++;  // Changed from actionType to type
+      actionTypeCounts[action.type].profit += action.profitImpact || 0;  // Changed from actionType to type
     }
     
     // Sort action types by average profit impact
@@ -84,10 +84,14 @@ export function learnFromOutcomes(
         strength,
         direction
       },
+      actionTaken: recommendedActions[0] || 'no_action',  // Added actionTaken
       successRate,
-      averageProfitImpact,
+      profitImpact: averageProfitImpact,  // Added profitImpact
+      appliedCount: actions.length,  // Added appliedCount
+      relatedRiskTolerance: actions[0]?.userRiskTolerance || 'moderate',  // Added relatedRiskTolerance
+      confidence: calculateInsightConfidence(actions.length, successRate),
       recommendedActions: recommendedActions.slice(0, 3), // Top 3 recommendations
-      confidence: calculateInsightConfidence(actions.length, successRate)
+      averageProfitImpact  // Keep this field
     };
     
     insights.push(insight);
