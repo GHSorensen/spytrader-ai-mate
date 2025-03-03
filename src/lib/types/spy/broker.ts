@@ -1,4 +1,4 @@
-export type BrokerType = 'interactive-brokers' | 'td-ameritrade' | 'none';
+export type BrokerType = 'interactive-brokers' | 'td-ameritrade' | 'schwab' | 'none';
 
 export interface BrokerSettings {
   type: BrokerType;
@@ -7,6 +7,8 @@ export interface BrokerSettings {
     apiKey?: string;
     secretKey?: string;
     accountId?: string;
+    appKey?: string; // Added for Schwab
+    callbackUrl?: string; // Added for OAuth flows
     // Other credentials as needed
   };
   paperTrading: boolean;

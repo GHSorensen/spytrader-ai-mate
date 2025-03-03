@@ -9,9 +9,10 @@ interface UseBrokerSettingsProps {
 
 export const useBrokerSettings = ({ currentSettings }: UseBrokerSettingsProps) => {
   const [settings, setSettings] = useState<BrokerSettings>(currentSettings);
-  const [activeTab, setActiveTab] = useState<'ib' | 'td' | 'none'>(
+  const [activeTab, setActiveTab] = useState<'ib' | 'td' | 'schwab' | 'none'>(
     currentSettings.type === 'interactive-brokers' ? 'ib' : 
-    currentSettings.type === 'td-ameritrade' ? 'td' : 'none'
+    currentSettings.type === 'td-ameritrade' ? 'td' :
+    currentSettings.type === 'schwab' ? 'schwab' : 'none'
   );
   
   // Get data provider for connection testing
@@ -22,7 +23,8 @@ export const useBrokerSettings = ({ currentSettings }: UseBrokerSettingsProps) =
     setSettings(currentSettings);
     setActiveTab(
       currentSettings.type === 'interactive-brokers' ? 'ib' : 
-      currentSettings.type === 'td-ameritrade' ? 'td' : 'none'
+      currentSettings.type === 'td-ameritrade' ? 'td' :
+      currentSettings.type === 'schwab' ? 'schwab' : 'none'
     );
   }, [currentSettings]);
 
@@ -56,7 +58,8 @@ export const useBrokerSettings = ({ currentSettings }: UseBrokerSettingsProps) =
   const prepareSettingsForSave = () => {
     const brokerType: BrokerType = 
       activeTab === 'ib' ? 'interactive-brokers' : 
-      activeTab === 'td' ? 'td-ameritrade' : 'none';
+      activeTab === 'td' ? 'td-ameritrade' :
+      activeTab === 'schwab' ? 'schwab' : 'none';
     
     return {
       ...settings,

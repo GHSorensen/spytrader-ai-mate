@@ -21,6 +21,7 @@ import { toast } from '@/components/ui/use-toast';
 import { useBrokerSettings } from '@/hooks/useBrokerSettings';
 import { InteractiveBrokersTabContent } from './broker/InteractiveBrokersTabContent';
 import { TDAmeritradeTabContent } from './broker/TDAmeritradeTabContent';
+import { SchwabTabContent } from './broker/SchwabTabContent';
 import { NoBrokerTabContent } from './broker/NoBrokerTabContent';
 
 interface BrokerSettingsProps {
@@ -57,7 +58,8 @@ export const BrokerSettings: React.FC<BrokerSettingsProps> = ({
       title: "Broker Settings Saved",
       description: `Settings saved for ${
         updatedSettings.type === 'interactive-brokers' ? 'Interactive Brokers' : 
-        updatedSettings.type === 'td-ameritrade' ? 'TD Ameritrade' : 'No Broker'
+        updatedSettings.type === 'td-ameritrade' ? 'TD Ameritrade' :
+        updatedSettings.type === 'schwab' ? 'Schwab' : 'No Broker'
       }`,
     });
   };
@@ -79,10 +81,11 @@ export const BrokerSettings: React.FC<BrokerSettingsProps> = ({
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'ib' | 'td' | 'none')}>
-          <TabsList className="grid grid-cols-3 mb-4">
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'ib' | 'td' | 'schwab' | 'none')}>
+          <TabsList className="grid grid-cols-4 mb-4">
             <TabsTrigger value="ib">Interactive Brokers</TabsTrigger>
             <TabsTrigger value="td">TD Ameritrade</TabsTrigger>
+            <TabsTrigger value="schwab">Schwab</TabsTrigger>
             <TabsTrigger value="none">No Broker</TabsTrigger>
           </TabsList>
 
@@ -99,6 +102,17 @@ export const BrokerSettings: React.FC<BrokerSettingsProps> = ({
 
           <TabsContent value="td">
             <TDAmeritradeTabContent 
+              settings={settings}
+              updateCredential={updateCredential}
+              togglePaperTrading={togglePaperTrading}
+              testConnection={testConnection}
+              isConnecting={isConnecting}
+              status={status}
+            />
+          </TabsContent>
+          
+          <TabsContent value="schwab">
+            <SchwabTabContent 
               settings={settings}
               updateCredential={updateCredential}
               togglePaperTrading={togglePaperTrading}
