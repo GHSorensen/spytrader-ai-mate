@@ -6,7 +6,7 @@ import { OptionChain } from '@/components/spy/OptionChain';
 import { ActiveTrades } from '@/components/spy/ActiveTrades';
 import PerformanceDashboard from '@/components/spy/PerformanceDashboard';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, RefreshCw, Settings, Sliders, Server } from 'lucide-react';
+import { ChevronDown, RefreshCw, Settings, Sliders, Server, AlertTriangle } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,6 +18,7 @@ import { AISettingsDialog } from '@/components/spy/AISettingsDialog';
 import { BrokerSettings } from '@/components/spy/settings/BrokerSettings';
 import { BrokerSettings as BrokerSettingsType } from '@/lib/types/spy/broker';
 import { toast } from '@/components/ui/use-toast';
+import { Link } from 'react-router-dom';
 
 const Index = () => {
   const [riskTolerance, setRiskTolerance] = useState<RiskToleranceType>('moderate');
@@ -103,6 +104,13 @@ const Index = () => {
               <Sliders className="h-4 w-4 mr-1" />
               AI Settings
             </Button>
+            
+            <Link to="/risk-monitoring-test">
+              <Button variant="outline" className="gap-1">
+                <AlertTriangle className="h-4 w-4 mr-1" />
+                Test Risk UI
+              </Button>
+            </Link>
           </div>
         </div>
         
