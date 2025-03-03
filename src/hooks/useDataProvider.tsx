@@ -28,7 +28,10 @@ export const useDataProvider = (brokerSettings: BrokerSettings) => {
     const config: DataProviderConfig = {
       type: brokerSettings.type,
       apiKey: brokerSettings.credentials.apiKey,
+      secretKey: brokerSettings.credentials.secretKey,
       accountId: brokerSettings.credentials.accountId,
+      appKey: brokerSettings.credentials.appKey,
+      callbackUrl: brokerSettings.credentials.callbackUrl,
       paperTrading: brokerSettings.paperTrading
     };
 

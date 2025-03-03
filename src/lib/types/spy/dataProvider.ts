@@ -5,7 +5,10 @@ import { BrokerType } from "./broker";
 export interface DataProviderConfig {
   type: BrokerType;
   apiKey?: string;
+  secretKey?: string;
   accountId?: string;
+  appKey?: string;
+  callbackUrl?: string;
   refreshToken?: string;
   paperTrading?: boolean;
 }
