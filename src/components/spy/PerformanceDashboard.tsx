@@ -1,10 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import React from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AreaChart, Area, BarChart, Bar, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { format, subDays, subMonths, subYears } from 'date-fns';
-import type { PerformanceMetrics, PerformanceSummary, TradeAnalytics, PerformanceChartData, BacktestResult, TimeFrame } from '@/lib/types/spyOptions';
+import type { PerformanceMetrics, PerformanceSummary, TradeAnalytics, PerformanceChartData, BacktestResult, TimeFrame, TradeHistoryEntry, StrategyPerformance, RiskToleranceType } from '@/lib/types/spy';  // Updated import path
 
 // Mock data for development
 const mockPerformanceSummary: PerformanceSummary = {
