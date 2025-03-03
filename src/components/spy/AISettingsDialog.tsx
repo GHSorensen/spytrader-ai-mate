@@ -101,7 +101,7 @@ const strategyDescriptions = {
   aggressive: 'Seeks higher returns with shorter expirations and larger position sizes. May use leveraged strategies targeting 20%+ returns.',
 };
 
-const marketConditionDescriptions = {
+const marketConditionDescriptions: Record<MarketCondition, string> = {
   bullish: 'Trending upward market with positive momentum',
   bearish: 'Trending downward market with negative momentum',
   neutral: 'Sideways or range-bound market with low directional bias',
@@ -135,7 +135,7 @@ export const AISettingsDialog = ({
     setSettings((prev) => ({
       ...prev,
       [parentKey]: {
-        ...prev[parentKey],
+        ...(prev[parentKey] as object),
         [childKey]: value,
       },
     }));
