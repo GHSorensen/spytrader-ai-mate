@@ -8,3 +8,12 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+    healthCheckPath: /health
+    autoDeploy: true
+    numInstances: 1
+    buildFilter:
+      paths:
+        - src/**
+        - public/**
+        - server.js
+        - vite.config.ts
