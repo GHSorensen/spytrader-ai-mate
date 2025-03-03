@@ -12,6 +12,24 @@ export interface AITradingSettings {
   enableHedging: boolean;
   minimumConfidenceScore: number;
   preferredTimeOfDay: TimeOfDayPreference;
+  
+  // Advanced AI and analysis settings
+  adaptivePositionSizing: boolean;
+  advancedTechnicalAnalysis: boolean;
+  technicalFundamentalBalance: number; // 0-100, higher means more technical
+  shortLongTimeframeBalance: number; // 0-100, higher means more short-term focus
+  
+  // Automation settings
+  maxCapitalDeployment: number; // percentage of portfolio to deploy
+  autoPositionScaling: boolean;
+  smartProfitTaking: boolean;
+  
+  // Risk factors
+  considerEconomicData: boolean;
+  considerGeopoliticalEvents: boolean;
+  dailyLossLimitPct: number;
+  volatilityThreshold: number; // VIX level
+  
   positionSizing: {
     type: 'fixed' | 'percentage' | 'kelly';
     value: number; // dollar amount, percentage of portfolio, or kelly criterion multiplier

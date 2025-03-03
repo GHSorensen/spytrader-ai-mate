@@ -1,32 +1,54 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { BarChart4 } from 'lucide-react';
-import { AITradingSettings, MarketCondition } from '@/lib/types/spy';
-import { marketConditionDescriptions } from './AISettingsTypes';
+import { BarChart4, RefreshCw } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { AITradingSettings, MarketCondition, RiskToleranceType } from '@/lib/types/spy';
+import { marketConditionDescriptions, getMarketConditionOverridesByRiskTolerance } from './AISettingsTypes';
 
 interface MarketConditionsTabProps {
   settings: AITradingSettings;
   updateSettings: <K extends keyof AITradingSettings>(key: K, value: AITradingSettings[K]) => void;
+  currentRiskTolerance?: RiskToleranceType;
 }
 
 export const MarketConditionsTab: React.FC<MarketConditionsTabProps> = ({
   settings,
   updateSettings,
+  currentRiskTolerance = 'moderate',
 }) => {
+  // Function to apply risk-tolerance-based settings
+  const applyRiskBasedSettings = () => {
+    const recommendedOverrides = getMarketConditionOverridesByRiskTolerance(currentRiskTolerance);
+    updateSettings('marketConditionOverrides', recommendedOverrides);
+  };
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <BarChart4 className="h-5 w-5 text-primary" />
-          Market Condition Adjustments
-        </CardTitle>
-        <CardDescription>
-          Configure how the AI should adjust its strategy in different market conditions
-        </CardDescription>
+        <div className="flex justify-between items-center">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart4 className="h-5 w-5 text-primary" />
+              Market Condition Adjustments
+            </CardTitle>
+            <CardDescription>
+              Configure how the AI should adjust its strategy in different market conditions
+            </CardDescription>
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={applyRiskBasedSettings}
+            className="flex items-center gap-1"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Auto-optimize for {currentRiskTolerance}
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {(Object.keys(marketConditionDescriptions) as MarketCondition[]).map((condition) => (

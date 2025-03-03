@@ -62,6 +62,7 @@ export const AISettingsContent: React.FC<AISettingsContentProps> = ({
               <MarketConditionsTabContent 
                 settings={settings}
                 updateSettings={updateSettings}
+                currentRiskTolerance={currentRiskTolerance}
               />
             </TabsContent>
             

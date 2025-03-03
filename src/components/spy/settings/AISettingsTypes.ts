@@ -24,6 +24,24 @@ export const DEFAULT_SETTINGS: AITradingSettings = {
   enableHedging: false,
   minimumConfidenceScore: 0.65,
   preferredTimeOfDay: 'any',
+  
+  // Advanced AI and analysis settings
+  adaptivePositionSizing: false,
+  advancedTechnicalAnalysis: true,
+  technicalFundamentalBalance: 60, // slightly more technical focus
+  shortLongTimeframeBalance: 50, // balanced timeframe
+  
+  // Automation settings
+  maxCapitalDeployment: 70, // percentage of portfolio to deploy
+  autoPositionScaling: false,
+  smartProfitTaking: true,
+  
+  // Risk factors
+  considerEconomicData: true,
+  considerGeopoliticalEvents: false,
+  dailyLossLimitPct: 2, // 2% daily loss limit
+  volatilityThreshold: 25, // VIX level
+  
   positionSizing: {
     type: 'percentage',
     value: 5, // 5% of portfolio per trade
@@ -67,4 +85,35 @@ export const marketConditionDescriptions: Record<MarketCondition, string> = {
   bearish: 'Trending downward market with negative momentum',
   neutral: 'Sideways or range-bound market with low directional bias',
   volatile: 'High volatility market with sharp movements in both directions',
+};
+
+// Add more detailed market condition overrides for different risk tolerances
+export const getMarketConditionOverridesByRiskTolerance = (riskTolerance: RiskToleranceType) => {
+  switch (riskTolerance) {
+    case 'conservative':
+      return {
+        bullish: { enabled: true, adjustedRisk: 0.8 }, // 80% of normal risk in bullish markets
+        bearish: { enabled: true, adjustedRisk: 0.3 }, // 30% of normal risk in bearish markets
+        neutral: { enabled: true, adjustedRisk: 0.6 }, // 60% of normal risk in neutral markets
+        volatile: { enabled: true, adjustedRisk: 0.2 }, // 20% of normal risk in volatile markets
+      };
+    case 'moderate':
+      return {
+        bullish: { enabled: true, adjustedRisk: 1.0 }, // 100% of normal risk in bullish markets
+        bearish: { enabled: true, adjustedRisk: 0.5 }, // 50% of normal risk in bearish markets
+        neutral: { enabled: true, adjustedRisk: 0.8 }, // 80% of normal risk in neutral markets
+        volatile: { enabled: true, adjustedRisk: 0.4 }, // 40% of normal risk in volatile markets
+      };
+    case 'aggressive':
+      return {
+        bullish: { enabled: true, adjustedRisk: 1.2 }, // 120% of normal risk in bullish markets
+        bearish: { enabled: true, adjustedRisk: 0.7 }, // 70% of normal risk in bearish markets
+        neutral: { enabled: true, adjustedRisk: 0.9 }, // 90% of normal risk in neutral markets
+        volatile: { enabled: true, adjustedRisk: 0.6 }, // 60% of normal risk in volatile markets
+      };
+    default:
+      return {
+        volatile: { enabled: true, adjustedRisk: 0.5 },
+      };
+  }
 };
