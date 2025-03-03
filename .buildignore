@@ -1,0 +1,4 @@
+
+# Ignore any Python files that might be in the repository
+*.py
+__pycache__/
