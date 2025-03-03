@@ -13,4 +13,3 @@ export interface StrategyLearningInsight {
   expectedImprovement: string;
   timestamp: Date;
 }
-

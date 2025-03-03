@@ -3,15 +3,23 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { LightbulbIcon, TrendingDownIcon, TrendingUpIcon, AlertTriangleIcon } from 'lucide-react';
-import { LearningInsight, RiskSignal, RiskAction } from '@/lib/types/spy/riskMonitoring';
+import { 
+  LearningInsight, 
+  RiskSignal, 
+  RiskAction,
+  StatisticalAnomaly 
+} from '@/lib/types/spy/riskMonitoring';
 import { SignalsSection } from './components/SignalsSection';
 import { ActionsSection } from './components/ActionsSection';
 import { RiskLearningInsightsCard } from './RiskLearningInsightsCard';
+import { AnomalyDetectionCard } from './AnomalyDetectionCard';
 
 interface RiskInsightsProps {
   signals: RiskSignal[];
   actions: RiskAction[];
   insights: LearningInsight[];
+  anomalies?: StatisticalAnomaly[];
+  lastAnomalyDetectionTime?: Date | null;
   isLoading: boolean;
 }
 
@@ -19,6 +27,8 @@ export const RiskInsights: React.FC<RiskInsightsProps> = ({
   signals,
   actions,
   insights,
+  anomalies = [],
+  lastAnomalyDetectionTime = null,
   isLoading
 }) => {
   // Get the most recent 5 signals and actions for display
@@ -50,10 +60,18 @@ export const RiskInsights: React.FC<RiskInsightsProps> = ({
         </CardContent>
       </Card>
       
-      <RiskLearningInsightsCard 
-        insights={insights}
-        isLoading={isLoading}
-      />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <AnomalyDetectionCard 
+          anomalies={anomalies}
+          isLoading={isLoading}
+          lastDetectionTime={lastAnomalyDetectionTime}
+        />
+        
+        <RiskLearningInsightsCard 
+          insights={insights}
+          isLoading={isLoading}
+        />
+      </div>
     </div>
   );
 };

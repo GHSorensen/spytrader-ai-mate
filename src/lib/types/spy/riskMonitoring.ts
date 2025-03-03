@@ -93,3 +93,65 @@ export interface RiskMonitoringLog {
   actions: RiskAction[];
   learningInsights: LearningInsight[];
 }
+
+// Statistical Anomaly Types
+export type AnomalyType = 
+  'price_spike' | 
+  'volume_surge' | 
+  'volatility_explosion' | 
+  'correlation_break' | 
+  'pattern_deviation' | 
+  'momentum_shift' | 
+  'liquidity_change' |
+  'option_skew_change' |
+  'implied_volatility_divergence';
+
+export type DetectionMethod = 
+  'zscore' | 
+  'moving_average' | 
+  'bollinger_bands' | 
+  'ARIMA' | 
+  'isolation_forest' | 
+  'DBSCAN' | 
+  'local_outlier_factor' |
+  'cumulative_sum' |
+  'kernel_density';
+
+export type TimeWindow = '1m' | '5m' | '15m' | '30m' | '1h' | '4h' | '1d' | '1w';
+
+export interface AnomalyDetectionParams {
+  sensitivity: number; // 0 to 1, with 1 being most sensitive
+  lookbackPeriods: number;
+  minConfidence: number; // 0 to 1
+  timeWindow: TimeWindow;
+  detectionMethods: DetectionMethod[];
+  anomalyTypes: AnomalyType[];
+  enabledDataSeries: string[];
+}
+
+export interface StatisticalAnomaly {
+  id: string;
+  timestamp: Date;
+  type: AnomalyType;
+  detectionMethod: DetectionMethod;
+  timeWindow: TimeWindow;
+  metric: string;
+  value: number;
+  expectedValue: number;
+  deviation: number; // how far from expected (normalized)
+  zScore: number;
+  confidence: number; // 0 to 1
+  description: string;
+  suggestedActions?: RiskActionType[];
+  relatedSignals?: string[]; // IDs of related risk signals
+  historicalOccurrences?: number;
+  successfulTradeRate?: number; // 0 to 1, success rate when traded on this anomaly
+}
+
+export interface AnomalyProcessorResult {
+  anomalies: StatisticalAnomaly[];
+  processedDataPoints: number;
+  detectionTimestamp: Date;
+  executionTimeMs: number;
+  triggerThresholdMet: boolean;
+}
