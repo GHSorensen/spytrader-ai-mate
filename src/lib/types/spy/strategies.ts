@@ -31,4 +31,8 @@ export interface TradingStrategy {
     performanceChange: number; // percentage improvement
   }[];
   confidenceThreshold?: number; // minimum confidence score to apply ML suggestions (0-1)
+  
+  // Allow for additional dynamic properties
+  [key: string]: any;
 }
+

@@ -1,5 +1,5 @@
 
-import { OptionType, TradeStatus } from './common';
+import { OptionType, TradeStatus, MarketCondition } from './common';
 
 export interface SpyTrade {
   id: string;
@@ -18,4 +18,11 @@ export interface SpyTrade {
   profit?: number;
   profitPercentage?: number;
   confidenceScore: number;
+  
+  // Adding the missing properties used in strategyLearningService
+  strategyId?: string;
+  executionTime?: Date;
+  closingTime?: Date;
+  marketCondition?: MarketCondition;
 }
+
