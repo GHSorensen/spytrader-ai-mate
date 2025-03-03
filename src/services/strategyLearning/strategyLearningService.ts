@@ -1,4 +1,3 @@
-
 import { v4 as uuidv4 } from 'uuid';
 import { 
   TradingStrategy, 
@@ -341,7 +340,7 @@ export function generateStrategySuggestions(
     let suggestedDelta: [number, number] = [...currentDelta];
     
     // If using far OTM options, suggest moving closer to ATM
-    if (strategy.optionType === 'call' && currentDelta[1] < 0.4) {
+    if (strategy.optionType === 'CALL' && currentDelta[1] < 0.4) {
       suggestedDelta = [0.3, 0.5];
       
       suggestions.push({
@@ -359,7 +358,7 @@ export function generateStrategySuggestions(
           profitFactor: 0.2
         }
       });
-    } else if (strategy.optionType === 'put' && currentDelta[1] < 0.4) {
+    } else if (strategy.optionType === 'PUT' && currentDelta[1] < 0.4) {
       suggestedDelta = [0.3, 0.5];
       
       suggestions.push({
