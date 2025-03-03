@@ -1,4 +1,3 @@
-
 import { v4 as uuidv4 } from 'uuid';
 import { 
   StatisticalAnomaly, 
@@ -8,7 +7,10 @@ import {
   AnomalyDetectionParams,
   AnomalyProcessorResult,
   RiskSignal,
-  RiskActionType
+  RiskActionType,
+  RiskSignalSource,
+  RiskSignalStrength,
+  RiskSignalDirection
 } from '@/lib/types/spy/riskMonitoring';
 import { 
   SpyMarketData, 
@@ -588,18 +590,6 @@ export function analyzeAnomalyTradePerformance(
   tradeCount: number; 
   bestDirection: 'CALL' | 'PUT' | null;
 }> {
-  const anomalyPerformance: Record<AnomalyType, {
-    successRate: number;
-    avgProfit: number;
-    tradeCount: number;
-    callSuccessRate: number;
-    putSuccessRate: number;
-    callTradeCount: number;
-    putTradeCount: number;
-    bestDirection: 'CALL' | 'PUT' | null;
-  }> = {};
-  
-  // Initialize performance record for each anomaly type
   const anomalyTypes: AnomalyType[] = [
     'price_spike', 
     'volume_surge', 
@@ -612,6 +602,27 @@ export function analyzeAnomalyTradePerformance(
     'implied_volatility_divergence'
   ];
   
+  const anomalyPerformance: Record<AnomalyType, {
+    successRate: number;
+    avgProfit: number;
+    tradeCount: number;
+    callSuccessRate: number;
+    putSuccessRate: number;
+    callTradeCount: number;
+    putTradeCount: number;
+    bestDirection: 'CALL' | 'PUT' | null;
+  }> = {} as Record<AnomalyType, {
+    successRate: number;
+    avgProfit: number;
+    tradeCount: number;
+    callSuccessRate: number;
+    putSuccessRate: number;
+    callTradeCount: number;
+    putTradeCount: number;
+    bestDirection: 'CALL' | 'PUT' | null;
+  }>;
+  
+  // Initialize with default values
   anomalyTypes.forEach(type => {
     anomalyPerformance[type] = {
       successRate: 0,
@@ -684,7 +695,12 @@ export function analyzeAnomalyTradePerformance(
     avgProfit: number; 
     tradeCount: number; 
     bestDirection: 'CALL' | 'PUT' | null;
-  }> = {};
+  }> = {} as Record<AnomalyType, { 
+    successRate: number; 
+    avgProfit: number; 
+    tradeCount: number; 
+    bestDirection: 'CALL' | 'PUT' | null;
+  }>;
   
   anomalyTypes.forEach(type => {
     const perf = anomalyPerformance[type];
@@ -709,7 +725,12 @@ export function getAnomalyTradingSuggestions(
     avgProfit: number; 
     tradeCount: number; 
     bestDirection: 'CALL' | 'PUT' | null;
-  }> = {}
+  }> = {} as Record<AnomalyType, { 
+    successRate: number; 
+    avgProfit: number; 
+    tradeCount: number; 
+    bestDirection: 'CALL' | 'PUT' | null;
+  }>
 ): Array<{
   anomalyId: string;
   anomalyType: AnomalyType;

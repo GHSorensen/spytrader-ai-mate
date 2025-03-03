@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import anomalyDetectionService from '@/services/anomalyDetection/anomalyDetectionService';
 import {
@@ -64,15 +63,46 @@ export function useAnomalyDetection({
     ...params
   });
   
-  // Store historical performance data for suggestions
+  const anomalyTypes: AnomalyType[] = [
+    'price_spike', 
+    'volume_surge', 
+    'volatility_explosion', 
+    'correlation_break', 
+    'pattern_deviation', 
+    'momentum_shift', 
+    'liquidity_change',
+    'option_skew_change',
+    'implied_volatility_divergence'
+  ];
+  
+  const initialPerformance: Record<AnomalyType, {
+    successRate: number;
+    avgProfit: number;
+    tradeCount: number;
+    bestDirection: 'CALL' | 'PUT' | null;
+  }> = {} as Record<AnomalyType, {
+    successRate: number;
+    avgProfit: number;
+    tradeCount: number;
+    bestDirection: 'CALL' | 'PUT' | null;
+  }>;
+  
+  anomalyTypes.forEach(type => {
+    initialPerformance[type] = {
+      successRate: 0,
+      avgProfit: 0,
+      tradeCount: 0,
+      bestDirection: null
+    };
+  });
+  
   const [historicalPerformance, setHistoricalPerformance] = useState<Record<AnomalyType, {
     successRate: number;
     avgProfit: number;
     tradeCount: number;
     bestDirection: 'CALL' | 'PUT' | null;
-  }>>({});
+  }>>(initialPerformance);
   
-  // Detection function
   const runDetection = useCallback(async (
     currentMarketData: SpyMarketData,
     historicalMarketData: SpyMarketData[],
@@ -82,7 +112,6 @@ export function useAnomalyDetection({
     setIsLoading(true);
     
     try {
-      // Run anomaly detection
       const result = anomalyDetectionService.detectAnomalies(
         currentMarketData,
         historicalMarketData,
@@ -93,20 +122,16 @@ export function useAnomalyDetection({
       
       setAnomalies(result.anomalies);
       
-      // Convert anomalies to risk signals
       const signals = anomalyDetectionService.anomaliesToRiskSignals(result.anomalies);
       setRiskSignals(signals);
       
-      // Update state
       setLastDetectionResult(result);
       setLastDetectionTime(new Date());
       
-      // Show notifications for significant anomalies if enabled
       if (showNotifications && result.triggerThresholdMet) {
         const highConfidenceAnomalies = result.anomalies.filter(a => a.confidence > 0.8);
         
         if (highConfidenceAnomalies.length > 0) {
-          // Get the highest confidence anomaly
           const topAnomaly = highConfidenceAnomalies.sort((a, b) => b.confidence - a.confidence)[0];
           
           toast.warning(
@@ -135,14 +160,12 @@ export function useAnomalyDetection({
     }
   }, [detectionParams, showNotifications]);
   
-  // Clear results
   const clearAnomalies = useCallback(() => {
     setAnomalies([]);
     setRiskSignals([]);
     setLastDetectionResult(null);
   }, []);
   
-  // Update detection parameters
   const updateDetectionParams = useCallback((newParams: Partial<AnomalyDetectionParams>) => {
     setDetectionParams(prev => ({
       ...prev,
@@ -150,7 +173,6 @@ export function useAnomalyDetection({
     }));
   }, []);
   
-  // Analyze historical trade performance with anomalies
   const updateHistoricalPerformance = useCallback((completedTrades: SpyTrade[]) => {
     if (anomalies.length === 0 || completedTrades.length === 0) {
       return;
@@ -164,7 +186,6 @@ export function useAnomalyDetection({
     setHistoricalPerformance(performance);
   }, [anomalies]);
   
-  // Get trading suggestions based on detected anomalies
   const getAnomalyTradingSuggestions = useCallback((completedTrades?: SpyTrade[]) => {
     if (completedTrades && completedTrades.length > 0) {
       updateHistoricalPerformance(completedTrades);
@@ -176,16 +197,12 @@ export function useAnomalyDetection({
     );
   }, [anomalies, historicalPerformance, updateHistoricalPerformance]);
   
-  // Set up auto-detection if enabled
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
     
     if (autoDetect) {
-      // This is just a placeholder - in a real app, you would have 
-      // a data provider that automatically fetches market data
       console.log('Auto-detection enabled but requires market data provider');
       
-      // Uncomment this when you have a data provider:
       /*
       intervalId = setInterval(async () => {
         const currentData = await dataProvider.getMarketData();

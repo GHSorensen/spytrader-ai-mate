@@ -155,3 +155,21 @@ export interface AnomalyProcessorResult {
   executionTimeMs: number;
   triggerThresholdMet: boolean;
 }
+
+// Strategy learning specific insight type
+export interface StrategyLearningAnomaly {
+  anomalyType: AnomalyType;
+  strategyId: string;
+  detectionTimestamp: Date;
+  tradingPerformance: {
+    successRate: number;
+    profitFactor: number;
+    sampleSize: number;
+  };
+  recommendedParameters: {
+    parameter: string;
+    currentValue: any;
+    suggestedValue: any;
+    confidence: number;
+  }[];
+}
