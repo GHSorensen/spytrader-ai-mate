@@ -3,7 +3,7 @@ services:
   - type: web
     name: spy-trader
     runtime: node
-    env: node
+    plan: free
     buildCommand: npm install && npm run build
     startCommand: node server.js
     envVars:
@@ -11,12 +11,3 @@ services:
         value: production
     healthCheckPath: /health
     autoDeploy: true
-    numInstances: 1
-    buildFilter:
-      paths:
-        - src/**
-        - public/**
-        - server.js
-        - vite.config.ts
-    plan: free
-

@@ -16,7 +16,10 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
+// Explicitly use the PORT from environment variable or default to 10000 as Render expects
+const PORT = process.env.PORT || 10000;
+
+// Listen on all interfaces (0.0.0.0) which is required for Render
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server listening on port ${PORT}`);
 });
