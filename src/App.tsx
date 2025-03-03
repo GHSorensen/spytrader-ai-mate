@@ -1,32 +1,50 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
-import RiskConsole from "./pages/RiskConsole";
-import RiskMonitoringTest from "./pages/RiskMonitoringTest";
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Toaster } from "sonner";
+import Dashboard from './components/Dashboard';
+import TradeAutomation from './components/TradeAutomation';
+import NotFound from './pages/NotFound';
+import Index from './pages/Index';
+import RiskConsole from './pages/RiskConsole';
+import PerformanceDashboard from './components/spy/PerformanceDashboard';
+import RiskMonitoringTest from './pages/RiskMonitoringTest';
+import notificationService from './services/notification/notificationService';
 
-const queryClient = new QueryClient();
+function App() {
+  // Set up initial notifications on app load
+  useEffect(() => {
+    // Demo: Schedule daily portfolio updates
+    const currentBalance = 125000; // This would come from your actual portfolio data
+    
+    // Initialize notification schedule (these would normally be at market open/close)
+    notificationService.scheduleMorningUpdate(currentBalance, 0, 0);
+    notificationService.scheduleEndOfDayUpdate(currentBalance, 1200, 0.96);
+    
+    // Sample initial notification on app startup
+    notificationService.createNotification(
+      'system_message',
+      'Welcome back',
+      'Your SPY trading AI system is active and monitoring the markets.',
+      'low',
+      ['in_app']
+    );
+  }, []);
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/risk-console" element={<RiskConsole />} />
-          <Route path="/risk-monitoring-test" element={<RiskMonitoringTest />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+  return (
+    <Router>
+      <Toaster richColors position="top-right" />
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/trade-automation" element={<TradeAutomation />} />
+        <Route path="/performance" element={<PerformanceDashboard />} />
+        <Route path="/risk-console" element={<RiskConsole />} />
+        <Route path="/risk-monitoring-test" element={<RiskMonitoringTest />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Router>
+  );
+}
 
 export default App;
