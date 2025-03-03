@@ -1,0 +1,175 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schwab Account Setup Guide - SPY Trading AI</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        h1, h2, h3 {
+            color: #2563eb;
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .step {
+            margin-bottom: 30px;
+            border-left: 4px solid #2563eb;
+            padding-left: 20px;
+        }
+        .warning {
+            background-color: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 10px 15px;
+            margin: 20px 0;
+        }
+        .note {
+            background-color: #e0f2fe;
+            border-left: 4px solid #0ea5e9;
+            padding: 10px 15px;
+            margin: 20px 0;
+        }
+        code {
+            background-color: #f1f5f9;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        .screenshot {
+            max-width: 100%;
+            border: 1px solid #e2e8f0;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        @media print {
+            body {
+                font-size: 12pt;
+            }
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="logo">
+        <h1>SPY Trading AI</h1>
+        <p>User Guide for Schwab Account Holders</p>
+    </div>
+    
+    <div class="no-print">
+        <p>
+            <button onclick="window.print()">Print this guide</button>
+            <button onclick="window.location.href='data:text/html;charset=utf-8,' + encodeURIComponent(document.documentElement.outerHTML)" download="schwab-user-guide.html">Download as HTML</button>
+        </p>
+    </div>
+
+    <h2>Getting Started with SPY Trading AI and Your Schwab Account</h2>
+    <p>This guide will walk you through the process of connecting your Charles Schwab account to SPY Trading AI for paper trading or live trading.</p>
+
+    <div class="note">
+        <strong>Note:</strong> SPY Trading AI uses secure OAuth2 authentication to connect to your Schwab account without storing your credentials.
+    </div>
+
+    <div class="step">
+        <h3>Step 1: Selecting the Right Account Type</h3>
+        <p>Before connecting to SPY Trading AI, make sure you have the appropriate Schwab account:</p>
+        <ul>
+            <li><strong>For Paper Trading:</strong> Any Schwab brokerage account can be used for paper trading, as this doesn't involve real money.</li>
+            <li><strong>For Live Trading:</strong> You need a Schwab brokerage account with options trading permissions to trade SPY options.</li>
+        </ul>
+        <p>If you don't have options trading permissions, you will need to apply for them through Schwab's website or by contacting Schwab customer service.</p>
+    </div>
+
+    <div class="step">
+        <h3>Step 2: Connecting Your Schwab Account</h3>
+        <ol>
+            <li>On the SPY Trading AI dashboard, click the "Settings" icon in the top-right corner.</li>
+            <li>In the settings dialog, select the "Broker" tab.</li>
+            <li>From the broker dropdown, select "Charles Schwab".</li>
+            <li>Click the "Connect to Schwab" button.</li>
+            <li>You will be redirected to Schwab's login page. Enter your Schwab credentials.</li>
+            <li>After logging in, Schwab will ask you to authorize SPY Trading AI to access your account. Review the permissions and click "Authorize".</li>
+            <li>You will be redirected back to SPY Trading AI with a confirmation message.</li>
+        </ol>
+    </div>
+
+    <div class="step">
+        <h3>Step 3: Selecting an Account</h3>
+        <p>If you have multiple Schwab accounts:</p>
+        <ol>
+            <li>After connecting, you'll see a dropdown of all available accounts.</li>
+            <li>Select the specific account you want to use with SPY Trading AI.</li>
+            <li>Click "Confirm Selection" to proceed.</li>
+        </ol>
+    </div>
+
+    <div class="step">
+        <h3>Step 4: Choose Paper or Live Trading</h3>
+        <ol>
+            <li>After selecting your account, you'll be prompted to choose between Paper Trading and Live Trading.</li>
+            <li>For beginners or testing, we strongly recommend starting with Paper Trading.</li>
+            <li>Select your preferred trading mode and click "Confirm".</li>
+        </ol>
+        
+        <div class="warning">
+            <strong>Important:</strong> Live Trading involves real money and real risk. Only choose this option if you fully understand the risks involved and are prepared for potential losses.
+        </div>
+    </div>
+
+    <div class="step">
+        <h3>Step 5: Verify Connection</h3>
+        <ol>
+            <li>After completing the setup, you'll see a "Connection Status" indicator showing "Connected to Schwab".</li>
+            <li>The system will display your account balance and current positions (if any).</li>
+            <li>Verify that this information is correct before proceeding.</li>
+        </ol>
+    </div>
+
+    <div class="step">
+        <h3>Step 6: Start Trading SPY</h3>
+        <p>You're now ready to use SPY Trading AI with your Schwab account:</p>
+        <ul>
+            <li>For Paper Trading: The system will simulate trades without using real money.</li>
+            <li>For Live Trading: The AI will execute real trades based on its analysis and your settings.</li>
+        </ul>
+        <p>All trades will be focused on SPY (S&P 500 ETF) options.</p>
+    </div>
+
+    <h2>Troubleshooting</h2>
+    
+    <h3>Common Issues</h3>
+    <ul>
+        <li><strong>Connection Failed:</strong> If connection fails, try again and make sure you're entering the correct Schwab credentials.</li>
+        <li><strong>Account Not Listed:</strong> Only accounts with appropriate permissions will be displayed. Contact Schwab if you believe an account is missing.</li>
+        <li><strong>Permission Errors:</strong> Make sure your Schwab account has the necessary permissions for options trading.</li>
+        <li><strong>Session Expired:</strong> You may occasionally need to reconnect your account if your session expires. This is normal and part of Schwab's security measures.</li>
+    </ul>
+
+    <h3>Support Resources</h3>
+    <p>If you encounter issues connecting your Schwab account:</p>
+    <ul>
+        <li>Check our FAQ section for common problems and solutions</li>
+        <li>Contact our support team at support@spytradingai.com</li>
+        <li>For Schwab-specific issues, contact Schwab customer service at 1-800-435-4000</li>
+    </ul>
+
+    <div class="note">
+        <p><strong>Security Note:</strong> SPY Trading AI never stores your Schwab password. We use OAuth2 authentication, which means your credentials are only shared with Schwab, not with our application.</p>
+    </div>
+
+    <footer>
+        <p>© 2023 SPY Trading AI. All rights reserved.</p>
+        <p>Last updated: November 30, 2023</p>
+    </footer>
+</body>
+</html>
