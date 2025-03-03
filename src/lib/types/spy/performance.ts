@@ -122,3 +122,38 @@ export interface PerformanceChartData {
     recoveryDays: number;
   }[];
 }
+
+// Adding the missing interfaces that are causing the errors
+export interface TradeHistoryEntry {
+  id: string;
+  timestamp: Date;
+  symbol: string;
+  type: string;
+  direction: string;
+  quantity: number;
+  entryPrice: number;
+  exitPrice?: number;
+  profit?: number;
+  profitPercent?: number;
+  status: string;
+  duration?: number; // in minutes
+  strategy: string;
+}
+
+export interface StrategyPerformance {
+  id: string;
+  name: string;
+  trades: number;
+  winRate: number;
+  averageReturn: number;
+  profitFactor: number;
+  sharpeRatio: number;
+  maxDrawdown: number;
+  netProfit: number;
+  status: 'active' | 'inactive' | 'testing';
+  riskLevel: string;
+  timeHorizon: string;
+}
+
+// Also adding TimeFrame type used in the PerformanceDashboard component
+export type TimeFrame = '1d' | '1w' | '1m' | '3m' | '6m' | '1y' | 'ytd' | 'all';
