@@ -10,12 +10,12 @@ import { marketConditionDescriptions } from './AISettingsTypes';
 
 interface MarketConditionsTabProps {
   settings: AITradingSettings;
-  setSettings: React.Dispatch<React.SetStateAction<AITradingSettings>>;
+  updateSettings: <K extends keyof AITradingSettings>(key: K, value: AITradingSettings[K]) => void;
 }
 
 export const MarketConditionsTab: React.FC<MarketConditionsTabProps> = ({
   settings,
-  setSettings,
+  updateSettings,
 }) => {
   return (
     <Card>
@@ -42,16 +42,14 @@ export const MarketConditionsTab: React.FC<MarketConditionsTabProps> = ({
                 checked={settings.marketConditionOverrides[condition]?.enabled || false}
                 onCheckedChange={(checked) => {
                   const current = settings.marketConditionOverrides[condition] || { adjustedRisk: 0.8 };
-                  setSettings((prev) => ({
-                    ...prev,
-                    marketConditionOverrides: {
-                      ...prev.marketConditionOverrides,
-                      [condition]: {
-                        ...current,
-                        enabled: checked,
-                      },
+                  const updatedOverrides = {
+                    ...settings.marketConditionOverrides,
+                    [condition]: {
+                      ...current,
+                      enabled: checked,
                     },
-                  }));
+                  };
+                  updateSettings('marketConditionOverrides', updatedOverrides);
                 }}
               />
             </div>
@@ -66,16 +64,14 @@ export const MarketConditionsTab: React.FC<MarketConditionsTabProps> = ({
                     max={120}
                     step={5}
                     onValueChange={(value) => {
-                      setSettings((prev) => ({
-                        ...prev,
-                        marketConditionOverrides: {
-                          ...prev.marketConditionOverrides,
-                          [condition]: {
-                            ...prev.marketConditionOverrides[condition],
-                            adjustedRisk: value[0] / 100,
-                          },
+                      const updatedOverrides = {
+                        ...settings.marketConditionOverrides,
+                        [condition]: {
+                          ...settings.marketConditionOverrides[condition],
+                          adjustedRisk: value[0] / 100,
                         },
-                      }));
+                      };
+                      updateSettings('marketConditionOverrides', updatedOverrides);
                     }}
                     className="flex-1"
                   />
