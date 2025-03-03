@@ -4,7 +4,7 @@ import { SpyHeader } from '@/components/spy/SpyHeader';
 import { SpyOverview } from '@/components/spy/SpyOverview';
 import { OptionChain } from '@/components/spy/OptionChain';
 import { ActiveTrades } from '@/components/spy/ActiveTrades';
-import { PerformanceDashboard } from '@/components/spy/PerformanceDashboard';
+import PerformanceDashboard from '@/components/spy/PerformanceDashboard';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, RefreshCw, Settings, Sliders } from 'lucide-react';
 import {
