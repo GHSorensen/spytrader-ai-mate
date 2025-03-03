@@ -1,15 +1,17 @@
 
 import { DataProviderConfig } from "@/lib/types/spy/dataProvider";
 import { SchwabAuth } from "./auth";
+import { TokenManager } from "./TokenManager";
+import { OAuthCallbackHandler } from "./OAuthCallbackHandler";
 import { toast } from "@/components/ui/use-toast";
 
 export class SchwabAuthManager {
   private auth: SchwabAuth;
   private config: DataProviderConfig;
+  private tokenManager: TokenManager;
+  private callbackHandler: OAuthCallbackHandler;
   private updateTokens: (accessToken: string, refreshToken: string, expiryTime: Date) => void;
   private updateConnectionStatus: (connected: boolean, errorMessage?: string) => void;
-  private refreshTokenInterval: number | null = null;
-  private stateParam: string | null = null;
 
   constructor(
     config: DataProviderConfig,
@@ -20,6 +22,14 @@ export class SchwabAuthManager {
     this.auth = new SchwabAuth(config);
     this.updateTokens = updateTokens;
     this.updateConnectionStatus = updateConnectionStatus;
+    
+    // Initialize token manager
+    this.tokenManager = new TokenManager(updateTokens, updateConnectionStatus);
+    // Set the refresh callback
+    this.tokenManager.setRefreshCallback(this.refreshToken.bind(this));
+    
+    // Initialize callback handler
+    this.callbackHandler = new OAuthCallbackHandler(this.auth, this.tokenManager);
   }
 
   /**
@@ -38,45 +48,7 @@ export class SchwabAuthManager {
    * Handle OAuth callback with authorization code
    */
   async handleOAuthCallback(code: string, state?: string): Promise<boolean> {
-    try {
-      if (state && this.stateParam && !this.auth.verifyStateParam(state, this.stateParam)) {
-        throw new Error("Invalid state parameter, possible CSRF attack");
-      }
-
-      const tokenResponse = await this.auth.getAccessToken(code);
-      
-      // Calculate expiry time from expiresIn seconds
-      const expiryTime = new Date();
-      expiryTime.setSeconds(expiryTime.getSeconds() + tokenResponse.expiresIn);
-      
-      // Update tokens in parent service
-      this.updateTokens(tokenResponse.accessToken, tokenResponse.refreshToken, expiryTime);
-      
-      // Update connection status
-      this.updateConnectionStatus(true);
-      
-      // Set up automatic token refresh
-      this.setupTokenRefresh(tokenResponse.expiresIn);
-      
-      toast({
-        title: "Schwab Connected",
-        description: "Successfully authenticated with Schwab API",
-      });
-      
-      return true;
-    } catch (error) {
-      console.error("OAuth callback error:", error);
-      
-      this.updateConnectionStatus(false, error instanceof Error ? error.message : "Authentication failed");
-      
-      toast({
-        title: "Authentication Failed",
-        description: error instanceof Error ? error.message : "Authentication failed",
-        variant: "destructive",
-      });
-      
-      return false;
-    }
+    return this.callbackHandler.handleCallback(code, state);
   }
 
   /**
@@ -143,18 +115,8 @@ export class SchwabAuthManager {
       
       const tokenResponse = await this.auth.refreshAccessToken(this.config.refreshToken);
       
-      // Calculate expiry time from expiresIn seconds
-      const expiryTime = new Date();
-      expiryTime.setSeconds(expiryTime.getSeconds() + tokenResponse.expiresIn);
-      
-      // Update tokens in parent service
-      this.updateTokens(tokenResponse.accessToken, tokenResponse.refreshToken, expiryTime);
-      
-      // Update connection status
-      this.updateConnectionStatus(true);
-      
-      // Set up automatic token refresh
-      this.setupTokenRefresh(tokenResponse.expiresIn);
+      // Use token manager to handle the token update
+      this.tokenManager.handleTokenUpdate(tokenResponse);
       
       return true;
     } catch (error) {
@@ -173,39 +135,6 @@ export class SchwabAuthManager {
    * Clear all tokens and intervals
    */
   clearTokens(): void {
-    // Clear token refresh interval
-    if (this.refreshTokenInterval !== null) {
-      window.clearInterval(this.refreshTokenInterval);
-      this.refreshTokenInterval = null;
-    }
-    
-    // Update with null tokens
-    this.updateTokens("", "", new Date(0));
-  }
-
-  /**
-   * Set up automatic token refresh
-   */
-  private setupTokenRefresh(expiresInSeconds: number): void {
-    // Clear any existing refresh interval
-    if (this.refreshTokenInterval !== null) {
-      window.clearInterval(this.refreshTokenInterval);
-    }
-    
-    // Refresh the token 5 minutes before it expires
-    const refreshMs = Math.max(0, (expiresInSeconds - 300) * 1000);
-    
-    // Set up the interval
-    this.refreshTokenInterval = window.setInterval(() => {
-      this.refreshToken().catch(error => {
-        console.error("Automatic token refresh failed:", error);
-        
-        // If refresh fails, clear the interval
-        if (this.refreshTokenInterval !== null) {
-          window.clearInterval(this.refreshTokenInterval);
-          this.refreshTokenInterval = null;
-        }
-      });
-    }, refreshMs);
+    this.tokenManager.clearTokens();
   }
 }
