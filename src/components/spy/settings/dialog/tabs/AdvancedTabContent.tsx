@@ -13,9 +13,11 @@ export const AdvancedTabContent: React.FC<AdvancedTabContentProps> = ({
   updateSettings
 }) => {
   return (
-    <AdvancedTab 
-      settings={settings}
-      updateSettings={updateSettings}
-    />
+    <div className="space-y-4">
+      <AdvancedTab 
+        settings={settings}
+        updateSettings={updateSettings}
+      />
+    </div>
   );
 };
