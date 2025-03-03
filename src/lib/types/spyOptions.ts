@@ -2,6 +2,7 @@
 export type OptionType = 'CALL' | 'PUT';
 export type OptionExpiry = 'daily' | 'weekly' | 'monthly';
 export type TradeStatus = 'pending' | 'active' | 'closed' | 'cancelled';
+export type RiskToleranceType = 'conservative' | 'moderate' | 'aggressive';
 
 export interface SpyOption {
   id: string;
@@ -80,4 +81,17 @@ export interface PerformanceMetrics {
   successfulTrades: number;
   failedTrades: number;
   averageDuration: number; // in minutes
+}
+
+export interface AITradingSettings {
+  enabledStrategies: RiskToleranceType[];
+  maxSimultaneousTrades: number;
+  maxDailyTrades: number;
+  autoAdjustVolatility: boolean;
+  useMarketSentiment: boolean;
+  considerEarningsEvents: boolean;
+  considerFedMeetings: boolean;
+  enableHedging: boolean;
+  minimumConfidenceScore: number;
+  preferredTimeOfDay: string; // 'market-open', 'midday', 'market-close', 'any'
 }

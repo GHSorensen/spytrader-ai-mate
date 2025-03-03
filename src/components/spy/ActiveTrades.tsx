@@ -9,10 +9,15 @@ import { format } from 'date-fns';
 import { ArrowUpRight, ArrowDownRight, Eye } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import type { RiskToleranceType } from '@/lib/types/spyOptions';
 
-export const ActiveTrades = () => {
+interface ActiveTradesProps {
+  riskTolerance?: RiskToleranceType;
+}
+
+export const ActiveTrades = ({ riskTolerance = 'moderate' }: ActiveTradesProps) => {
   const { data: trades, isLoading } = useQuery({
-    queryKey: ['spyTrades', 'active'],
+    queryKey: ['spyTrades', 'active', riskTolerance],
     queryFn: () => getSpyTradesByStatus('active'),
     refetchInterval: 30000, // Refresh every 30 seconds
   });
@@ -24,7 +29,14 @@ export const ActiveTrades = () => {
   return (
     <Card className="col-span-full">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-2xl font-bold tracking-tight">Active SPY Trades</CardTitle>
+        <CardTitle className="text-2xl font-bold tracking-tight">
+          Active SPY Trades
+          {riskTolerance && (
+            <Badge variant="outline" className="ml-2 capitalize">
+              {riskTolerance}
+            </Badge>
+          )}
+        </CardTitle>
         <Button variant="outline" size="sm">View All Trades</Button>
       </CardHeader>
       <CardContent>
@@ -95,7 +107,7 @@ export const ActiveTrades = () => {
         ) : (
           <div className="h-52 flex items-center justify-center flex-col gap-2">
             <p className="text-muted-foreground">No active trades found</p>
-            <p className="text-sm text-muted-foreground">AI agent will automatically initiate trades based on market conditions</p>
+            <p className="text-sm text-muted-foreground">AI agent will automatically initiate trades based on market conditions and {riskTolerance} risk profile</p>
           </div>
         )}
       </CardContent>

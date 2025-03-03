@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { SpyHeader } from '@/components/spy/SpyHeader';
 import { SpyOverview } from '@/components/spy/SpyOverview';
 import { OptionChain } from '@/components/spy/OptionChain';
@@ -12,8 +12,22 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { RiskToleranceType } from '@/lib/types/spyOptions';
+import { AISettingsDialog } from '@/components/spy/AISettingsDialog';
+import { toast } from '@/components/ui/use-toast';
 
 const Index = () => {
+  const [riskTolerance, setRiskTolerance] = useState<RiskToleranceType>('moderate');
+  const [isAISettingsOpen, setIsAISettingsOpen] = useState(false);
+
+  const handleRiskToleranceChange = (tolerance: RiskToleranceType) => {
+    setRiskTolerance(tolerance);
+    toast({
+      title: "Risk Tolerance Updated",
+      description: `Strategy set to ${tolerance} risk profile`,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -50,13 +64,19 @@ const Index = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem>Conservative</DropdownMenuItem>
-                <DropdownMenuItem>Moderate</DropdownMenuItem>
-                <DropdownMenuItem>Aggressive</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleRiskToleranceChange('conservative')}>
+                  Conservative
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleRiskToleranceChange('moderate')}>
+                  Moderate
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleRiskToleranceChange('aggressive')}>
+                  Aggressive
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Button className="gap-1">
+            <Button className="gap-1" onClick={() => setIsAISettingsOpen(true)}>
               <Sliders className="h-4 w-4 mr-1" />
               AI Settings
             </Button>
@@ -66,10 +86,18 @@ const Index = () => {
         {/* Dashboard Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <SpyOverview />
-          <ActiveTrades />
+          <ActiveTrades riskTolerance={riskTolerance} />
           <OptionChain />
         </div>
       </main>
+
+      {/* AI Settings Dialog */}
+      <AISettingsDialog 
+        open={isAISettingsOpen} 
+        onOpenChange={setIsAISettingsOpen}
+        currentRiskTolerance={riskTolerance}
+        onRiskToleranceChange={handleRiskToleranceChange}
+      />
     </div>
   );
 };
