@@ -31,14 +31,14 @@ export const RiskLearningInsightsCard: React.FC<RiskLearningInsightsCardProps> =
       case 'exit_trade':
         return <Badge variant="destructive">{type}</Badge>;
       case 'reduce_position_size':
-        return <Badge variant="warning">{type}</Badge>;
+        return <Badge variant="outline" className="text-amber-500 border-amber-500">{type}</Badge>;
       case 'hedge_position':
         return <Badge variant="outline">{type}</Badge>;
       case 'adjust_stop_loss':
       case 'adjust_take_profit':
         return <Badge variant="secondary">{type}</Badge>;
       case 'increase_position_size':
-        return <Badge variant="success">{type}</Badge>;
+        return <Badge variant="outline" className="text-green-500 border-green-500">{type}</Badge>;
       default:
         return <Badge>{type}</Badge>;
     }

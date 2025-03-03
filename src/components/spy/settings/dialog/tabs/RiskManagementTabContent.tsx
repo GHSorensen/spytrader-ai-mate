@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { AITradingSettings } from '@/lib/types/spy';
+import { AITradingSettings, RiskToleranceType } from '@/lib/types/spy';
 import { RiskManagementTab } from '../../RiskManagementTab';
 
 interface RiskManagementTabContentProps {
@@ -11,18 +11,21 @@ interface RiskManagementTabContentProps {
     childKey: N,
     value: any
   ) => void;
+  currentRiskTolerance: RiskToleranceType;
 }
 
 export const RiskManagementTabContent: React.FC<RiskManagementTabContentProps> = ({
   settings,
   updateSettings,
-  updateNestedSettings
+  updateNestedSettings,
+  currentRiskTolerance
 }) => {
   return (
     <RiskManagementTab 
       settings={settings}
       updateSettings={updateSettings}
       updateNestedSettings={updateNestedSettings}
+      currentRiskTolerance={currentRiskTolerance}
     />
   );
 };

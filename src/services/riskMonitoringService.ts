@@ -8,7 +8,8 @@ import {
   RiskSignalSource,
   RiskSignalStrength,
   RiskActionType,
-  MarketRiskProfile
+  MarketRiskProfile,
+  RiskSignalDirection
 } from '@/lib/types/spy/riskMonitoring';
 import { 
   AITradingSettings, 

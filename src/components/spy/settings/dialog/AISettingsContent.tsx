@@ -55,6 +55,7 @@ export const AISettingsContent: React.FC<AISettingsContentProps> = ({
                 settings={settings}
                 updateSettings={updateSettings}
                 updateNestedSettings={updateNestedSettings}
+                currentRiskTolerance={currentRiskTolerance}
               />
             </TabsContent>
             
