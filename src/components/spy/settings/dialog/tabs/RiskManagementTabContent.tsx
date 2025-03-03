@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { AITradingSettings, RiskToleranceType } from '@/lib/types/spy';
-import { RiskManagementTab } from '../../RiskManagementTab';
+import { RiskManagementTabContent as RiskManagementContent } from '../../risk/RiskManagementTabContent';
 
 interface RiskManagementTabContentProps {
   settings: AITradingSettings;
@@ -21,7 +21,7 @@ export const RiskManagementTabContent: React.FC<RiskManagementTabContentProps> =
   currentRiskTolerance
 }) => {
   return (
-    <RiskManagementTab 
+    <RiskManagementContent 
       settings={settings}
       updateSettings={updateSettings}
       updateNestedSettings={updateNestedSettings}
