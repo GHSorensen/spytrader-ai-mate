@@ -4,7 +4,7 @@ services:
     name: spy-trader
     runtime: node
     plan: free
-    buildCommand: npm install && npm run build
+    buildCommand: npm install && npm run build && if [ -f package.json.override ]; then jq -s '.[0] * .[1]' package.json package.json.override > package.json.tmp && mv package.json.tmp package.json; fi
     startCommand: node server.js
     envVars:
       - key: NODE_ENV
