@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import AISettingsDialog from './AISettingsDialog';
+import { AISettingsDialog } from './AISettingsDialog';
 import NotificationCenter from './notifications/NotificationCenter';
 
 interface SpyHeaderProps {

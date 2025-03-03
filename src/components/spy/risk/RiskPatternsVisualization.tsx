@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -18,9 +17,8 @@ const RiskPatternsVisualization: React.FC<RiskPatternsVisualizationProps> = ({
   signals,
   timeFrame = '30d'
 }) => {
-  const [selectedTimeFrame, setSelectedTimeFrame] = React.useState(timeFrame);
+  const [selectedTimeFrame, setSelectedTimeFrame] = React.useState<'7d' | '30d' | '90d' | 'all'>(timeFrame);
   
-  // Filter data based on selected time frame
   const getFilteredData = (data: Array<StatisticalAnomaly | RiskSignal>) => {
     const now = new Date();
     let daysToSubtract = 30;
@@ -43,11 +41,9 @@ const RiskPatternsVisualization: React.FC<RiskPatternsVisualizationProps> = ({
     return data.filter(item => new Date(item.timestamp) >= cutoffDate);
   };
 
-  // Process anomaly data for charts
   const processAnomaliesForChart = () => {
     const filteredAnomalies = getFilteredData(anomalies) as StatisticalAnomaly[];
     
-    // Count anomalies by type
     const anomalyCountsByType: Record<AnomalyType, number> = {
       'price_spike': 0,
       'volume_surge': 0,
@@ -64,18 +60,15 @@ const RiskPatternsVisualization: React.FC<RiskPatternsVisualizationProps> = ({
       anomalyCountsByType[anomaly.type]++;
     });
     
-    // Convert to chart format
     return Object.entries(anomalyCountsByType).map(([type, count]) => ({
       type,
       count
     }));
   };
   
-  // Process anomaly data by day for time series
   const processAnomaliesByDay = () => {
     const filteredAnomalies = getFilteredData(anomalies) as StatisticalAnomaly[];
     
-    // Group by day
     const anomaliesByDay: Record<string, number> = {};
     
     filteredAnomalies.forEach(anomaly => {
@@ -83,7 +76,6 @@ const RiskPatternsVisualization: React.FC<RiskPatternsVisualizationProps> = ({
       anomaliesByDay[day] = (anomaliesByDay[day] || 0) + 1;
     });
     
-    // Convert to chart format
     return Object.entries(anomaliesByDay)
       .map(([day, count]) => ({
         day,
@@ -92,11 +84,9 @@ const RiskPatternsVisualization: React.FC<RiskPatternsVisualizationProps> = ({
       .sort((a, b) => a.day.localeCompare(b.day));
   };
   
-  // Process signal data by confidence
   const processSignalsByConfidence = () => {
     const filteredSignals = getFilteredData(signals) as RiskSignal[];
     
-    // Group signals by confidence ranges
     const ranges: Record<string, number> = {
       '0-0.2': 0,
       '0.2-0.4': 0,
@@ -113,7 +103,6 @@ const RiskPatternsVisualization: React.FC<RiskPatternsVisualizationProps> = ({
       else ranges['0.8-1.0']++;
     });
     
-    // Convert to chart format
     return Object.entries(ranges).map(([range, count]) => ({
       range,
       count
@@ -134,7 +123,10 @@ const RiskPatternsVisualization: React.FC<RiskPatternsVisualizationProps> = ({
               Visual analysis of detected anomalies and risk signals
             </CardDescription>
           </div>
-          <Select value={selectedTimeFrame} onValueChange={setSelectedTimeFrame}>
+          <Select 
+            value={selectedTimeFrame} 
+            onValueChange={(value: '7d' | '30d' | '90d' | 'all') => setSelectedTimeFrame(value)}
+          >
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Select time frame" />
             </SelectTrigger>
