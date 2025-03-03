@@ -1,26 +1,18 @@
 
-import { DataProviderInterface, DataProviderConfig, DataProviderStatus } from "@/lib/types/spy/dataProvider";
-import { SpyMarketData, SpyOption, SpyTrade, OptionType, TradeStatus } from "@/lib/types/spy";
+import { DataProviderConfig, DataProviderStatus } from "@/lib/types/spy/dataProvider";
+import { SpyMarketData, SpyOption, SpyTrade } from "@/lib/types/spy";
 import { toast } from "@/components/ui/use-toast";
+import { BaseDataProvider } from "./base/BaseDataProvider";
+import { SchwabAuth } from "./schwab/auth";
+import { generateMockOptions, generateMockTrades } from "./schwab/utils";
+import * as endpoints from "./schwab/endpoints";
 
-// Schwab API endpoints (These will need to be updated with actual Schwab endpoints)
-const SCHWAB_API_BASE_URL = "https://api.schwab.com/v1";
-const QUOTE_ENDPOINT = "/marketdata/quotes";
-const OPTION_CHAIN_ENDPOINT = "/marketdata/chains";
-const ACCOUNTS_ENDPOINT = "/accounts";
-
-export class SchwabService implements DataProviderInterface {
-  private config: DataProviderConfig;
-  private status: DataProviderStatus = {
-    connected: false,
-    lastUpdated: new Date(),
-    quotesDelayed: true
-  };
-  private accessToken: string | null = null;
-  private tokenExpiry: Date | null = null;
+export class SchwabService extends BaseDataProvider {
+  private auth: SchwabAuth;
 
   constructor(config: DataProviderConfig) {
-    this.config = config;
+    super(config);
+    this.auth = new SchwabAuth(config);
   }
 
   /**
@@ -74,34 +66,14 @@ export class SchwabService implements DataProviderInterface {
    * Disconnect from Schwab API
    */
   async disconnect(): Promise<boolean> {
-    this.accessToken = null;
-    this.tokenExpiry = null;
-    this.status.connected = false;
-    this.status.lastUpdated = new Date();
+    const result = await super.disconnect();
     
     toast({
       title: "Schwab Disconnected",
       description: "Successfully disconnected from Schwab API",
     });
     
-    return true;
-  }
-
-  /**
-   * Check if connected to Schwab API
-   */
-  isConnected(): boolean {
-    return this.status.connected && 
-      this.accessToken !== null && 
-      this.tokenExpiry !== null && 
-      this.tokenExpiry > new Date();
-  }
-
-  /**
-   * Get Schwab connection status
-   */
-  getStatus(): DataProviderStatus {
-    return { ...this.status };
+    return result;
   }
 
   /**
@@ -150,83 +122,12 @@ export class SchwabService implements DataProviderInterface {
       // In a real implementation, we would call the Schwab API
       console.log("Fetching SPY options from Schwab");
       
-      // Mock data for development
-      const today = new Date();
-      const nextWeek = new Date(today);
-      nextWeek.setDate(today.getDate() + 7);
-      const nextMonth = new Date(today);
-      nextMonth.setDate(today.getDate() + 30);
-
-      return [
-        {
-          id: "opt-s1",
-          strikePrice: 500,
-          expirationDate: nextWeek,
-          type: "CALL" as OptionType,
-          premium: 3.55,
-          impliedVolatility: 0.22,
-          openInterest: 13000,
-          volume: 3500,
-          delta: 0.58,
-          gamma: 0.09,
-          theta: -0.16,
-          vega: 0.13,
-        },
-        {
-          id: "opt-s2",
-          strikePrice: 495,
-          expirationDate: nextWeek,
-          type: "PUT" as OptionType,
-          premium: 2.95,
-          impliedVolatility: 0.20,
-          openInterest: 10000,
-          volume: 2200,
-          delta: -0.49,
-          gamma: 0.08,
-          theta: -0.14,
-          vega: 0.12,
-        },
-        {
-          id: "opt-s3",
-          strikePrice: 505,
-          expirationDate: nextMonth,
-          type: "CALL" as OptionType,
-          premium: 5.85,
-          impliedVolatility: 0.24,
-          openInterest: 7800,
-          volume: 1900,
-          delta: 0.54,
-          gamma: 0.07,
-          theta: -0.12,
-          vega: 0.15,
-        },
-        {
-          id: "opt-s4",
-          strikePrice: 490,
-          expirationDate: nextMonth,
-          type: "PUT" as OptionType,
-          premium: 4.45,
-          impliedVolatility: 0.23,
-          openInterest: 5500,
-          volume: 1600,
-          delta: -0.46,
-          gamma: 0.06,
-          theta: -0.11,
-          vega: 0.14,
-        },
-      ];
+      // Return mock data for development
+      return generateMockOptions();
     } catch (error) {
       console.error("Schwab options error:", error);
       throw error;
     }
-  }
-
-  /**
-   * Get SPY options by type (CALL or PUT)
-   */
-  async getOptionsByType(type: 'CALL' | 'PUT'): Promise<SpyOption[]> {
-    const options = await this.getOptions();
-    return options.filter(option => option.type === type);
   }
 
   /**
@@ -265,60 +166,11 @@ export class SchwabService implements DataProviderInterface {
       // In a real implementation, we would query the account positions
       console.log("Fetching trades from Schwab account");
       
-      // Mock data for development
-      const today = new Date();
-      const yesterday = new Date(today);
-      yesterday.setDate(today.getDate() - 1);
-      const nextWeek = new Date(today);
-      nextWeek.setDate(today.getDate() + 7);
-      
-      return [
-        {
-          id: "trade-s1",
-          optionId: "opt-s1",
-          type: "CALL",
-          strikePrice: 500,
-          expirationDate: nextWeek,
-          entryPrice: 3.35,
-          currentPrice: 3.55,
-          targetPrice: 4.75,
-          stopLoss: 2.85,
-          quantity: 5,
-          status: "active" as TradeStatus,
-          openedAt: yesterday,
-          profit: 100,
-          profitPercentage: 5.97,
-          confidenceScore: 0.80,
-        },
-        {
-          id: "trade-s2",
-          optionId: "opt-s2",
-          type: "PUT",
-          strikePrice: 495,
-          expirationDate: nextWeek,
-          entryPrice: 3.05,
-          currentPrice: 2.95,
-          targetPrice: 3.85,
-          stopLoss: 2.50,
-          quantity: 3,
-          status: "active" as TradeStatus,
-          openedAt: yesterday,
-          profit: -30,
-          profitPercentage: -3.28,
-          confidenceScore: 0.68,
-        },
-      ];
+      // Return mock data for development
+      return generateMockTrades();
     } catch (error) {
       console.error("Schwab trades error:", error);
       throw error;
     }
-  }
-
-  /**
-   * Get trades by status
-   */
-  async getTradesByStatus(status: string): Promise<SpyTrade[]> {
-    const trades = await this.getTrades();
-    return trades.filter(trade => trade.status === status);
   }
 }
