@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { AISettingsDialog } from './AISettingsDialog';
 import NotificationCenter from './notifications/NotificationCenter';
 import { RiskToleranceType } from '@/lib/types/spy';
+import { schwabDocumentation } from '@/services/dataProviders/schwab/documentation';
 
 interface SpyHeaderProps {
   minimal?: boolean;
@@ -38,6 +39,30 @@ export const SpyHeaderWithNotifications: React.FC<SpyHeaderProps> = ({ minimal =
       </div>
       
       <div className="flex items-center gap-2">
+        <div className="relative group">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="text-xs"
+            onClick={() => schwabDocumentation.openUserGuide()}
+          >
+            Schwab Guide
+          </Button>
+          <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+            <button 
+              className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+              onClick={() => schwabDocumentation.openUserGuide()}
+            >
+              View Guide
+            </button>
+            <button 
+              className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+              onClick={() => schwabDocumentation.downloadUserGuide()}
+            >
+              Download Guide
+            </button>
+          </div>
+        </div>
         <NotificationCenter />
         <Button variant="ghost" size="icon" onClick={() => setIsAISettingsOpen(true)}>
           <span className="sr-only">AI Settings</span>
