@@ -101,16 +101,16 @@ const PerformanceDashboard = () => {
           <PerformanceSummaryCards summary={mockPerformanceSummary} />
           
           <Card>
-            <EquityCurveChart data={filteredData.equityCurve} />
+            <EquityCurveChart equityCurve={filteredData.equityCurve} />
           </Card>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card>
-              <MonthlyPerformanceChart data={filteredData.monthlyPerformance} />
+              <MonthlyPerformanceChart monthlyPerformance={filteredData.monthlyPerformance} />
             </Card>
             
             <Card>
-              <ProfitDistributionChart data={filteredData.profitDistribution} />
+              <ProfitDistributionChart profitDistribution={filteredData.profitDistribution} />
             </Card>
           </div>
           
