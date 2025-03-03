@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card } from "@/components/ui/card";
-import { TrendingDownIcon, TrendingUpIcon, AlertTriangleIcon } from 'lucide-react';
+import { LightbulbIcon, TrendingDownIcon, TrendingUpIcon, AlertTriangleIcon } from 'lucide-react';
 import { 
   LearningInsight, 
   RiskSignal, 

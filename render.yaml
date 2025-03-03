@@ -17,3 +17,4 @@ services:
         - public/**
         - server.js
         - vite.config.ts
+    plan: free
