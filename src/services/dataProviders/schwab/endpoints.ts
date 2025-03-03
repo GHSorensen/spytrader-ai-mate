@@ -7,3 +7,8 @@ export const ACCOUNTS_ENDPOINT = "/accounts";
 export const ORDERS_ENDPOINT = "/orders";
 export const POSITIONS_ENDPOINT = "/positions";
 export const AUTH_ENDPOINT = "/oauth2/token";
+
+// OAuth endpoints
+export const OAUTH_AUTHORIZE_URL = "https://api.schwab.com/oauth2/authorize";
+export const OAUTH_TOKEN_URL = "https://api.schwab.com/oauth2/token";
+export const OAUTH_REVOKE_URL = "https://api.schwab.com/oauth2/revoke";

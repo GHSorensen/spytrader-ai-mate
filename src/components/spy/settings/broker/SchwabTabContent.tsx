@@ -4,11 +4,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { RefreshCw, CheckCircle, AlertCircle, Info } from "lucide-react";
+import { RefreshCw, CheckCircle, AlertCircle, Info, LogIn } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { BrokerSettings } from "@/lib/types/spy/broker";
 import { DataProviderStatus } from "@/lib/types/spy/dataProvider";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { SchwabService } from "@/services/dataProviders/schwabService";
+import { Separator } from "@/components/ui/separator";
 
 interface SchwabTabContentProps {
   settings: BrokerSettings;
@@ -27,6 +29,32 @@ export const SchwabTabContent: React.FC<SchwabTabContentProps> = ({
   isConnecting,
   status,
 }) => {
+  const handleOAuthLogin = () => {
+    try {
+      // Create a temporary service to get the authorization URL
+      const schwabService = new SchwabService({
+        type: 'schwab',
+        apiKey: settings.credentials.apiKey,
+        secretKey: settings.credentials.secretKey,
+        callbackUrl: settings.credentials.callbackUrl || window.location.origin + '/auth/callback',
+        paperTrading: settings.paperTrading
+      });
+      
+      // Store credentials in local storage temporarily
+      // In a production app, you'd use a more secure state management solution
+      localStorage.setItem('schwab_api_key', settings.credentials.apiKey || '');
+      localStorage.setItem('schwab_secret_key', settings.credentials.secretKey || '');
+      localStorage.setItem('schwab_paper_trading', settings.paperTrading.toString());
+      
+      // Get OAuth URL and redirect
+      const authUrl = schwabService.getAuthorizationUrl();
+      window.location.href = authUrl;
+    } catch (error) {
+      console.error("Failed to initiate OAuth flow:", error);
+      // Handle error
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -106,7 +134,9 @@ export const SchwabTabContent: React.FC<SchwabTabContentProps> = ({
           />
         </div>
         
-        <div className="pt-2">
+        <Separator className="my-4" />
+        
+        <div className="flex flex-col space-y-4 pt-2">
           <Button 
             variant="outline" 
             onClick={testConnection} 
@@ -121,6 +151,16 @@ export const SchwabTabContent: React.FC<SchwabTabContentProps> = ({
               <AlertCircle className="h-4 w-4 mr-2" />
             )}
             Test Connection
+          </Button>
+          
+          <Button 
+            variant="default" 
+            onClick={handleOAuthLogin} 
+            disabled={!settings.credentials.apiKey || !settings.credentials.secretKey}
+            className="w-full"
+          >
+            <LogIn className="h-4 w-4 mr-2" />
+            Connect with OAuth
           </Button>
         </div>
       </CardContent>

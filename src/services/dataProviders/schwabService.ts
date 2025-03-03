@@ -1,3 +1,4 @@
+
 import { DataProviderConfig, DataProviderStatus } from "@/lib/types/spy/dataProvider";
 import { SpyMarketData, SpyOption, SpyTrade } from "@/lib/types/spy";
 import { toast } from "@/components/ui/use-toast";
@@ -9,6 +10,8 @@ import * as endpoints from "./schwab/endpoints";
 
 export class SchwabService extends BaseDataProvider {
   private auth: SchwabAuth;
+  private refreshTokenInterval: number | null = null;
+  private stateParam: string | null = null;
 
   constructor(config: DataProviderConfig) {
     super(config);
@@ -16,7 +19,68 @@ export class SchwabService extends BaseDataProvider {
   }
 
   /**
-   * Connect to Schwab API
+   * Get OAuth authorization URL
+   */
+  getAuthorizationUrl(): string {
+    try {
+      return this.auth.getAuthorizationUrl();
+    } catch (error) {
+      console.error("Failed to generate authorization URL:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Handle OAuth callback with authorization code
+   */
+  async handleOAuthCallback(code: string, state?: string): Promise<boolean> {
+    try {
+      if (state && this.stateParam && !this.auth.verifyStateParam(state, this.stateParam)) {
+        throw new Error("Invalid state parameter, possible CSRF attack");
+      }
+
+      const tokenResponse = await this.auth.getAccessToken(code);
+      
+      this.accessToken = tokenResponse.accessToken;
+      
+      // Store refresh token in config for future use
+      this.config.refreshToken = tokenResponse.refreshToken;
+      
+      // Calculate expiry time from expiresIn seconds
+      const expiryTime = new Date();
+      expiryTime.setSeconds(expiryTime.getSeconds() + tokenResponse.expiresIn);
+      this.tokenExpiry = expiryTime;
+      
+      this.status.connected = true;
+      this.status.lastUpdated = new Date();
+      
+      // Set up automatic token refresh
+      this.setupTokenRefresh(tokenResponse.expiresIn);
+      
+      toast({
+        title: "Schwab Connected",
+        description: "Successfully authenticated with Schwab API",
+      });
+      
+      return true;
+    } catch (error) {
+      console.error("OAuth callback error:", error);
+      
+      this.status.connected = false;
+      this.status.errorMessage = error instanceof Error ? error.message : "Authentication failed";
+      
+      toast({
+        title: "Authentication Failed",
+        description: this.status.errorMessage,
+        variant: "destructive",
+      });
+      
+      return false;
+    }
+  }
+
+  /**
+   * Connect to Schwab API - basic connection or OAuth flow
    */
   async connect(): Promise<boolean> {
     try {
@@ -24,29 +88,36 @@ export class SchwabService extends BaseDataProvider {
         throw new Error("Schwab API key not provided");
       }
 
-      // In a real implementation, we would use OAuth flow to get an access token
-      // For now, we'll simulate a successful connection if API key is provided
-      console.log("Connecting to Schwab API with credentials:", {
-        apiKey: this.config.apiKey ? "PROVIDED" : "MISSING",
-        accountId: this.config.accountId ? "PROVIDED" : "MISSING",
-        appKey: this.config.appKey ? "PROVIDED" : "MISSING",
-      });
+      // Check if we have a refresh token to use
+      if (this.config.refreshToken) {
+        return this.refreshToken();
+      }
       
-      this.status.connected = true;
-      this.status.lastUpdated = new Date();
+      // For development without real OAuth flow, we simulate successful connection
+      if (process.env.NODE_ENV === 'development') {
+        console.log("Development mode: Simulating successful connection to Schwab API");
+        
+        this.status.connected = true;
+        this.status.lastUpdated = new Date();
+        
+        // Mock token for development
+        this.accessToken = "mock-schwab-token-" + Date.now();
+        const tokenExpiry = new Date();
+        tokenExpiry.setHours(tokenExpiry.getHours() + 1); // Token valid for 1 hour
+        this.tokenExpiry = tokenExpiry;
+        
+        toast({
+          title: "Schwab Connected (Dev Mode)",
+          description: "Successfully connected to Schwab API in development mode",
+        });
+        
+        return true;
+      }
       
-      // Mock token for development
-      this.accessToken = "mock-schwab-token";
-      const tokenExpiry = new Date();
-      tokenExpiry.setHours(tokenExpiry.getHours() + 1); // Token valid for 1 hour
-      this.tokenExpiry = tokenExpiry;
-      
-      toast({
-        title: "Schwab Connected",
-        description: "Successfully connected to Schwab API",
-      });
-      
-      return true;
+      // In production, we would initiate the OAuth flow by redirecting
+      // to the authorization URL, but we can't do redirects within this service
+      // So we'll return false and let the UI handle the redirect
+      return false;
     } catch (error) {
       console.error("Schwab connection error:", error);
       this.status.connected = false;
@@ -63,9 +134,85 @@ export class SchwabService extends BaseDataProvider {
   }
 
   /**
+   * Refresh the access token using refresh token
+   */
+  private async refreshToken(): Promise<boolean> {
+    try {
+      if (!this.config.refreshToken) {
+        throw new Error("No refresh token available");
+      }
+      
+      const tokenResponse = await this.auth.refreshAccessToken(this.config.refreshToken);
+      
+      this.accessToken = tokenResponse.accessToken;
+      this.config.refreshToken = tokenResponse.refreshToken;
+      
+      const expiryTime = new Date();
+      expiryTime.setSeconds(expiryTime.getSeconds() + tokenResponse.expiresIn);
+      this.tokenExpiry = expiryTime;
+      
+      this.status.connected = true;
+      this.status.lastUpdated = new Date();
+      
+      // Set up automatic token refresh
+      this.setupTokenRefresh(tokenResponse.expiresIn);
+      
+      return true;
+    } catch (error) {
+      console.error("Token refresh error:", error);
+      this.status.connected = false;
+      this.status.errorMessage = error instanceof Error ? error.message : "Token refresh failed";
+      
+      // Clear tokens on refresh failure
+      this.accessToken = null;
+      this.config.refreshToken = undefined;
+      this.tokenExpiry = null;
+      
+      return false;
+    }
+  }
+
+  /**
+   * Set up automatic token refresh
+   */
+  private setupTokenRefresh(expiresInSeconds: number): void {
+    // Clear any existing refresh interval
+    if (this.refreshTokenInterval !== null) {
+      window.clearInterval(this.refreshTokenInterval);
+    }
+    
+    // Refresh the token 5 minutes before it expires
+    const refreshMs = Math.max(0, (expiresInSeconds - 300) * 1000);
+    
+    // Set up the interval
+    this.refreshTokenInterval = window.setInterval(() => {
+      this.refreshToken().catch(error => {
+        console.error("Automatic token refresh failed:", error);
+        
+        // If refresh fails, clear the interval
+        if (this.refreshTokenInterval !== null) {
+          window.clearInterval(this.refreshTokenInterval);
+          this.refreshTokenInterval = null;
+        }
+      });
+    }, refreshMs);
+  }
+
+  /**
    * Disconnect from Schwab API
    */
   async disconnect(): Promise<boolean> {
+    // Clear token refresh interval
+    if (this.refreshTokenInterval !== null) {
+      window.clearInterval(this.refreshTokenInterval);
+      this.refreshTokenInterval = null;
+    }
+    
+    // Clear tokens
+    this.accessToken = null;
+    this.config.refreshToken = undefined;
+    this.tokenExpiry = null;
+    
     const result = await super.disconnect();
     
     toast({
