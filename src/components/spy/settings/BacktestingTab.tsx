@@ -1,9 +1,12 @@
-import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+
+import React, { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
+import { toast } from "@/components/ui/use-toast";
 import {
   Select,
   SelectContent,
@@ -11,8 +14,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar, Info, LineChart } from 'lucide-react';
-import { AITradingSettings } from '@/lib/types/spy';
+import { Calendar, Info, LineChart, PlayCircle } from 'lucide-react';
+import { AITradingSettings, BacktestResult } from '@/lib/types/spy';
+import { runBacktest } from '@/services/backtestingService';
 
 interface BacktestingTabProps {
   settings: AITradingSettings;
@@ -27,6 +31,62 @@ export const BacktestingTab: React.FC<BacktestingTabProps> = ({
   settings,
   updateNestedSettings,
 }) => {
+  const [isRunningBacktest, setIsRunningBacktest] = useState(false);
+  const [backtestResult, setBacktestResult] = useState<BacktestResult | null>(null);
+
+  const handleRunBacktest = async () => {
+    try {
+      setIsRunningBacktest(true);
+      
+      // Create a simple default strategy for testing
+      const defaultStrategy = {
+        id: "default-strategy",
+        name: "Default Strategy",
+        description: "A basic trading strategy for testing",
+        isActive: true,
+        riskLevel: 5,
+        timeFrame: "1d",
+        optionType: "BOTH",
+        expiryPreference: ["weekly", "monthly"],
+        deltaRange: [0.3, 0.7],
+        maxPositionSize: 10,
+        maxLossPerTrade: 25,
+        profitTarget: 50,
+        marketCondition: "neutral",
+        averageHoldingPeriod: 5,
+        successRate: 0.6
+      };
+      
+      const result = await runBacktest(
+        defaultStrategy,
+        settings,
+        settings.backtestingSettings.startDate,
+        settings.backtestingSettings.endDate,
+        settings.backtestingSettings.initialCapital,
+        settings.backtestingSettings.includeCommissions,
+        settings.backtestingSettings.commissionPerTrade,
+        settings.backtestingSettings.includeTaxes,
+        settings.backtestingSettings.taxRate
+      );
+      
+      setBacktestResult(result);
+      
+      toast({
+        title: "Backtest Completed",
+        description: `Final capital: $${result.finalCapital.toLocaleString()} (${(result.annualizedReturn * 100).toFixed(2)}% annualized)`,
+      });
+    } catch (error) {
+      console.error("Backtest error:", error);
+      toast({
+        title: "Backtest Error",
+        description: "An error occurred while running the backtest",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRunningBacktest(false);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -178,7 +238,67 @@ export const BacktestingTab: React.FC<BacktestingTabProps> = ({
             </div>
           )}
         </div>
+        
+        {backtestResult && (
+          <div className="mt-4 p-4 bg-muted rounded-md">
+            <h3 className="font-semibold mb-2">Backtest Results</h3>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span>Initial Capital:</span>
+                <span className="font-medium">${backtestResult.initialCapital.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Final Capital:</span>
+                <span className="font-medium">${backtestResult.finalCapital.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Total Return:</span>
+                <span className={`font-medium ${backtestResult.finalCapital > backtestResult.initialCapital ? 'text-green-500' : 'text-red-500'}`}>
+                  {((backtestResult.finalCapital / backtestResult.initialCapital - 1) * 100).toFixed(2)}%
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span>Annualized Return:</span>
+                <span className={`font-medium ${backtestResult.annualizedReturn > 0 ? 'text-green-500' : 'text-red-500'}`}>
+                  {(backtestResult.annualizedReturn * 100).toFixed(2)}%
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span>Max Drawdown:</span>
+                <span className="font-medium text-red-500">
+                  {backtestResult.maxDrawdown.percentage.toFixed(2)}%
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span>Sharpe Ratio:</span>
+                <span className="font-medium">
+                  {backtestResult.performanceMetrics.sharpeRatio.toFixed(2)}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span>Win Rate:</span>
+                <span className="font-medium">
+                  {(backtestResult.performanceMetrics.winRate * 100).toFixed(2)}%
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span>Total Trades:</span>
+                <span className="font-medium">{backtestResult.performanceMetrics.totalTrades}</span>
+              </div>
+            </div>
+          </div>
+        )}
       </CardContent>
+      <CardFooter>
+        <Button 
+          onClick={handleRunBacktest} 
+          disabled={isRunningBacktest}
+          className="w-full"
+        >
+          <PlayCircle className="mr-2 h-4 w-4" />
+          {isRunningBacktest ? "Running Backtest..." : "Run Backtest"}
+        </Button>
+      </CardFooter>
     </Card>
   );
 };
