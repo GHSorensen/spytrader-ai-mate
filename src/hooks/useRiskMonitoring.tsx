@@ -13,7 +13,7 @@ import {
   applyRiskActions,
   learnFromRiskActionOutcomes,
   getMonitoringLog
-} from '@/services/riskMonitoringService';
+} from '@/services/riskMonitoring/riskMonitoringService';
 import { AITradingSettings, RiskToleranceType, SpyTrade } from '@/lib/types/spy';
 
 // Cache for historical market data
