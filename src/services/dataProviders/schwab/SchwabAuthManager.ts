@@ -1,0 +1,211 @@
+
+import { DataProviderConfig } from "@/lib/types/spy/dataProvider";
+import { SchwabAuth } from "./auth";
+import { toast } from "@/components/ui/use-toast";
+
+export class SchwabAuthManager {
+  private auth: SchwabAuth;
+  private config: DataProviderConfig;
+  private updateTokens: (accessToken: string, refreshToken: string, expiryTime: Date) => void;
+  private updateConnectionStatus: (connected: boolean, errorMessage?: string) => void;
+  private refreshTokenInterval: number | null = null;
+  private stateParam: string | null = null;
+
+  constructor(
+    config: DataProviderConfig,
+    updateTokens: (accessToken: string, refreshToken: string, expiryTime: Date) => void,
+    updateConnectionStatus: (connected: boolean, errorMessage?: string) => void
+  ) {
+    this.config = config;
+    this.auth = new SchwabAuth(config);
+    this.updateTokens = updateTokens;
+    this.updateConnectionStatus = updateConnectionStatus;
+  }
+
+  /**
+   * Get OAuth authorization URL
+   */
+  getAuthorizationUrl(): string {
+    try {
+      return this.auth.getAuthorizationUrl();
+    } catch (error) {
+      console.error("Failed to generate authorization URL:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Handle OAuth callback with authorization code
+   */
+  async handleOAuthCallback(code: string, state?: string): Promise<boolean> {
+    try {
+      if (state && this.stateParam && !this.auth.verifyStateParam(state, this.stateParam)) {
+        throw new Error("Invalid state parameter, possible CSRF attack");
+      }
+
+      const tokenResponse = await this.auth.getAccessToken(code);
+      
+      // Calculate expiry time from expiresIn seconds
+      const expiryTime = new Date();
+      expiryTime.setSeconds(expiryTime.getSeconds() + tokenResponse.expiresIn);
+      
+      // Update tokens in parent service
+      this.updateTokens(tokenResponse.accessToken, tokenResponse.refreshToken, expiryTime);
+      
+      // Update connection status
+      this.updateConnectionStatus(true);
+      
+      // Set up automatic token refresh
+      this.setupTokenRefresh(tokenResponse.expiresIn);
+      
+      toast({
+        title: "Schwab Connected",
+        description: "Successfully authenticated with Schwab API",
+      });
+      
+      return true;
+    } catch (error) {
+      console.error("OAuth callback error:", error);
+      
+      this.updateConnectionStatus(false, error instanceof Error ? error.message : "Authentication failed");
+      
+      toast({
+        title: "Authentication Failed",
+        description: error instanceof Error ? error.message : "Authentication failed",
+        variant: "destructive",
+      });
+      
+      return false;
+    }
+  }
+
+  /**
+   * Connect to Schwab API - basic connection or OAuth flow
+   */
+  async connect(): Promise<boolean> {
+    try {
+      if (!this.config.apiKey) {
+        throw new Error("Schwab API key not provided");
+      }
+
+      // Check if we have a refresh token to use
+      if (this.config.refreshToken) {
+        return this.refreshToken();
+      }
+      
+      // For development without real OAuth flow, we simulate successful connection
+      if (process.env.NODE_ENV === 'development') {
+        console.log("Development mode: Simulating successful connection to Schwab API");
+        
+        // Mock token for development
+        const accessToken = "mock-schwab-token-" + Date.now();
+        const tokenExpiry = new Date();
+        tokenExpiry.setHours(tokenExpiry.getHours() + 1); // Token valid for 1 hour
+        
+        this.updateTokens(accessToken, "mock-refresh-token", tokenExpiry);
+        this.updateConnectionStatus(true);
+        
+        toast({
+          title: "Schwab Connected (Dev Mode)",
+          description: "Successfully connected to Schwab API in development mode",
+        });
+        
+        return true;
+      }
+      
+      // In production, we would initiate the OAuth flow by redirecting
+      // to the authorization URL, but we can't do redirects within this service
+      // So we'll return false and let the UI handle the redirect
+      return false;
+    } catch (error) {
+      console.error("Schwab connection error:", error);
+      
+      this.updateConnectionStatus(false, error instanceof Error ? error.message : "Unknown error");
+      
+      toast({
+        title: "Connection Failed",
+        description: error instanceof Error ? error.message : "Unknown error",
+        variant: "destructive",
+      });
+      
+      return false;
+    }
+  }
+
+  /**
+   * Refresh the access token using refresh token
+   */
+  async refreshToken(): Promise<boolean> {
+    try {
+      if (!this.config.refreshToken) {
+        throw new Error("No refresh token available");
+      }
+      
+      const tokenResponse = await this.auth.refreshAccessToken(this.config.refreshToken);
+      
+      // Calculate expiry time from expiresIn seconds
+      const expiryTime = new Date();
+      expiryTime.setSeconds(expiryTime.getSeconds() + tokenResponse.expiresIn);
+      
+      // Update tokens in parent service
+      this.updateTokens(tokenResponse.accessToken, tokenResponse.refreshToken, expiryTime);
+      
+      // Update connection status
+      this.updateConnectionStatus(true);
+      
+      // Set up automatic token refresh
+      this.setupTokenRefresh(tokenResponse.expiresIn);
+      
+      return true;
+    } catch (error) {
+      console.error("Token refresh error:", error);
+      
+      this.updateConnectionStatus(false, error instanceof Error ? error.message : "Token refresh failed");
+      
+      // Clear tokens on refresh failure
+      this.clearTokens();
+      
+      return false;
+    }
+  }
+
+  /**
+   * Clear all tokens and intervals
+   */
+  clearTokens(): void {
+    // Clear token refresh interval
+    if (this.refreshTokenInterval !== null) {
+      window.clearInterval(this.refreshTokenInterval);
+      this.refreshTokenInterval = null;
+    }
+    
+    // Update with null tokens
+    this.updateTokens("", "", new Date(0));
+  }
+
+  /**
+   * Set up automatic token refresh
+   */
+  private setupTokenRefresh(expiresInSeconds: number): void {
+    // Clear any existing refresh interval
+    if (this.refreshTokenInterval !== null) {
+      window.clearInterval(this.refreshTokenInterval);
+    }
+    
+    // Refresh the token 5 minutes before it expires
+    const refreshMs = Math.max(0, (expiresInSeconds - 300) * 1000);
+    
+    // Set up the interval
+    this.refreshTokenInterval = window.setInterval(() => {
+      this.refreshToken().catch(error => {
+        console.error("Automatic token refresh failed:", error);
+        
+        // If refresh fails, clear the interval
+        if (this.refreshTokenInterval !== null) {
+          window.clearInterval(this.refreshTokenInterval);
+          this.refreshTokenInterval = null;
+        }
+      });
+    }, refreshMs);
+  }
+}
