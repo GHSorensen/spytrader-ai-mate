@@ -25,11 +25,18 @@ export class OAuthCallbackHandler {
    */
   async handleCallback(code: string, state?: string): Promise<boolean> {
     try {
+      console.log("Handling OAuth callback with code:", code, "and state:", state);
+      
       if (state && this.stateParam && !this.auth.verifyStateParam(state, this.stateParam)) {
+        console.error("State parameter verification failed", { 
+          received: state,
+          expected: this.stateParam
+        });
         throw new Error("Invalid state parameter, possible CSRF attack");
       }
 
       const tokenResponse = await this.auth.getAccessToken(code);
+      console.log("Token response received successfully");
       
       // Use token manager to handle the token update
       this.tokenManager.handleTokenUpdate(tokenResponse);

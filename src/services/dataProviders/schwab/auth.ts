@@ -1,4 +1,3 @@
-
 import { DataProviderConfig } from "@/lib/types/spy/dataProvider";
 import * as endpoints from './endpoints';
 
@@ -11,7 +10,24 @@ export class SchwabAuth {
   
   constructor(config: DataProviderConfig) {
     this.config = config;
-    this.redirectUri = config.callbackUrl || window.location.origin + '/auth/callback';
+    
+    // Use the provided callback URL or default to a secure URL structure
+    // Note: Schwab requires HTTPS for callback URLs, even for development
+    if (config.callbackUrl) {
+      this.redirectUri = config.callbackUrl;
+    } else {
+      // Default to production URL if in production mode
+      if (process.env.NODE_ENV === 'production') {
+        this.redirectUri = window.location.origin + '/auth/callback';
+      } else {
+        // In development, we need to use a secure URL that will be properly redirected
+        // This URL should be registered in the Schwab Developer Portal
+        this.redirectUri = 'https://your-registered-domain.com/auth/callback';
+        console.warn('Using default secure callback URL. Make sure this is registered in the Schwab Developer Portal.');
+      }
+    }
+    
+    console.log('Using redirect URI:', this.redirectUri);
   }
   
   /**
