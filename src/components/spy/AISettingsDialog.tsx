@@ -6,16 +6,15 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { RiskToleranceType } from '@/lib/types/spy';
 import { toast } from '@/components/ui/use-toast';
 import { AISettingsDialogProps, DEFAULT_SETTINGS } from './settings/AISettingsTypes';
 
-// Import our new components
+// Import our components
 import { AISettingsHeader } from './settings/AISettingsHeader';
 import { AISettingsFooter } from './settings/AISettingsFooter';
 import { AISettingsTabs } from './settings/AISettingsTabs';
 
-// Import the existing tab components
+// Import the tab components
 import { StrategyTab } from './settings/StrategyTab';
 import { RiskManagementTab } from './settings/RiskManagementTab';
 import { MarketConditionsTab } from './settings/MarketConditionsTab';
