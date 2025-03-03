@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Dialog, 
   DialogContent, 
@@ -18,10 +18,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Save, Server, X } from "lucide-react";
+import { Save, Server, X, RefreshCw, CheckCircle, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BrokerSettings as BrokerSettingsType, BrokerType } from '@/lib/types/spy/broker';
 import { toast } from '@/components/ui/use-toast';
+import { useDataProvider } from '@/hooks/useDataProvider';
 
 interface BrokerSettingsProps {
   open: boolean;
@@ -42,6 +43,9 @@ export const BrokerSettings: React.FC<BrokerSettingsProps> = ({
     currentSettings.type === 'interactive-brokers' ? 'ib' : 
     currentSettings.type === 'td-ameritrade' ? 'td' : 'none'
   );
+  
+  // Get data provider for connection testing
+  const { provider, status, isConnecting, connect } = useDataProvider(settings);
 
   // Reset local state when dialog opens
   React.useEffect(() => {
@@ -64,10 +68,8 @@ export const BrokerSettings: React.FC<BrokerSettingsProps> = ({
     const updatedSettings: BrokerSettingsType = {
       ...settings,
       type: brokerType,
-      isConnected: brokerType !== 'none' && Boolean(
-        settings.credentials.apiKey && 
-        (brokerType === 'interactive-brokers' ? settings.credentials.accountId : true)
-      ),
+      isConnected: status.connected,
+      lastConnected: status.connected ? new Date() : undefined
     };
     
     onSave(updatedSettings);
@@ -103,6 +105,22 @@ export const BrokerSettings: React.FC<BrokerSettingsProps> = ({
       ...prev,
       paperTrading: enabled
     }));
+  };
+  
+  // Test connection to broker
+  const testConnection = async () => {
+    if (provider) {
+      try {
+        await connect();
+      } catch (error) {
+        console.error('Error testing connection:', error);
+        toast({
+          title: "Connection Error",
+          description: error instanceof Error ? error.message : "Unknown error connecting to broker",
+          variant: "destructive"
+        });
+      }
+    }
   };
 
   return (
@@ -167,6 +185,24 @@ export const BrokerSettings: React.FC<BrokerSettingsProps> = ({
                     onCheckedChange={togglePaperTrading}
                   />
                 </div>
+                
+                <div className="pt-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={testConnection} 
+                    disabled={isConnecting || !settings.credentials.apiKey}
+                    className="w-full"
+                  >
+                    {isConnecting ? (
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    ) : status.connected ? (
+                      <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
+                    ) : (
+                      <AlertCircle className="h-4 w-4 mr-2" />
+                    )}
+                    Test Connection
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -212,6 +248,24 @@ export const BrokerSettings: React.FC<BrokerSettingsProps> = ({
                     checked={settings.paperTrading}
                     onCheckedChange={togglePaperTrading}
                   />
+                </div>
+                
+                <div className="pt-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={testConnection} 
+                    disabled={isConnecting || !settings.credentials.apiKey}
+                    className="w-full"
+                  >
+                    {isConnecting ? (
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    ) : status.connected ? (
+                      <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
+                    ) : (
+                      <AlertCircle className="h-4 w-4 mr-2" />
+                    )}
+                    Test Connection
+                  </Button>
                 </div>
               </CardContent>
             </Card>
