@@ -3,17 +3,19 @@ import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { RiskToleranceType } from '@/lib/types/spy';
 import { toast } from '@/components/ui/use-toast';
 import { AISettingsDialogProps, DEFAULT_SETTINGS } from './settings/AISettingsTypes';
+
+// Import our new components
+import { AISettingsHeader } from './settings/AISettingsHeader';
+import { AISettingsFooter } from './settings/AISettingsFooter';
+import { AISettingsTabs } from './settings/AISettingsTabs';
+
+// Import the existing tab components
 import { StrategyTab } from './settings/StrategyTab';
 import { RiskManagementTab } from './settings/RiskManagementTab';
 import { MarketConditionsTab } from './settings/MarketConditionsTab';
@@ -65,22 +67,11 @@ export const AISettingsDialog = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[800px] max-h-[90vh]">
-        <DialogHeader>
-          <DialogTitle>AI Trading Settings</DialogTitle>
-          <DialogDescription>
-            Configure how the AI agent manages your SPY options trades.
-          </DialogDescription>
-        </DialogHeader>
+        <AISettingsHeader />
         
         <ScrollArea className="pr-4 max-h-[calc(90vh-180px)]">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
-            <TabsList className="grid grid-cols-5 w-full">
-              <TabsTrigger value="strategy">Strategy</TabsTrigger>
-              <TabsTrigger value="risk">Risk Management</TabsTrigger>
-              <TabsTrigger value="market">Market Conditions</TabsTrigger>
-              <TabsTrigger value="backtest">Backtesting</TabsTrigger>
-              <TabsTrigger value="advanced">Advanced</TabsTrigger>
-            </TabsList>
+            <AISettingsTabs activeTab={activeTab} />
             
             <TabsContent value="strategy" className="space-y-4 mt-4">
               <StrategyTab 
@@ -122,10 +113,10 @@ export const AISettingsDialog = ({
           </Tabs>
         </ScrollArea>
         
-        <DialogFooter className="mt-6">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleSaveSettings}>Save Settings</Button>
-        </DialogFooter>
+        <AISettingsFooter 
+          onCancel={() => onOpenChange(false)}
+          onSave={handleSaveSettings}
+        />
       </DialogContent>
     </Dialog>
   );
