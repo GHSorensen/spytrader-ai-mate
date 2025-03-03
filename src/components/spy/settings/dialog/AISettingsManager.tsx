@@ -1,11 +1,11 @@
 
-import React, { useState, useEffect } from 'react';
-import { toast } from '@/components/ui/use-toast';
+import React from 'react';
 import { 
-  AISettingsDialogProps, 
-  DEFAULT_SETTINGS 
+  AISettingsDialogProps
 } from '../AISettingsTypes';
 import { AITradingSettings } from '@/lib/types/spy';
+import { useAISettingsState } from './hooks/useAISettingsState';
+import { useAISettingsActions } from './hooks/useAISettingsActions';
 
 interface AISettingsManagerProps extends AISettingsDialogProps {
   children: (props: AISettingsManagerChildProps) => React.ReactNode;
@@ -39,86 +39,35 @@ export const AISettingsManager: React.FC<AISettingsManagerProps> = ({
   onRiskToleranceChange,
   children
 }) => {
-  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
-  const [initialSettings, setInitialSettings] = useState(DEFAULT_SETTINGS);
-  const [activeTab, setActiveTab] = useState('strategy');
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [hasChanges, setHasChanges] = useState(false);
+  const {
+    settings,
+    setSettings,
+    initialSettings,
+    setInitialSettings,
+    activeTab,
+    setActiveTab,
+    showConfirmDialog,
+    setShowConfirmDialog,
+    hasChanges
+  } = useAISettingsState(open);
   
-  // Set initial settings when the dialog opens
-  useEffect(() => {
-    if (open) {
-      setInitialSettings({...settings});
-    }
-  }, [open]);
-  
-  // Check if settings have changed
-  useEffect(() => {
-    if (open) {
-      setHasChanges(JSON.stringify(settings) !== JSON.stringify(initialSettings));
-    }
-  }, [settings, initialSettings, open]);
-  
-  const updateSettings = <K extends keyof typeof settings>(
-    key: K,
-    value: typeof settings[K]
-  ) => {
-    setSettings((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
-  };
-
-  const updateNestedSettings = <K extends keyof typeof settings, N extends keyof typeof settings[K]>(
-    parentKey: K,
-    childKey: N,
-    value: any
-  ) => {
-    setSettings((prev) => ({
-      ...prev,
-      [parentKey]: {
-        ...(prev[parentKey] as object),
-        [childKey]: value,
-      },
-    }));
-  };
-  
-  const handleSaveSettings = () => {
-    // Here you would save the settings to your backend or local storage
-    toast({
-      title: "AI Settings Saved",
-      description: "Your trading preferences have been updated",
-    });
-    setInitialSettings({...settings});
-    setHasChanges(false);
-    onOpenChange(false);
-  };
-
-  const handleResetSettings = () => {
-    setSettings(DEFAULT_SETTINGS);
-    toast({
-      title: "Settings Reset",
-      description: "All settings have been reset to default values",
-      variant: "default",
-    });
-  };
-  
-  const handleCancel = () => {
-    if (hasChanges) {
-      setShowConfirmDialog(true);
-    } else {
-      onOpenChange(false);
-    }
-  };
-  
-  const handleConfirmCancel = () => {
-    setShowConfirmDialog(false);
-    onOpenChange(false);
-  };
-  
-  const handleCancelDialog = () => {
-    setShowConfirmDialog(false);
-  };
+  const {
+    updateSettings,
+    updateNestedSettings,
+    handleSaveSettings,
+    handleResetSettings,
+    handleCancel,
+    handleConfirmCancel,
+    handleCancelDialog
+  } = useAISettingsActions({
+    settings,
+    setSettings,
+    initialSettings,
+    setInitialSettings,
+    hasChanges,
+    setShowConfirmDialog,
+    onOpenChange
+  });
 
   const childProps: AISettingsManagerChildProps = {
     settings,
