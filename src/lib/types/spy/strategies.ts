@@ -17,4 +17,18 @@ export interface TradingStrategy {
   marketCondition: MarketCondition;
   averageHoldingPeriod: number; // in days
   successRate: number; // percentage based on backtest
+  
+  // New fields for enhanced machine learning capabilities
+  adaptiveLearning?: boolean; // whether the strategy auto-adapts based on ML insights
+  performanceScore?: number; // composite score from 0-100
+  patternEffectiveness?: Record<string, number>; // effectiveness score for different market patterns
+  lastOptimized?: Date; // when parameters were last optimized
+  optimizationHistory?: {
+    date: Date;
+    parameter: string;
+    oldValue: any;
+    newValue: any;
+    performanceChange: number; // percentage improvement
+  }[];
+  confidenceThreshold?: number; // minimum confidence score to apply ML suggestions (0-1)
 }
