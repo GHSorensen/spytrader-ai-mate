@@ -3,6 +3,8 @@ export type OptionType = 'CALL' | 'PUT';
 export type OptionExpiry = 'daily' | 'weekly' | 'monthly';
 export type TradeStatus = 'pending' | 'active' | 'closed' | 'cancelled';
 export type RiskToleranceType = 'conservative' | 'moderate' | 'aggressive';
+export type MarketCondition = 'bullish' | 'bearish' | 'neutral' | 'volatile';
+export type TimeOfDayPreference = 'market-open' | 'midday' | 'market-close' | 'any';
 
 export interface SpyOption {
   id: string;
@@ -65,6 +67,9 @@ export interface TradingStrategy {
   maxPositionSize: number;
   maxLossPerTrade: number;
   profitTarget: number; // percentage
+  marketCondition: MarketCondition;
+  averageHoldingPeriod: number; // in days
+  successRate: number; // percentage based on backtest
 }
 
 export interface PerformanceMetrics {
@@ -81,6 +86,12 @@ export interface PerformanceMetrics {
   successfulTrades: number;
   failedTrades: number;
   averageDuration: number; // in minutes
+  bestTrade: number;
+  worstTrade: number;
+  consecutiveWins: number;
+  consecutiveLosses: number;
+  returnsVolatility: number;
+  sortinoRatio: number;
 }
 
 export interface AITradingSettings {
@@ -93,5 +104,56 @@ export interface AITradingSettings {
   considerFedMeetings: boolean;
   enableHedging: boolean;
   minimumConfidenceScore: number;
-  preferredTimeOfDay: string; // 'market-open', 'midday', 'market-close', 'any'
+  preferredTimeOfDay: TimeOfDayPreference;
+  positionSizing: {
+    type: 'fixed' | 'percentage' | 'kelly';
+    value: number; // dollar amount, percentage of portfolio, or kelly criterion multiplier
+  };
+  stopLossSettings: {
+    enabled: boolean;
+    type: 'fixed' | 'percentage' | 'atr-based';
+    value: number;
+  };
+  takeProfitSettings: {
+    enabled: boolean;
+    type: 'fixed' | 'percentage' | 'risk-reward';
+    value: number;
+  };
+  marketConditionOverrides: {
+    [key in MarketCondition]?: {
+      enabled: boolean;
+      adjustedRisk: number; // 0-1, where 1 is full risk
+    };
+  };
+  backtestingSettings: {
+    startDate: Date;
+    endDate: Date;
+    initialCapital: number;
+    dataSource: string;
+    includeCommissions: boolean;
+    commissionPerTrade: number;
+    includeTaxes: boolean;
+    taxRate: number;
+  };
+}
+
+export interface BacktestResult {
+  strategyId: string;
+  strategyName: string;
+  riskProfile: RiskToleranceType;
+  performanceMetrics: PerformanceMetrics;
+  equityCurve: {date: Date; equity: number}[];
+  trades: SpyTrade[];
+  startDate: Date;
+  endDate: Date;
+  initialCapital: number;
+  finalCapital: number;
+  maxDrawdown: {
+    amount: number;
+    percentage: number;
+    startDate: Date;
+    endDate: Date;
+  };
+  annualizedReturn: number;
+  marketBenchmarkReturn: number;
 }
