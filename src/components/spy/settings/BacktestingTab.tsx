@@ -17,7 +17,7 @@ import {
 import { Calendar, Info, LineChart, PlayCircle } from 'lucide-react';
 import { AITradingSettings, BacktestResult } from '@/lib/types/spy';
 import { runBacktest } from '@/services/backtestingService';
-import { OptionExpiry } from '@/lib/types/spy/common';
+import { OptionExpiry, MarketCondition } from '@/lib/types/spy/common';
 
 interface BacktestingTabProps {
   settings: AITradingSettings;
@@ -49,11 +49,11 @@ export const BacktestingTab: React.FC<BacktestingTabProps> = ({
         timeFrame: "1d",
         optionType: "BOTH" as const, // Type assertion to ensure it matches the expected type
         expiryPreference: ["weekly", "monthly"] as Array<OptionExpiry>, // Explicitly cast as mutable array of OptionExpiry
-        deltaRange: [0.3, 0.7],
+        deltaRange: [0.3, 0.7] as [number, number], // Explicitly cast as tuple
         maxPositionSize: 10,
         maxLossPerTrade: 25,
         profitTarget: 50,
-        marketCondition: "neutral" as const,
+        marketCondition: "neutral" as MarketCondition,
         averageHoldingPeriod: 5,
         successRate: 0.6
       };
