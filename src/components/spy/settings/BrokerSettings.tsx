@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { 
   Dialog, 
   DialogContent, 
@@ -14,15 +14,14 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Save, Server, X, RefreshCw, CheckCircle, AlertCircle } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BrokerSettings as BrokerSettingsType, BrokerType } from '@/lib/types/spy/broker';
+import { Save, Server, X } from "lucide-react";
+import { BrokerSettings as BrokerSettingsType } from '@/lib/types/spy/broker';
 import { toast } from '@/components/ui/use-toast';
-import { useDataProvider } from '@/hooks/useDataProvider';
+import { useBrokerSettings } from '@/hooks/useBrokerSettings';
+import { InteractiveBrokersTabContent } from './broker/InteractiveBrokersTabContent';
+import { TDAmeritradeTabContent } from './broker/TDAmeritradeTabContent';
+import { NoBrokerTabContent } from './broker/NoBrokerTabContent';
 
 interface BrokerSettingsProps {
   open: boolean;
@@ -37,90 +36,34 @@ export const BrokerSettings: React.FC<BrokerSettingsProps> = ({
   currentSettings,
   onSave
 }) => {
-  // Local state to track form changes
-  const [settings, setSettings] = useState<BrokerSettingsType>(currentSettings);
-  const [activeTab, setActiveTab] = useState<'ib' | 'td' | 'none'>(
-    currentSettings.type === 'interactive-brokers' ? 'ib' : 
-    currentSettings.type === 'td-ameritrade' ? 'td' : 'none'
-  );
-  
-  // Get data provider for connection testing
-  const { provider, status, isConnecting, connect } = useDataProvider(settings);
-
-  // Reset local state when dialog opens
-  React.useEffect(() => {
-    if (open) {
-      setSettings(currentSettings);
-      setActiveTab(
-        currentSettings.type === 'interactive-brokers' ? 'ib' : 
-        currentSettings.type === 'td-ameritrade' ? 'td' : 'none'
-      );
-    }
-  }, [open, currentSettings]);
+  const {
+    settings,
+    activeTab,
+    setActiveTab,
+    status,
+    isConnecting,
+    updateCredential,
+    togglePaperTrading,
+    testConnection,
+    prepareSettingsForSave
+  } = useBrokerSettings({ currentSettings });
 
   const handleSave = () => {
-    // Set the broker type based on the active tab
-    const brokerType: BrokerType = 
-      activeTab === 'ib' ? 'interactive-brokers' : 
-      activeTab === 'td' ? 'td-ameritrade' : 'none';
-    
-    // Update the settings with the broker type
-    const updatedSettings: BrokerSettingsType = {
-      ...settings,
-      type: brokerType,
-      isConnected: status.connected,
-      lastConnected: status.connected ? new Date() : undefined
-    };
-    
+    const updatedSettings = prepareSettingsForSave();
     onSave(updatedSettings);
     onOpenChange(false);
     
     toast({
       title: "Broker Settings Saved",
       description: `Settings saved for ${
-        brokerType === 'interactive-brokers' ? 'Interactive Brokers' : 
-        brokerType === 'td-ameritrade' ? 'TD Ameritrade' : 'No Broker'
+        updatedSettings.type === 'interactive-brokers' ? 'Interactive Brokers' : 
+        updatedSettings.type === 'td-ameritrade' ? 'TD Ameritrade' : 'No Broker'
       }`,
     });
   };
 
   const handleCancel = () => {
     onOpenChange(false);
-  };
-
-  // Update credentials in the settings state
-  const updateCredential = (key: string, value: string) => {
-    setSettings(prev => ({
-      ...prev,
-      credentials: {
-        ...prev.credentials,
-        [key]: value
-      }
-    }));
-  };
-
-  // Toggle paper trading
-  const togglePaperTrading = (enabled: boolean) => {
-    setSettings(prev => ({
-      ...prev,
-      paperTrading: enabled
-    }));
-  };
-  
-  // Test connection to broker
-  const testConnection = async () => {
-    if (provider) {
-      try {
-        await connect();
-      } catch (error) {
-        console.error('Error testing connection:', error);
-        toast({
-          title: "Connection Error",
-          description: error instanceof Error ? error.message : "Unknown error connecting to broker",
-          variant: "destructive"
-        });
-      }
-    }
   };
 
   return (
@@ -144,147 +87,29 @@ export const BrokerSettings: React.FC<BrokerSettingsProps> = ({
           </TabsList>
 
           <TabsContent value="ib">
-            <Card>
-              <CardHeader>
-                <CardTitle>Interactive Brokers API</CardTitle>
-                <CardDescription>
-                  Enter your IBKR credentials to connect via the Client Portal API
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="ibkr-api-key">API Key</Label>
-                  <Input 
-                    id="ibkr-api-key" 
-                    placeholder="Enter your IBKR API key"
-                    value={settings.credentials.apiKey || ''}
-                    onChange={(e) => updateCredential('apiKey', e.target.value)}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="ibkr-account-id">Account ID</Label>
-                  <Input 
-                    id="ibkr-account-id" 
-                    placeholder="Enter your IBKR account ID"
-                    value={settings.credentials.accountId || ''}
-                    onChange={(e) => updateCredential('accountId', e.target.value)}
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between pt-2">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="paper-trading">Paper Trading</Label>
-                    <div className="text-sm text-muted-foreground">
-                      Use paper trading account for testing
-                    </div>
-                  </div>
-                  <Switch
-                    id="paper-trading"
-                    checked={settings.paperTrading}
-                    onCheckedChange={togglePaperTrading}
-                  />
-                </div>
-                
-                <div className="pt-2">
-                  <Button 
-                    variant="outline" 
-                    onClick={testConnection} 
-                    disabled={isConnecting || !settings.credentials.apiKey}
-                    className="w-full"
-                  >
-                    {isConnecting ? (
-                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                    ) : status.connected ? (
-                      <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
-                    ) : (
-                      <AlertCircle className="h-4 w-4 mr-2" />
-                    )}
-                    Test Connection
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <InteractiveBrokersTabContent 
+              settings={settings}
+              updateCredential={updateCredential}
+              togglePaperTrading={togglePaperTrading}
+              testConnection={testConnection}
+              isConnecting={isConnecting}
+              status={status}
+            />
           </TabsContent>
 
           <TabsContent value="td">
-            <Card>
-              <CardHeader>
-                <CardTitle>TD Ameritrade API</CardTitle>
-                <CardDescription>
-                  Enter your TD Ameritrade developer credentials
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="td-api-key">Consumer Key</Label>
-                  <Input 
-                    id="td-api-key" 
-                    placeholder="Enter your TD Ameritrade consumer key"
-                    value={settings.credentials.apiKey || ''}
-                    onChange={(e) => updateCredential('apiKey', e.target.value)}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="td-secret-key">Redirect URI</Label>
-                  <Input 
-                    id="td-secret-key" 
-                    placeholder="Enter your redirect URI"
-                    value={settings.credentials.secretKey || ''}
-                    onChange={(e) => updateCredential('secretKey', e.target.value)}
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between pt-2">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="paper-trading-td">Paper Trading</Label>
-                    <div className="text-sm text-muted-foreground">
-                      Use paper trading account for testing
-                    </div>
-                  </div>
-                  <Switch
-                    id="paper-trading-td"
-                    checked={settings.paperTrading}
-                    onCheckedChange={togglePaperTrading}
-                  />
-                </div>
-                
-                <div className="pt-2">
-                  <Button 
-                    variant="outline" 
-                    onClick={testConnection} 
-                    disabled={isConnecting || !settings.credentials.apiKey}
-                    className="w-full"
-                  >
-                    {isConnecting ? (
-                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                    ) : status.connected ? (
-                      <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
-                    ) : (
-                      <AlertCircle className="h-4 w-4 mr-2" />
-                    )}
-                    Test Connection
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <TDAmeritradeTabContent 
+              settings={settings}
+              updateCredential={updateCredential}
+              togglePaperTrading={togglePaperTrading}
+              testConnection={testConnection}
+              isConnecting={isConnecting}
+              status={status}
+            />
           </TabsContent>
 
           <TabsContent value="none">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex flex-col items-center justify-center py-8 text-center space-y-3">
-                  <Server className="h-12 w-12 text-muted-foreground" />
-                  <div>
-                    <h3 className="text-lg font-medium">No Broker Connection</h3>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Without a broker connection, you'll need to execute trades manually
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <NoBrokerTabContent />
           </TabsContent>
         </Tabs>
 
