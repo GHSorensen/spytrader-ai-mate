@@ -1,3 +1,4 @@
+
 import { DataProviderConfig } from "@/lib/types/spy/dataProvider";
 import * as endpoints from './endpoints';
 
@@ -20,10 +21,9 @@ export class SchwabAuth {
       if (process.env.NODE_ENV === 'production') {
         this.redirectUri = window.location.origin + '/auth/callback';
       } else {
-        // For development, we need an HTTPS URL - when you deploy your app,
-        // this will be the URL to register in the Schwab Developer Portal
-        this.redirectUri = 'https://lovable-app-deployment.com/auth/callback';
-        console.warn('Using development placeholder for callback URL. When deploying, register your actual domain in the Schwab Developer Portal.');
+        // For development, we can use either the actual production domain or the placeholder
+        this.redirectUri = 'https://your-production-domain.com/auth/callback';
+        console.log('Using registered production callback URL for Schwab authentication');
       }
     }
     

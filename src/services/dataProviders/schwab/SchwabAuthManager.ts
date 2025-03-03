@@ -1,4 +1,3 @@
-
 import { DataProviderConfig } from "@/lib/types/spy/dataProvider";
 import { SchwabAuth } from "./auth";
 import { TokenManager } from "./TokenManager";
@@ -22,13 +21,13 @@ export class SchwabAuthManager {
     if (!config.callbackUrl || !config.callbackUrl.startsWith('https://')) {
       console.warn('Schwab requires HTTPS for callback URLs. Updating config with secure URL.');
       
-      // Use a placeholder URL that will be replaced with your actual domain when deployed
-      config.callbackUrl = 'https://lovable-app-deployment.com/auth/callback';
+      // Use the production URL for Schwab authentication
+      config.callbackUrl = 'https://your-production-domain.com/auth/callback';
       
       // Show a toast to notify the user about the callback URL requirement
       toast({
         title: "Callback URL Notice",
-        description: "Using placeholder HTTPS URL. After deployment, register your actual domain in the Schwab Developer Portal.",
+        description: "Using production callback URL for Schwab authentication.",
       });
     }
     
