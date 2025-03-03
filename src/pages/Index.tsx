@@ -4,6 +4,7 @@ import { SpyHeader } from '@/components/spy/SpyHeader';
 import { SpyOverview } from '@/components/spy/SpyOverview';
 import { OptionChain } from '@/components/spy/OptionChain';
 import { ActiveTrades } from '@/components/spy/ActiveTrades';
+import { PerformanceDashboard } from '@/components/spy/PerformanceDashboard';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, RefreshCw, Settings, Sliders } from 'lucide-react';
 import {
@@ -84,10 +85,19 @@ const Index = () => {
         </div>
         
         {/* Dashboard Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <SpyOverview />
-          <ActiveTrades riskTolerance={riskTolerance} />
-          <OptionChain />
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+          <div className="col-span-1 md:col-span-4">
+            <SpyOverview />
+          </div>
+          <div className="col-span-1 md:col-span-4">
+            <ActiveTrades riskTolerance={riskTolerance} />
+          </div>
+          <div className="col-span-1 md:col-span-4">
+            <OptionChain />
+          </div>
+          <div className="col-span-1 md:col-span-12">
+            <PerformanceDashboard />
+          </div>
         </div>
       </main>
 
