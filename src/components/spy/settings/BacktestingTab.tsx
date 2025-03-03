@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -13,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Calendar, Info, LineChart } from 'lucide-react';
-import { AITradingSettings } from '@/lib/types/spyOptions';
+import { AITradingSettings } from '@/lib/types/spy';
 
 interface BacktestingTabProps {
   settings: AITradingSettings;

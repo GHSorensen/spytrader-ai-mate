@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { RiskToleranceType } from '@/lib/types/spyOptions';
+import { RiskToleranceType } from '@/lib/types/spy';
 import { toast } from '@/components/ui/use-toast';
 import { AISettingsDialogProps, DEFAULT_SETTINGS } from './settings/AISettingsTypes';
 import { StrategyTab } from './settings/StrategyTab';

@@ -4,7 +4,7 @@ import {
   RiskToleranceType, 
   MarketCondition, 
   TimeOfDayPreference 
-} from '@/lib/types/spyOptions';
+} from '@/lib/types/spy';
 
 export interface AISettingsDialogProps {
   open: boolean;

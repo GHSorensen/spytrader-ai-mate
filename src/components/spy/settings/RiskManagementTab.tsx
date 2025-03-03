@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -12,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DollarSign, AlertTriangle, TrendingUp, Percent } from 'lucide-react';
-import { AITradingSettings } from '@/lib/types/spyOptions';
+import { AITradingSettings } from '@/lib/types/spy';
 
 interface RiskManagementTabProps {
   settings: AITradingSettings;

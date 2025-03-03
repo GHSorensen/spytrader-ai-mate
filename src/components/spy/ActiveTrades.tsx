@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -9,7 +8,7 @@ import { format } from 'date-fns';
 import { ArrowUpRight, ArrowDownRight, Eye } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { RiskToleranceType } from '@/lib/types/spyOptions';
+import type { RiskToleranceType } from '@/lib/types/spy';
 
 interface ActiveTradesProps {
   riskTolerance?: RiskToleranceType;

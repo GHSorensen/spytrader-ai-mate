@@ -5,7 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { BarChart4 } from 'lucide-react';
-import { AITradingSettings, MarketCondition } from '@/lib/types/spyOptions';
+import { AITradingSettings, MarketCondition } from '@/lib/types/spy';
 import { marketConditionDescriptions } from './AISettingsTypes';
 
 interface MarketConditionsTabProps {

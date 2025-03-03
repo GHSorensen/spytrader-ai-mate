@@ -1,9 +1,8 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { AITradingSettings } from '@/lib/types/spyOptions';
+import { AITradingSettings } from '@/lib/types/spy';
 
 interface AdvancedTabProps {
   settings: AITradingSettings;

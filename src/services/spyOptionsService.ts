@@ -1,4 +1,4 @@
-import { SpyOption, SpyMarketData, SpyTrade, OptionType, TradeStatus } from "@/lib/types/spyOptions";
+import { SpyOption, SpyMarketData, SpyTrade, OptionType, TradeStatus } from "@/lib/types/spy";
 
 // Mock data function for development - would be replaced with actual API calls
 const getMockSpyData = (): SpyMarketData => {

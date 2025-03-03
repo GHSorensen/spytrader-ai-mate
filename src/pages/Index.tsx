@@ -13,7 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { RiskToleranceType } from '@/lib/types/spyOptions';
+import { RiskToleranceType } from '@/lib/types/spy';
 import { AISettingsDialog } from '@/components/spy/AISettingsDialog';
 import { toast } from '@/components/ui/use-toast';
 

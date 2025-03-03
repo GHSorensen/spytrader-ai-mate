@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Shield, Gauge, Clock } from 'lucide-react';
-import { AITradingSettings, RiskToleranceType, TimeOfDayPreference } from '@/lib/types/spyOptions';
+import { AITradingSettings, RiskToleranceType, TimeOfDayPreference } from '@/lib/types/spy';
 import { strategyDescriptions } from './AISettingsTypes';
 
 interface StrategyTabProps {
