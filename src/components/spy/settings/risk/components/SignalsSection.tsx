@@ -2,31 +2,43 @@
 import React from 'react';
 import { RiskSignal } from '@/lib/types/spy/riskMonitoring';
 import { SignalItem } from './SignalItem';
+import { Skeleton } from "@/components/ui/skeleton";
+import { AlertTriangleIcon } from 'lucide-react';
 
 interface SignalsSectionProps {
-  latestSignals: RiskSignal[];
-  getRelativeTime: (timestamp: Date) => string;
+  signals: RiskSignal[];
+  isLoading: boolean;
 }
 
-export const SignalsSection: React.FC<SignalsSectionProps> = ({
-  latestSignals,
-  getRelativeTime
-}) => {
+export const SignalsSection: React.FC<SignalsSectionProps> = ({ signals, isLoading }) => {
+  if (isLoading) {
+    return (
+      <div>
+        <h3 className="text-sm font-medium mb-2">Risk Signals</h3>
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="mb-2">
+            <Skeleton className="h-20 w-full" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div>
-      <h3 className="font-medium mb-2">Recent Market Signals</h3>
-      {latestSignals.length === 0 ? (
-        <p className="text-sm text-muted-foreground italic">No recent signals detected</p>
-      ) : (
-        <div className="space-y-2">
-          {latestSignals.slice(0, 5).map(signal => (
-            <SignalItem 
-              key={signal.id} 
-              signal={signal} 
-              getRelativeTime={getRelativeTime} 
-            />
-          ))}
+      <h3 className="text-sm font-medium mb-2">Risk Signals</h3>
+      
+      {signals.length === 0 ? (
+        <div className="flex items-center p-4 border rounded-md bg-muted/20">
+          <AlertTriangleIcon className="h-4 w-4 text-muted-foreground mr-2" />
+          <p className="text-xs text-muted-foreground">
+            No risk signals detected
+          </p>
         </div>
+      ) : (
+        signals.map((signal) => (
+          <SignalItem key={signal.id} signal={signal} />
+        ))
       )}
     </div>
   );

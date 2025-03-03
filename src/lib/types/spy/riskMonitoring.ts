@@ -1,93 +1,57 @@
 
-import { MarketCondition, RiskToleranceType } from './common';
-import { SpyTrade, SpyMarketData } from './index';
+import { RiskToleranceType } from './common';
 
-export type RiskSignalSource = 
-  | 'technical'
-  | 'fundamental'
-  | 'volatility'
-  | 'momentum'
-  | 'sentiment'
-  | 'economic'
-  | 'geopolitical'
-  | 'earnings'
-  | 'federal_reserve'
-  | 'liquidity';
-
+export type RiskSignalSource = 'price' | 'volatility' | 'volume' | 'momentum' | 'sentiment' | 'technical' | 'fundamental';
+export type RiskSignalCondition = 'bullish' | 'bearish' | 'neutral' | 'volatile' | 'trending' | 'ranging';
 export type RiskSignalStrength = 'weak' | 'moderate' | 'strong' | 'extreme';
-
 export type RiskSignalDirection = 'bullish' | 'bearish' | 'neutral';
-
 export type RiskActionType = 
-  | 'reduce_position_size'
-  | 'increase_position_size'
-  | 'exit_trade'
-  | 'hedge_position'
-  | 'adjust_stop_loss'
-  | 'adjust_take_profit'
-  | 'no_action'
-  | 'enter_new_trade'
-  | 'convert_to_spread';
+  'exit_trade' | 
+  'reduce_position_size' | 
+  'hedge_position' | 
+  'adjust_stop_loss' | 
+  'adjust_take_profit' | 
+  'increase_position_size';
 
+// Risk signal detected by the system
 export interface RiskSignal {
   id: string;
   timestamp: Date;
   source: RiskSignalSource;
-  condition: MarketCondition;
+  condition: RiskSignalCondition;
   strength: RiskSignalStrength;
-  direction: RiskSignalDirection;
   description: string;
-  dataPoints?: Record<string, any>;
-  confidence: number; // 0-1
+  confidence: number; // 0 to 1
 }
 
+// Risk action recommended based on signals
 export interface RiskAction {
   id: string;
-  signalId: string;
   timestamp: Date;
-  actionType: RiskActionType;
-  tradeIds: string[];
+  type: RiskActionType;
   description: string;
-  parameters: Record<string, any>;
-  previousRisk: number; // 0-1
-  newRisk: number; // 0-1
-  userRiskTolerance: RiskToleranceType;
-  success?: boolean;
-  profitImpact?: number;
+  expectedImpact: {
+    profitPotential: number; // % change
+    riskReduction: number; // % change
+  };
+  appliedSuccess?: boolean;
+  appliedAt?: Date;
 }
 
-export interface RiskMonitoringLog {
-  signals: RiskSignal[];
-  actions: RiskAction[];
-  learningInsights: LearningInsight[];
-}
-
+// Learning insight from historical signals and actions
 export interface LearningInsight {
   id: string;
   timestamp: Date;
-  description: string;
   signalPattern: {
     source: RiskSignalSource;
-    condition: MarketCondition;
+    condition: RiskSignalCondition;
     strength: RiskSignalStrength;
     direction: RiskSignalDirection;
   };
-  successRate: number; // 0-1
-  averageProfitImpact: number;
-  recommendedActions: RiskActionType[];
-  confidence: number; // 0-1
-}
-
-export interface MarketRiskProfile {
-  currentCondition: MarketCondition;
-  volatilityLevel: number; // 0-1
-  sentimentScore: number; // -1 to 1
-  marketTrendStrength: number; // 0-1
-  marketTrendDirection: 'bullish' | 'bearish' | 'neutral';
-  keyRiskFactors: {
-    source: RiskSignalSource;
-    impact: number; // 0-1
-    description: string;
-  }[];
-  compositeRiskScore: number; // 0-1
+  actionTaken: RiskActionType;
+  successRate: number; // 0 to 1
+  profitImpact: number; // $ amount
+  description: string;
+  appliedCount: number;
+  relatedRiskTolerance: RiskToleranceType;
 }

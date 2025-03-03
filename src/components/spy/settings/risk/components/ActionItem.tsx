@@ -1,49 +1,44 @@
 
 import React from 'react';
-import { Check } from 'lucide-react';
-import { RiskAction, RiskActionType } from '@/lib/types/spy/riskMonitoring';
+import { RiskAction } from '@/lib/types/spy/riskMonitoring';
+import { CheckIcon, XIcon } from 'lucide-react';
 import { getActionBadge } from '../utils/insightFormatters';
 
 interface ActionItemProps {
   action: RiskAction;
-  getRelativeTime: (timestamp: Date) => string;
 }
 
-export const ActionItem: React.FC<ActionItemProps> = ({
-  action,
-  getRelativeTime
-}) => {
+export const ActionItem: React.FC<ActionItemProps> = ({ action }) => {
   return (
-    <div className="border rounded-lg p-2 text-sm">
+    <div className="p-2 border rounded-md mb-1.5 hover:bg-accent/5 transition-colors">
       <div className="flex justify-between items-center mb-1">
-        <div className="flex items-center gap-2">
-          <Check className="h-4 w-4 text-primary" />
-          {getActionBadge(action.actionType)}
+        <div className="flex items-center gap-1.5">
+          {getActionBadge(action.type)}
         </div>
-        <span className="text-xs text-muted-foreground">
-          {getRelativeTime(action.timestamp)}
-        </span>
+        <div className="text-xs text-muted-foreground">
+          {new Date(action.timestamp).toLocaleTimeString()}
+        </div>
       </div>
-      <p className="text-xs">{action.description}</p>
-      <div className="flex gap-3 mt-1">
-        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-          <span>Before:</span>
-          <div className="w-10 h-1.5 bg-gray-200 rounded-full">
-            <div 
-              className="h-full bg-orange-500 rounded-full" 
-              style={{width: `${action.previousRisk * 100}%`}}
-            />
-          </div>
+      
+      <p className="text-xs text-muted-foreground mb-1.5">{action.description}</p>
+      
+      <div className="flex justify-between items-center text-xs">
+        <div className="flex gap-3">
+          <span className="text-green-500">+{action.expectedImpact.profitPotential}% profit</span>
+          <span className="text-blue-500">-{action.expectedImpact.riskReduction}% risk</span>
         </div>
-        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-          <span>After:</span>
-          <div className="w-10 h-1.5 bg-gray-200 rounded-full">
-            <div 
-              className="h-full bg-green-500 rounded-full" 
-              style={{width: `${action.newRisk * 100}%`}}
-            />
+        
+        {action.appliedSuccess !== undefined && (
+          <div className="flex items-center">
+            {action.appliedSuccess ? 
+              <CheckIcon className="h-3 w-3 text-green-500 mr-1" /> : 
+              <XIcon className="h-3 w-3 text-red-500 mr-1" />
+            }
+            <span className={action.appliedSuccess ? "text-green-500" : "text-red-500"}>
+              {action.appliedSuccess ? "Applied" : "Ignored"}
+            </span>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
