@@ -95,7 +95,7 @@ export const ActiveTrades = () => {
         ) : (
           <div className="h-52 flex items-center justify-center flex-col gap-2">
             <p className="text-muted-foreground">No active trades found</p>
-            <Button variant="outline" size="sm">Create New Trade</Button>
+            <p className="text-sm text-muted-foreground">AI agent will automatically initiate trades based on market conditions</p>
           </div>
         )}
       </CardContent>
