@@ -8,6 +8,8 @@ set -e
 export POETRY_VIRTUALENVS_CREATE=false
 export PIP_NO_PYTHON_VERSION_WARNING=1
 export PYTHON_VERSION=none
+export PYTHONPATH=""
+export PYTHONHOME=""
 
 # Make it clear we're using Node.js
 echo "Node version:"

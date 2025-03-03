@@ -11,3 +11,14 @@ __pycache__/
 .venv/
 poetry.lock
 pyproject.toml
+**/*.egg-info
+**/*.whl
+**/*.pyd
+**/*.pyo
+**/*.so
+**/*.dylib
+**/poetry.toml
+**/pytest.ini
+**/tox.ini
+**/requirements*.txt
+**/.python-version
