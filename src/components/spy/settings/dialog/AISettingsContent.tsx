@@ -61,7 +61,7 @@ export const AISettingsContent: React.FC<AISettingsContentProps> = ({
             <TabsContent value="market" className="space-y-4 mt-2 pb-4">
               <MarketConditionsTab 
                 settings={settings}
-                setSettings={setSettings}
+                updateSettings={updateSettings}
               />
             </TabsContent>
             

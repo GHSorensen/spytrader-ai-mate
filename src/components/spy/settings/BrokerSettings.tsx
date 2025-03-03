@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Save, Server, X } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BrokerSettings as BrokerSettingsType } from '@/lib/types/spy/broker';
+import { BrokerSettings as BrokerSettingsType, BrokerType } from '@/lib/types/spy/broker';
 import { toast } from '@/components/ui/use-toast';
 
 interface BrokerSettingsProps {
@@ -56,12 +56,12 @@ export const BrokerSettings: React.FC<BrokerSettingsProps> = ({
 
   const handleSave = () => {
     // Set the broker type based on the active tab
-    const brokerType = 
+    const brokerType: BrokerType = 
       activeTab === 'ib' ? 'interactive-brokers' : 
       activeTab === 'td' ? 'td-ameritrade' : 'none';
     
     // Update the settings with the broker type
-    const updatedSettings = {
+    const updatedSettings: BrokerSettingsType = {
       ...settings,
       type: brokerType,
       isConnected: brokerType !== 'none' && Boolean(

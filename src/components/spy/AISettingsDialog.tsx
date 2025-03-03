@@ -37,6 +37,7 @@ export const AISettingsDialog = ({
         handleResetSettings,
         handleCancel,
         showConfirmDialog,
+        setShowConfirmDialog,
         handleConfirmCancel,
         handleCancelDialog
       }) => (
