@@ -67,7 +67,7 @@ export const AISettingsDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[800px] max-h-[90vh] p-0 overflow-hidden">
         <div className="p-6 pb-0">
-          <AISettingsHeader />
+          <AISettingsHeader activeTab={activeTab} />
         </div>
         
         <div className="flex flex-col md:flex-row h-full">
@@ -123,6 +123,21 @@ export const AISettingsDialog = ({
           <AISettingsFooter 
             onCancel={() => onOpenChange(false)}
             onSave={handleSaveSettings}
+            activeTab={activeTab}
+            onPrevious={() => {
+              const tabs = ['strategy', 'risk', 'market', 'backtest', 'advanced'];
+              const currentIndex = tabs.indexOf(activeTab);
+              if (currentIndex > 0) {
+                setActiveTab(tabs[currentIndex - 1]);
+              }
+            }}
+            onNext={() => {
+              const tabs = ['strategy', 'risk', 'market', 'backtest', 'advanced'];
+              const currentIndex = tabs.indexOf(activeTab);
+              if (currentIndex < tabs.length - 1) {
+                setActiveTab(tabs[currentIndex + 1]);
+              }
+            }}
           />
         </div>
       </DialogContent>

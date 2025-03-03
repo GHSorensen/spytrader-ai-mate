@@ -2,34 +2,70 @@
 import React from 'react';
 import { DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Save, X } from 'lucide-react';
+import { Save, X, ArrowLeft, ArrowRight } from 'lucide-react';
 
 interface AISettingsFooterProps {
   onCancel: () => void;
   onSave: () => void;
+  activeTab?: string;
+  onPrevious?: () => void;
+  onNext?: () => void;
 }
 
 export const AISettingsFooter: React.FC<AISettingsFooterProps> = ({
   onCancel,
   onSave,
+  activeTab = 'strategy',
+  onPrevious,
+  onNext,
 }) => {
+  const isFirstTab = activeTab === 'strategy';
+  const isLastTab = activeTab === 'advanced';
+
   return (
     <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0 mt-6">
       <Button 
         variant="outline" 
         onClick={onCancel} 
-        className="w-full sm:w-auto order-2 sm:order-1"
+        className="w-full sm:w-auto order-3 sm:order-1"
       >
         <X className="h-4 w-4 mr-2" />
         Cancel
       </Button>
-      <Button 
-        onClick={onSave} 
-        className="w-full sm:w-auto order-1 sm:order-2"
-      >
-        <Save className="h-4 w-4 mr-2" />
-        Save Settings
-      </Button>
+      
+      <div className="flex items-center gap-2 order-2 w-full sm:w-auto">
+        {!isFirstTab && onPrevious && (
+          <Button 
+            variant="outline" 
+            onClick={onPrevious}
+            className="flex-1 sm:flex-none"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Previous
+          </Button>
+        )}
+        
+        {!isLastTab && onNext && (
+          <Button 
+            variant="secondary" 
+            onClick={onNext}
+            className="flex-1 sm:flex-none"
+          >
+            Next
+            <ArrowRight className="h-4 w-4 ml-2" />
+          </Button>
+        )}
+        
+        {isLastTab && (
+          <Button 
+            onClick={onSave} 
+            className="flex-1 sm:flex-none"
+          >
+            <Save className="h-4 w-4 mr-2" />
+            Save Settings
+          </Button>
+        )}
+      </div>
     </DialogFooter>
   );
 };
