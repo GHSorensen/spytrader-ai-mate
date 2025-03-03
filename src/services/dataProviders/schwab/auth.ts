@@ -17,13 +17,17 @@ export class SchwabAuth {
     if (config.callbackUrl) {
       this.redirectUri = config.callbackUrl;
     } else {
-      // Default to production URL if in production mode
-      if (process.env.NODE_ENV === 'production') {
-        this.redirectUri = window.location.origin + '/auth/callback';
+      // Get the current origin if in a browser environment
+      const origin = typeof window !== 'undefined' ? window.location.origin : '';
+      const callbackPath = '/auth/callback';
+      
+      // Default to current origin in production if it's HTTPS
+      if (process.env.NODE_ENV === 'production' && origin.startsWith('https://')) {
+        this.redirectUri = origin + callbackPath;
       } else {
-        // For development, we can use either the actual production domain or the placeholder
-        this.redirectUri = 'https://your-production-domain.com/auth/callback';
-        console.log('Using registered production callback URL for Schwab authentication');
+        // For development, use a placeholder
+        this.redirectUri = 'https://dev-placeholder.com/auth/callback';
+        console.log('Using development placeholder for callback URL. Will use actual domain in production.');
       }
     }
     

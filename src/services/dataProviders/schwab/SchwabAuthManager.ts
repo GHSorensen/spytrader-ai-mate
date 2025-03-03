@@ -1,3 +1,4 @@
+
 import { DataProviderConfig } from "@/lib/types/spy/dataProvider";
 import { SchwabAuth } from "./auth";
 import { TokenManager } from "./TokenManager";
@@ -21,13 +22,26 @@ export class SchwabAuthManager {
     if (!config.callbackUrl || !config.callbackUrl.startsWith('https://')) {
       console.warn('Schwab requires HTTPS for callback URLs. Updating config with secure URL.');
       
-      // Use the production URL for Schwab authentication
-      config.callbackUrl = 'https://your-production-domain.com/auth/callback';
+      // Use the current origin if in production, or development placeholder otherwise
+      const origin = typeof window !== 'undefined' ? window.location.origin : '';
+      const callbackPath = '/auth/callback';
       
-      // Show a toast to notify the user about the callback URL requirement
+      if (process.env.NODE_ENV === 'production' && origin.startsWith('https://')) {
+        // In production, use the actual window origin
+        config.callbackUrl = origin + callbackPath;
+        console.log(`Using production domain for callback URL: ${config.callbackUrl}`);
+      } else {
+        // In development, use a placeholder
+        config.callbackUrl = 'https://dev-placeholder.com/auth/callback';
+        console.log('Using development placeholder for callback URL. Will use actual domain in production.');
+      }
+      
+      // Show a toast to notify the user about the callback URL
       toast({
         title: "Callback URL Notice",
-        description: "Using production callback URL for Schwab authentication.",
+        description: process.env.NODE_ENV === 'production' 
+          ? `Using ${config.callbackUrl} for Schwab authentication.`
+          : "Using development placeholder. Will use actual domain in production.",
       });
     }
     
