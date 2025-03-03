@@ -6,7 +6,7 @@ import { OptionChain } from '@/components/spy/OptionChain';
 import { ActiveTrades } from '@/components/spy/ActiveTrades';
 import PerformanceDashboard from '@/components/spy/PerformanceDashboard';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, RefreshCw, Settings, Sliders } from 'lucide-react';
+import { ChevronDown, RefreshCw, Settings, Sliders, Server } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,11 +15,20 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { RiskToleranceType } from '@/lib/types/spy';
 import { AISettingsDialog } from '@/components/spy/AISettingsDialog';
+import { BrokerSettings } from '@/components/spy/settings/BrokerSettings';
+import { BrokerSettings as BrokerSettingsType } from '@/lib/types/spy/broker';
 import { toast } from '@/components/ui/use-toast';
 
 const Index = () => {
   const [riskTolerance, setRiskTolerance] = useState<RiskToleranceType>('moderate');
   const [isAISettingsOpen, setIsAISettingsOpen] = useState(false);
+  const [isBrokerSettingsOpen, setIsBrokerSettingsOpen] = useState(false);
+  const [brokerSettings, setBrokerSettings] = useState<BrokerSettingsType>({
+    type: 'none',
+    isConnected: false,
+    credentials: {},
+    paperTrading: true
+  });
 
   const handleRiskToleranceChange = (tolerance: RiskToleranceType) => {
     setRiskTolerance(tolerance);
@@ -27,6 +36,11 @@ const Index = () => {
       title: "Risk Tolerance Updated",
       description: `Strategy set to ${tolerance} risk profile`,
     });
+  };
+
+  const handleBrokerSettingsSave = (settings: BrokerSettingsType) => {
+    setBrokerSettings(settings);
+    // Here you would typically save these to your backend or local storage
   };
 
   return (
@@ -43,6 +57,14 @@ const Index = () => {
             </Button>
             <Button variant="outline" size="icon" className="md:hidden">
               <RefreshCw className="h-4 w-4" />
+            </Button>
+            <Button 
+              variant="outline" 
+              size="icon"
+              onClick={() => setIsBrokerSettingsOpen(true)}
+              className={brokerSettings.isConnected ? "border-green-500 text-green-500 hover:text-green-600 hover:border-green-600" : ""}
+            >
+              <Server className="h-4 w-4" />
             </Button>
             <Button variant="outline" size="icon">
               <Settings className="h-4 w-4" />
@@ -107,6 +129,14 @@ const Index = () => {
         onOpenChange={setIsAISettingsOpen}
         currentRiskTolerance={riskTolerance}
         onRiskToleranceChange={handleRiskToleranceChange}
+      />
+
+      {/* Broker Settings Dialog */}
+      <BrokerSettings
+        open={isBrokerSettingsOpen}
+        onOpenChange={setIsBrokerSettingsOpen}
+        currentSettings={brokerSettings}
+        onSave={handleBrokerSettingsSave}
       />
     </div>
   );
