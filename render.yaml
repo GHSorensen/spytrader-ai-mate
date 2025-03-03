@@ -5,20 +5,28 @@ services:
     runtime: node
     buildCommand: bash ./build.sh
     startCommand: node server.js
+    env: node
+    nodeVersion: 18.19.1
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PYTHON_VERSION
-        value: "false"
-      - key: PYTHONPATH
-        value: "none"
-      - key: PYTHONHOME
-        value: "none"
       - key: NODE_VERSION
         value: 18.19.1
+      - key: PYTHON_ENABLED
+        value: "0"
+      - key: PYTHON_VERSION
+        value: "DISABLED"
+      - key: PYTHONPATH
+        value: "/dev/null"
+      - key: PYTHONHOME
+        value: "/dev/null"
       - key: POETRY_ENABLED
-        value: "false"
+        value: "0"
       - key: PIP_NO_PYTHON_VERSION_WARNING
         value: "1"
+      - key: SKIP_PYTHON
+        value: "true"
+      - key: USE_PYTHON
+        value: "false"
     healthCheckPath: /health
     autoDeploy: true

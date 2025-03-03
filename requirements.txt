@@ -1,8 +1,7 @@
 
-# THIS IS A NODE.JS PROJECT
-# NO PYTHON DEPENDENCIES ARE NEEDED
-# DO NOT INSTALL ANY PYTHON PACKAGES
-# PYTHON SHOULD NOT BE USED FOR THIS PROJECT
+# THIS IS EXPLICITLY A NODE.JS PROJECT
+# NO PYTHON DEPENDENCIES SHOULD BE INSTALLED
+# PYTHON IS NOT USED IN THIS PROJECT
+# DO NOT INSTALL POETRY
 
-# The presence of this file with no actual requirements
-# should prevent Render from attempting to install Python packages.
+# This empty file with explicit comments should prevent Python package installation
