@@ -46,13 +46,13 @@ export const BacktestingTab: React.FC<BacktestingTabProps> = ({
         isActive: true,
         riskLevel: 5,
         timeFrame: "1d",
-        optionType: "BOTH",
-        expiryPreference: ["weekly", "monthly"],
+        optionType: "BOTH" as const, // Type assertion to ensure it matches the expected type
+        expiryPreference: ["weekly", "monthly"] as const,
         deltaRange: [0.3, 0.7],
         maxPositionSize: 10,
         maxLossPerTrade: 25,
         profitTarget: 50,
-        marketCondition: "neutral",
+        marketCondition: "neutral" as const,
         averageHoldingPeriod: 5,
         successRate: 0.6
       };
