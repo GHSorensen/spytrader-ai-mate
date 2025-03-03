@@ -8,9 +8,19 @@ import { AlertCircleIcon } from 'lucide-react';
 interface ActionsSectionProps {
   actions: RiskAction[];
   isLoading: boolean;
+  latestActions?: RiskAction[];
+  getRelativeTime?: (timestamp: Date) => string;
 }
 
-export const ActionsSection: React.FC<ActionsSectionProps> = ({ actions, isLoading }) => {
+export const ActionsSection: React.FC<ActionsSectionProps> = ({ 
+  actions, 
+  isLoading,
+  latestActions,
+  getRelativeTime
+}) => {
+  // Use latestActions if provided, otherwise use actions
+  const actionsToRender = latestActions || actions;
+  
   if (isLoading) {
     return (
       <div>
@@ -28,7 +38,7 @@ export const ActionsSection: React.FC<ActionsSectionProps> = ({ actions, isLoadi
     <div>
       <h3 className="text-sm font-medium mb-2">Recommended Actions</h3>
       
-      {actions.length === 0 ? (
+      {actionsToRender.length === 0 ? (
         <div className="flex items-center p-4 border rounded-md bg-muted/20">
           <AlertCircleIcon className="h-4 w-4 text-muted-foreground mr-2" />
           <p className="text-xs text-muted-foreground">
@@ -36,7 +46,7 @@ export const ActionsSection: React.FC<ActionsSectionProps> = ({ actions, isLoadi
           </p>
         </div>
       ) : (
-        actions.map((action) => (
+        actionsToRender.map((action) => (
           <ActionItem key={action.id} action={action} />
         ))
       )}

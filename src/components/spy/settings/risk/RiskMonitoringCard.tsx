@@ -12,14 +12,22 @@ import { useRelativeTime } from '@/hooks/useRelativeTime';
 
 interface RiskMonitoringCardProps {
   isLoading?: boolean;
-  latestSignals: RiskSignal[];
-  latestActions: RiskAction[];
+  latestSignals?: RiskSignal[];
+  latestActions?: RiskAction[];
+  signals?: RiskSignal[];
+  actions?: RiskAction[];
+  settings?: any;
+  updateSettings?: any;
 }
 
 export const RiskMonitoringCard: React.FC<RiskMonitoringCardProps> = ({
   isLoading = false,
   latestSignals = [],
-  latestActions = []
+  latestActions = [],
+  signals = [],
+  actions = [],
+  settings,
+  updateSettings
 }) => {
   // Use our custom hook for relative time formatting
   const getRelativeTime = useRelativeTime();
@@ -43,13 +51,17 @@ export const RiskMonitoringCard: React.FC<RiskMonitoringCardProps> = ({
         ) : (
           <>
             <SignalsSection 
+              signals={signals}
               latestSignals={latestSignals}
               getRelativeTime={getRelativeTime}
+              isLoading={isLoading}
             />
             
             <ActionsSection 
+              actions={actions}
               latestActions={latestActions}
               getRelativeTime={getRelativeTime}
+              isLoading={isLoading}
             />
           </>
         )}

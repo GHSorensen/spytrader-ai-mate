@@ -66,6 +66,8 @@ export const DynamicRiskMonitoringTab: React.FC<DynamicRiskMonitoringTabProps> =
       
       <RiskMonitoringCard 
         isLoading={isLoading}
+        latestSignals={latestSignals}
+        latestActions={latestActions}
         settings={settings}
         updateSettings={updateSettings}
       />

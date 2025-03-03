@@ -30,6 +30,8 @@ export const getActionBadge = (actionType: RiskActionType): JSX.Element => {
       return <Badge variant="secondary">{type}</Badge>;
     case 'increase_position_size':
       return <Badge variant="outline" className="text-green-500 border-green-500">{type}</Badge>;
+    case 'no_action':
+      return <Badge variant="outline" className="text-muted-foreground">{type}</Badge>;
     default:
       return <Badge>{type}</Badge>;
   }
