@@ -3,12 +3,14 @@ services:
   - type: web
     name: spy-trader
     runtime: node
-    buildCommand: npm install && npm run build && if [ -f package.json.override ]; then jq -s '.[0] * .[1]' package.json package.json.override > package.json.tmp && mv package.json.tmp package.json; fi
+    buildCommand: bash ./build.sh
     startCommand: node server.js
     envVars:
       - key: NODE_ENV
         value: production
       - key: PYTHON_VERSION
         value: none
+      - key: NODE_VERSION
+        value: 18.19.1
     healthCheckPath: /health
     autoDeploy: true
