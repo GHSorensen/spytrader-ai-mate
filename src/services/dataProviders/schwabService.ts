@@ -1,10 +1,10 @@
-
 import { DataProviderConfig, DataProviderStatus } from "@/lib/types/spy/dataProvider";
 import { SpyMarketData, SpyOption, SpyTrade } from "@/lib/types/spy";
 import { toast } from "@/components/ui/use-toast";
 import { BaseDataProvider } from "./base/BaseDataProvider";
 import { SchwabAuth } from "./schwab/auth";
 import { generateMockOptions, generateMockTrades } from "./schwab/utils";
+import { generateMockMarketData } from "./tdAmeritrade/utils";
 import * as endpoints from "./schwab/endpoints";
 
 export class SchwabService extends BaseDataProvider {
@@ -88,22 +88,8 @@ export class SchwabService extends BaseDataProvider {
       // In a real implementation, we would call the Schwab API
       console.log("Fetching SPY market data from Schwab");
       
-      const now = new Date();
-      
-      // Mock data for development
-      return {
-        price: 499.25,
-        previousClose: 497.82,
-        change: 1.43,
-        changePercent: 0.29,
-        volume: 31840213,
-        averageVolume: 42615200,
-        high: 501.75,
-        low: 498.50,
-        open: 498.75,
-        timestamp: now,
-        vix: 15.45,
-      };
+      // Return mock data for development using the shared utility function
+      return generateMockMarketData();
     } catch (error) {
       console.error("Schwab market data error:", error);
       throw error;
