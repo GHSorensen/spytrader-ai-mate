@@ -22,3 +22,7 @@ pyproject.toml
 **/tox.ini
 **/requirements*.txt
 **/.python-version
+**/.python-version.*
+**/poetry*
+**/*.poetry*
+.python-version*

@@ -1,5 +1,8 @@
 
 # THIS IS A NODE.JS PROJECT
-# NO PYTHON DEPENDENCIES SHOULD BE INSTALLED
-# This file exists only to prevent Render from attempting to install Python dependencies.
-# If you're seeing this message during build, please use Node.js build tools instead.
+# NO PYTHON DEPENDENCIES ARE NEEDED
+# DO NOT INSTALL ANY PYTHON PACKAGES
+# PYTHON SHOULD NOT BE USED FOR THIS PROJECT
+
+# The presence of this file with no actual requirements
+# should prevent Render from attempting to install Python packages.

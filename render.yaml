@@ -9,12 +9,16 @@ services:
       - key: NODE_ENV
         value: production
       - key: PYTHON_VERSION
-        value: none
+        value: "false"
       - key: PYTHONPATH
-        value: ""
+        value: "none"
       - key: PYTHONHOME
-        value: ""
+        value: "none"
       - key: NODE_VERSION
         value: 18.19.1
+      - key: POETRY_ENABLED
+        value: "false"
+      - key: PIP_NO_PYTHON_VERSION_WARNING
+        value: "1"
     healthCheckPath: /health
     autoDeploy: true
