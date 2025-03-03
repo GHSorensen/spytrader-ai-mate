@@ -11,6 +11,7 @@ interface AISettingsFooterProps {
   activeTab?: string;
   onPrevious?: () => void;
   onNext?: () => void;
+  hasChanges?: boolean;
 }
 
 export const AISettingsFooter: React.FC<AISettingsFooterProps> = ({
@@ -20,6 +21,7 @@ export const AISettingsFooter: React.FC<AISettingsFooterProps> = ({
   activeTab = 'strategy',
   onPrevious,
   onNext,
+  hasChanges = false,
 }) => {
   const isFirstTab = activeTab === 'strategy';
   const isLastTab = activeTab === 'advanced';
@@ -75,6 +77,7 @@ export const AISettingsFooter: React.FC<AISettingsFooterProps> = ({
           <Button 
             onClick={onSave} 
             className="flex-1 sm:flex-none"
+            variant={hasChanges ? "default" : "secondary"}
           >
             <Save className="h-4 w-4 mr-2" />
             Save Settings
