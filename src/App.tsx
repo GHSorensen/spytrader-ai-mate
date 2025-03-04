@@ -12,6 +12,9 @@ import RiskMonitoringTest from './pages/RiskMonitoringTest';
 import notificationService from './services/notification/notificationService';
 import ErrorBoundary from './components/ErrorBoundary';
 import SchwabIntegrationPage from './pages/SchwabIntegrationPage';
+import AuthenticationPage from './components/auth/AuthenticationPage';
+import UserProfilePage from './components/auth/UserProfilePage';
+import DetailedPerformancePage from './components/performance/DetailedPerformancePage';
 
 function App() {
   // Set up initial notifications on app load
@@ -42,9 +45,12 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/trade-automation" element={<TradeAutomation />} />
           <Route path="/performance" element={<PerformanceDashboard />} />
+          <Route path="/detailed-performance" element={<DetailedPerformancePage />} />
           <Route path="/risk-console" element={<RiskConsole />} />
           <Route path="/risk-monitoring-test" element={<RiskMonitoringTest />} />
           <Route path="/schwab-integration" element={<SchwabIntegrationPage />} />
+          <Route path="/auth" element={<AuthenticationPage />} />
+          <Route path="/profile" element={<UserProfilePage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </ErrorBoundary>

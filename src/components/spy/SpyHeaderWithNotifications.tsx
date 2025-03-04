@@ -6,6 +6,7 @@ import { AISettingsDialog } from './AISettingsDialog';
 import NotificationCenter from './notifications/NotificationCenter';
 import { RiskToleranceType } from '@/lib/types/spy';
 import { schwabDocumentation } from '@/services/dataProviders/schwab/documentation';
+import { User, Settings, BarChart2 } from 'lucide-react';
 
 interface SpyHeaderProps {
   minimal?: boolean;
@@ -33,6 +34,7 @@ export const SpyHeaderWithNotifications: React.FC<SpyHeaderProps> = ({ minimal =
             <Link to="/" className="text-muted-foreground hover:text-foreground">Dashboard</Link>
             <Link to="/trades" className="text-muted-foreground hover:text-foreground">Trades</Link>
             <Link to="/performance" className="text-muted-foreground hover:text-foreground">Performance</Link>
+            <Link to="/detailed-performance" className="text-muted-foreground hover:text-foreground">Analytics</Link>
             <Link to="/risk-console" className="text-muted-foreground hover:text-foreground">Risk Console</Link>
             <Link to="/schwab-integration" className="text-muted-foreground hover:text-foreground">Schwab Connect</Link>
           </nav>
@@ -70,14 +72,21 @@ export const SpyHeaderWithNotifications: React.FC<SpyHeaderProps> = ({ minimal =
             </Link>
           </div>
         </div>
+        
+        <Link to="/profile">
+          <Button variant="ghost" size="icon">
+            <User className="h-5 w-5" />
+            <span className="sr-only">User Profile</span>
+          </Button>
+        </Link>
+        
         <NotificationCenter />
+        
         <Button variant="ghost" size="icon" onClick={() => setIsAISettingsOpen(true)}>
           <span className="sr-only">AI Settings</span>
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
-            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
-            <circle cx="12" cy="12" r="3" />
-          </svg>
+          <Settings className="h-5 w-5" />
         </Button>
+        
         <AISettingsDialog 
           open={isAISettingsOpen}
           onOpenChange={setIsAISettingsOpen}
