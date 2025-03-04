@@ -6,7 +6,7 @@ import { useIBKRHandlers } from './hooks/useIBKRHandlers';
 import { useNavigate } from 'react-router-dom';
 
 const IBKRIntegrationContainer: React.FC = () => {
-  const navigate = useNavigate(); // Use the actual navigate function from react-router-dom
+  const navigate = useNavigate();
   
   const {
     isConnecting,
@@ -43,7 +43,7 @@ const IBKRIntegrationContainer: React.FC = () => {
     setIsConnecting,
     setConnectionStatus,
     setIsConfigured,
-    navigate // Pass the navigate function from react-router-dom directly
+    navigate
   });
 
   return (

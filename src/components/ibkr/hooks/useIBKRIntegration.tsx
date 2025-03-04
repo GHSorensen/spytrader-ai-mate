@@ -1,7 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useToast } from '@/hooks/use-toast';
+
+import { useEffect } from 'react';
+import { useIBKRConnection } from './ibkr-connection/useIBKRConnection';
+import { useIBKRAccounts } from './ibkr-accounts/useIBKRAccounts';
+import { useIBKRConfig } from './ibkr-config/useIBKRConfig';
 import { IBKRAccount, IBKRConnectionStatus } from '@/lib/types/ibkr';
-import { getIBKRConnectionStatus, getIBKRAccounts, connectToIBKR, disconnectFromIBKR } from '@/services/ibkrService';
 
 interface IBKRIntegrationHook {
   // Connection state
@@ -15,7 +17,7 @@ interface IBKRIntegrationHook {
   isLoading: boolean;
   error: string | null;
   
-  // API method - updated to match IBKRCredentialsForm
+  // API method
   apiMethod: 'webapi' | 'tws';
   setApiMethod: (value: 'webapi' | 'tws') => void;
   
@@ -43,198 +45,83 @@ interface IBKRIntegrationHook {
 }
 
 export const useIBKRIntegration = (): IBKRIntegrationHook => {
-  const { toast } = useToast();
+  const {
+    connectionStatus,
+    isConnecting,
+    setIsConnecting,
+    setConnectionStatus,
+    isLoading: connectionLoading,
+    error: connectionError,
+    connect,
+    disconnect
+  } = useIBKRConnection();
   
-  // Connection state
-  const [connectionStatus, setConnectionStatus] = useState<IBKRConnectionStatus>('disconnected');
-  const [isConnecting, setIsConnecting] = useState(false);
+  const {
+    accounts,
+    isLoading: accountsLoading,
+    error: accountsError,
+    fetchAccounts
+  } = useIBKRAccounts();
   
-  // Account data
-  const [accounts, setAccounts] = useState<IBKRAccount[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  
-  // API method - updated from 'api' to 'webapi' to match IBKRCredentialsForm
-  const [apiMethod, setApiMethod] = useState<'webapi' | 'tws'>('webapi');
-  
-  // API credentials
-  const [apiKey, setApiKey] = useState('');
-  const [callbackUrl, setCallbackUrl] = useState(window.location.origin + '/auth/ibkr/callback');
-  
-  // TWS settings
-  const [twsHost, setTwsHost] = useState('127.0.0.1');
-  const [twsPort, setTwsPort] = useState('7496');
-  const [isPaperTrading, setIsPaperTrading] = useState(false);
-  
-  // Configuration state
-  const [isConfigured, setIsConfigured] = useState(false);
+  const {
+    apiMethod,
+    setApiMethod,
+    apiKey,
+    setApiKey,
+    callbackUrl,
+    setCallbackUrl,
+    twsHost,
+    setTwsHost,
+    twsPort,
+    setTwsPort,
+    isPaperTrading,
+    setIsPaperTrading,
+    isConfigured,
+    setIsConfigured
+  } = useIBKRConfig();
 
-  const checkConnectionStatus = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const status = await getIBKRConnectionStatus();
-      setConnectionStatus(status);
-      setError(null);
-      
-      if (status === 'connected') {
-        setIsConfigured(true);
-      }
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch connection status');
-      toast({
-        title: 'Error',
-        description: `Failed to fetch IBKR connection status: ${err.message}`,
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [toast]);
+  // Determine if we're loading or have an error
+  const isLoading = connectionLoading || accountsLoading;
+  const error = connectionError || accountsError;
 
-  const fetchAccounts = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const accountsData = await getIBKRAccounts();
-      setAccounts(accountsData);
-      setError(null);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch accounts');
-      toast({
-        title: 'Error',
-        description: `Failed to fetch IBKR accounts: ${err.message}`,
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [toast]);
-
-  const connect = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      setConnectionStatus('connecting');
-      await connectToIBKR();
-      setConnectionStatus('connected');
-      setError(null);
-      toast({
-        title: 'IBKR Connected',
-        description: 'Successfully connected to IBKR',
-      });
-    } catch (err: any) {
-      setConnectionStatus('disconnected');
-      setError(err.message || 'Failed to connect to IBKR');
-      toast({
-        title: 'Error',
-        description: `Failed to connect to IBKR: ${err.message}`,
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [toast]);
-
-  const disconnect = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      await disconnectFromIBKR();
-      setConnectionStatus('disconnected');
-      setAccounts([]);
-      setError(null);
-      toast({
-        title: 'IBKR Disconnected',
-        description: 'Successfully disconnected from IBKR',
-      });
-    } catch (err: any) {
-      setError(err.message || 'Failed to disconnect from IBKR');
-      toast({
-        title: 'Error',
-        description: `Failed to disconnect from IBKR: ${err.message}`,
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [toast]);
-
+  // Check connection status and fetch accounts periodically
   useEffect(() => {
-    checkConnectionStatus();
-    
-    // Only fetch accounts if we're connected
+    // Initial check
     if (connectionStatus === 'connected') {
       fetchAccounts();
     }
     
     const intervalId = setInterval(() => {
-      checkConnectionStatus();
       if (connectionStatus === 'connected') {
         fetchAccounts();
       }
     }, 60000);
 
     return () => clearInterval(intervalId);
-  }, [checkConnectionStatus, fetchAccounts, connectionStatus]);
-
-  // Load saved configuration on mount
-  useEffect(() => {
-    const savedConfig = localStorage.getItem('ibkr-config');
-    if (savedConfig) {
-      try {
-        const config = JSON.parse(savedConfig);
-        
-        if (config.connectionMethod === 'tws') {
-          setApiMethod('tws');
-          if (config.twsHost) setTwsHost(config.twsHost);
-          if (config.twsPort) setTwsPort(config.twsPort);
-          if (config.hasOwnProperty('paperTrading')) setIsPaperTrading(config.paperTrading);
-        } else {
-          // Update from 'api' to 'webapi' to match IBKRCredentialsForm
-          setApiMethod('webapi');
-          if (config.apiKey) setApiKey(config.apiKey);
-          if (config.callbackUrl) setCallbackUrl(config.callbackUrl);
-        }
-        
-        setIsConfigured(true);
-      } catch (e) {
-        console.error('Failed to parse saved IBKR config:', e);
-      }
-    }
-  }, []);
+  }, [connectionStatus, fetchAccounts]);
 
   return {
-    // Connection state
     connectionStatus,
     isConnecting,
     setIsConnecting,
     setConnectionStatus,
-    
-    // Account data
     accounts,
     isLoading,
     error,
-    
-    // API method - note the change to match IBKRCredentialsForm
     apiMethod,
     setApiMethod,
-    
-    // API credentials
     apiKey,
     setApiKey,
     callbackUrl,
     setCallbackUrl,
-    
-    // TWS settings
     twsHost,
     setTwsHost,
-    twsPort, 
+    twsPort,
     setTwsPort,
     isPaperTrading,
     setIsPaperTrading,
-    
-    // Configuration state
     isConfigured,
     setIsConfigured,
-    
-    // Actions
     connect,
     disconnect
   };
