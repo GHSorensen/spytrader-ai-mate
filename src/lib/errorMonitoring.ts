@@ -22,6 +22,15 @@ interface ErrorContext {
   severity?: 'low' | 'medium' | 'high' | 'critical';
 }
 
+// Track event interface
+interface EventProperties {
+  timestamp: string;
+  environment: string;
+  sessionId?: string;
+  userId?: string;
+  [key: string]: any;
+}
+
 // Error storage to avoid duplicate reports
 const reportedErrors = new Set<string>();
 const MAX_STORED_ERRORS = 100;
@@ -142,7 +151,7 @@ export function logError(error: Error, context?: ErrorContext): void {
  */
 export function trackEvent(eventName: string, properties?: Record<string, any>): void {
   try {
-    const enhancedProps = {
+    const enhancedProps: EventProperties = {
       ...properties,
       timestamp: new Date().toISOString(),
       environment,

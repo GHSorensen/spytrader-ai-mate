@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -54,7 +53,6 @@ export const SchwabCallbackHandler: React.FC = () => {
           secretKey: '',
           callbackUrl: config.authRedirectUrl,
           refreshToken: '',
-          accessToken: '',
           paperTrading: false
         };
         

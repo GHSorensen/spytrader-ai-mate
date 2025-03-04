@@ -10,6 +10,7 @@ export interface DataProviderConfig {
   appKey?: string;
   callbackUrl?: string;
   refreshToken?: string;
+  accessToken?: string; // Added this property to fix the type error
   paperTrading?: boolean;
 }
 

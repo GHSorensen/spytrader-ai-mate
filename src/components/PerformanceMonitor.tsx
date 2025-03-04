@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { trackEvent } from '@/lib/errorMonitoring';
@@ -20,6 +19,17 @@ interface PerformanceMetrics {
   apiLatency: Record<string, number>;
 }
 
+interface NetworkInformation {
+  effectiveType: string;
+  downlink: number;
+  rtt: number;
+  saveData?: boolean;
+}
+
+interface NavigatorWithConnection extends Navigator {
+  connection?: NetworkInformation;
+}
+
 /**
  * Enhanced component that monitors and reports on application performance in production
  */
@@ -33,12 +43,12 @@ const PerformanceMonitor: React.FC = () => {
     cacheMisses: 0,
   });
   
-  // Shared function to report metrics
   const reportMetrics = (metrics: Partial<PerformanceMetrics>, event = 'performance_metrics') => {
-    // Only send all metrics in production or when sampling in development
     const shouldReportFull = isProduction || Math.random() < 0.1;
     
     if (shouldReportFull) {
+      const navigatorWithConnection = navigator as NavigatorWithConnection;
+      
       trackEvent(event, {
         ...metrics,
         path: location.pathname,
@@ -47,23 +57,21 @@ const PerformanceMonitor: React.FC = () => {
           width: window.innerWidth,
           height: window.innerHeight,
         },
-        connection: navigator.connection 
+        connection: navigatorWithConnection.connection 
           ? {
-              effectiveType: (navigator.connection as any).effectiveType,
-              downlink: (navigator.connection as any).downlink,
-              rtt: (navigator.connection as any).rtt,
+              effectiveType: navigatorWithConnection.connection.effectiveType,
+              downlink: navigatorWithConnection.connection.downlink,
+              rtt: navigatorWithConnection.connection.rtt,
             }
           : undefined,
       });
     }
   };
   
-  // Track API latency
   useEffect(() => {
     const originalFetch = window.fetch;
     
     window.fetch = async (input, init) => {
-      // Only track API calls
       const url = typeof input === 'string' 
         ? input 
         : input instanceof URL 
@@ -79,13 +87,11 @@ const PerformanceMonitor: React.FC = () => {
         return originalFetch(input, init);
       }
       
-      // Calculate a more user-friendly endpoint name
       let endpoint = url;
       try {
         const urlObj = new URL(url);
         endpoint = urlObj.pathname;
       } catch (e) {
-        // If URL parsing fails, use the original
       }
       
       const startTime = performance.now();
@@ -95,12 +101,10 @@ const PerformanceMonitor: React.FC = () => {
         const endTime = performance.now();
         const latency = endTime - startTime;
         
-        // Update metrics
         const apiLatency = metricsCollectedRef.current.apiLatency || {};
         apiLatency[endpoint] = latency;
         metricsCollectedRef.current.apiLatency = apiLatency;
         
-        // Track cache hit status
         const cacheStatus = response.headers.get('x-cache');
         if (cacheStatus) {
           if (cacheStatus.includes('HIT')) {
@@ -110,7 +114,6 @@ const PerformanceMonitor: React.FC = () => {
           }
         }
         
-        // Log slow API calls
         if (latency > 1000) {
           console.warn(`Slow API call detected: ${endpoint} took ${latency.toFixed(2)}ms`);
         }
@@ -120,7 +123,6 @@ const PerformanceMonitor: React.FC = () => {
         const endTime = performance.now();
         const latency = endTime - startTime;
         
-        // Still record the latency even for failed requests
         const apiLatency = metricsCollectedRef.current.apiLatency || {};
         apiLatency[`${endpoint}|error`] = latency;
         metricsCollectedRef.current.apiLatency = apiLatency;
@@ -129,12 +131,11 @@ const PerformanceMonitor: React.FC = () => {
       }
     };
     
-    // Monitor memory usage
     const memoryCheckInterval = setInterval(() => {
       if (performance && 'memory' in performance) {
         metricsCollectedRef.current.jsHeapSize = (performance as any).memory.usedJSHeapSize;
       }
-    }, 10000); // Check every 10 seconds
+    }, 10000);
     
     return () => {
       window.fetch = originalFetch;
@@ -142,22 +143,17 @@ const PerformanceMonitor: React.FC = () => {
     };
   }, []);
   
-  // Track route changes and user journey
   useEffect(() => {
     const currentPath = location.pathname;
     
-    // Only run on path changes
     if (prevPathRef.current !== currentPath) {
       const timestamp = new Date().toISOString();
       
-      // Get session identifier or user id
       let userId: string | undefined;
       
-      // Get current user if available
       supabase.auth.getSession().then(({ data }) => {
         userId = data?.session?.user?.id;
         
-        // Track route change
         trackEvent('page_view', { 
           from: prevPathRef.current || '(initial)',
           to: currentPath,
@@ -165,11 +161,9 @@ const PerformanceMonitor: React.FC = () => {
           userId
         });
         
-        // Calculate navigation duration if this isn't the first page
         if (prevPathRef.current && navigationStartTimeRef.current > 0) {
           const navigationDuration = performance.now() - navigationStartTimeRef.current;
           
-          // Only log navigation durations over 100ms
           if (navigationDuration > 100) {
             trackEvent('navigation_duration', {
               from: prevPathRef.current,
@@ -180,7 +174,6 @@ const PerformanceMonitor: React.FC = () => {
           }
         }
       }).catch(() => {
-        // Still track even if we can't get the user
         trackEvent('page_view', { 
           from: prevPathRef.current || '(initial)',
           to: currentPath,
@@ -188,20 +181,16 @@ const PerformanceMonitor: React.FC = () => {
         });
       });
       
-      // Mark navigation start time
       navigationStartTimeRef.current = performance.now();
       prevPathRef.current = currentPath;
       
-      // Reset metrics collection for the new page
       metricsCollectedRef.current = {
         apiLatency: {},
         cacheHits: 0,
         cacheMisses: 0,
       };
       
-      // Report initial loading performance
       if ('performance' in window) {
-        // Use setTimeout to ensure we capture metrics after the page has loaded
         setTimeout(() => {
           try {
             const navigationEntry = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
@@ -225,12 +214,10 @@ const PerformanceMonitor: React.FC = () => {
       }
     }
   }, [location.pathname]);
-
-  // Set up observers for Web Vitals
+  
   useEffect(() => {
     if ('PerformanceObserver' in window) {
       try {
-        // Observe LCP (Largest Contentful Paint)
         const lcpObserver = new PerformanceObserver((entryList) => {
           const entries = entryList.getEntries();
           const lastEntry = entries[entries.length - 1];
@@ -238,7 +225,6 @@ const PerformanceMonitor: React.FC = () => {
           
           metricsCollectedRef.current.lcp = lcp;
           
-          // Report LCP separately
           if (lcp > 2500) {
             reportMetrics({ lcp }, 'performance_lcp_slow');
           } else {
@@ -248,11 +234,9 @@ const PerformanceMonitor: React.FC = () => {
         
         lcpObserver.observe({ type: 'largest-contentful-paint', buffered: true });
         
-        // Observe CLS (Cumulative Layout Shift)
         let clsValue = 0;
         const clsObserver = new PerformanceObserver((entryList) => {
           for (const entry of entryList.getEntries()) {
-            // Cast to any because TypeScript doesn't have up-to-date types
             if (!(entry as any).hadRecentInput) {
               clsValue += (entry as any).value;
             }
@@ -260,7 +244,6 @@ const PerformanceMonitor: React.FC = () => {
           
           metricsCollectedRef.current.cls = clsValue;
           
-          // Only report CLS when it's significant
           if (clsValue > 0.1) {
             reportMetrics({ cls: clsValue }, 'performance_cls');
           }
@@ -268,17 +251,18 @@ const PerformanceMonitor: React.FC = () => {
         
         clsObserver.observe({ type: 'layout-shift', buffered: true });
         
-        // Observe FID (First Input Delay)
         const fidObserver = new PerformanceObserver((entryList) => {
           const entries = entryList.getEntries();
-          const firstEntry = entries[0];
+          const firstEntry = entries[0] as unknown as {
+            processingStart: number;
+            startTime: number;
+          };
           
           if (firstEntry) {
             const fid = firstEntry.processingStart - firstEntry.startTime;
             
             metricsCollectedRef.current.fid = fid;
             
-            // Report FID separately if it's poor
             if (fid > 100) {
               reportMetrics({ fid }, 'performance_fid_slow');
             } else {
@@ -289,35 +273,38 @@ const PerformanceMonitor: React.FC = () => {
         
         fidObserver.observe({ type: 'first-input', buffered: true });
         
-        // Try to observe INP (Interaction to Next Paint) if supported
         try {
           const inpObserver = new PerformanceObserver((entryList) => {
             const entries = entryList.getEntries();
             let maxDelay = 0;
             
             for (const entry of entries) {
-              // Find the maximum delay
-              const delay = (entry as any).processingStart - (entry as any).startTime;
+              const interactionEntry = entry as unknown as {
+                processingStart: number;
+                startTime: number;
+              };
+              const delay = interactionEntry.processingStart - interactionEntry.startTime;
               maxDelay = Math.max(maxDelay, delay);
             }
             
             if (maxDelay > 0) {
               metricsCollectedRef.current.inp = maxDelay;
               
-              // Report INP separately if it's poor
               if (maxDelay > 200) {
                 reportMetrics({ inp: maxDelay }, 'performance_inp_slow');
               }
             }
           });
           
-          inpObserver.observe({ type: 'event', buffered: true, durationThreshold: 40 });
+          inpObserver.observe({ 
+            type: 'event', 
+            buffered: true,
+            durationThreshold: 40
+          } as any);
         } catch (e) {
-          // INP might not be supported in all browsers
           console.info('INP monitoring not supported in this browser');
         }
         
-        // Clean up observers on unmount
         return () => {
           lcpObserver.disconnect();
           clsObserver.disconnect();
@@ -328,21 +315,19 @@ const PerformanceMonitor: React.FC = () => {
       }
     }
     
-    // Create periodic reporter for collected metrics
     const periodicReporter = setInterval(() => {
       if (Object.keys(metricsCollectedRef.current.apiLatency || {}).length > 0 ||
           metricsCollectedRef.current.cacheHits || 
           metricsCollectedRef.current.cacheMisses) {
         reportMetrics(metricsCollectedRef.current, 'performance_periodic');
       }
-    }, 60000); // Report every minute
+    }, 60000);
     
     return () => {
       clearInterval(periodicReporter);
     };
   }, []);
-
-  // This component doesn't render anything
+  
   return null;
 };
 
