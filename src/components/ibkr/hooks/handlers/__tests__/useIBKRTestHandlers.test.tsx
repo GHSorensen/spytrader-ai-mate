@@ -14,21 +14,17 @@ jest.mock('sonner', () => ({
   },
 }));
 
-// Create a mock constructor and connect method
-const mockConnect = jest.fn().mockResolvedValue(true);
+// Create a properly typed mock for InteractiveBrokersService
+const mockConnectFn = jest.fn().mockResolvedValue(true);
 const MockInteractiveBrokersService = jest.fn().mockImplementation(() => {
   return {
-    connect: mockConnect,
+    connect: mockConnectFn,
   };
 });
 
-// Mock the InteractiveBrokersService
+// Mock the InteractiveBrokersService with our typed mock
 jest.mock('@/services/dataProviders/interactiveBrokersService', () => ({
-  InteractiveBrokersService: jest.fn().mockImplementation(() => {
-    return {
-      connect: jest.fn().mockResolvedValue(true),
-    };
-  }),
+  InteractiveBrokersService: MockInteractiveBrokersService,
 }));
 
 jest.mock('@/services/dataProviders/dataProviderFactory', () => ({
@@ -54,15 +50,8 @@ describe('useIBKRTestHandlers', () => {
   });
 
   test('should test connection with current web API settings', async () => {
-    // Get the mocked constructor
-    const mockedInteractiveBrokersService = InteractiveBrokersService as jest.Mock;
-    
-    // Configure the mock to return a successful connection
-    mockedInteractiveBrokersService.mockImplementation(() => {
-      return {
-        connect: jest.fn().mockResolvedValue(true),
-      };
-    });
+    // Reset mock to return a successful connection
+    mockConnectFn.mockResolvedValueOnce(true);
     
     const { result } = renderHook(() => useIBKRTestHandlers({
       apiKey: 'test-key',
@@ -79,7 +68,7 @@ describe('useIBKRTestHandlers', () => {
     expect(mockSetConnectionStatus).toHaveBeenCalledWith('connecting');
     
     // Check service was initialized with correct config
-    expect(mockedInteractiveBrokersService.mock.calls[0][0]).toEqual({
+    expect(MockInteractiveBrokersService.mock.calls[0][0]).toEqual({
       type: 'interactive-brokers' as DataProviderType,
       apiKey: 'test-key',
       callbackUrl: 'http://localhost:3000/callback',
@@ -95,15 +84,8 @@ describe('useIBKRTestHandlers', () => {
   });
 
   test('should test connection with current TWS settings', async () => {
-    // Get the mocked constructor
-    const mockedInteractiveBrokersService = InteractiveBrokersService as jest.Mock;
-    
-    // Configure the mock to return a successful connection
-    mockedInteractiveBrokersService.mockImplementation(() => {
-      return {
-        connect: jest.fn().mockResolvedValue(true),
-      };
-    });
+    // Reset mock to return a successful connection
+    mockConnectFn.mockResolvedValueOnce(true);
     
     const { result } = renderHook(() => useIBKRTestHandlers({
       apiKey: '',
@@ -118,7 +100,7 @@ describe('useIBKRTestHandlers', () => {
     await result.current.handleTestConnection();
     
     // Check service was initialized with correct config
-    expect(mockedInteractiveBrokersService.mock.calls[0][0]).toEqual({
+    expect(MockInteractiveBrokersService.mock.calls[0][0]).toEqual({
       type: 'interactive-brokers' as DataProviderType,
       twsHost: '127.0.0.1',
       twsPort: '7496',
@@ -146,15 +128,8 @@ describe('useIBKRTestHandlers', () => {
       writable: true
     });
     
-    // Get the mocked constructor
-    const mockedInteractiveBrokersService = InteractiveBrokersService as jest.Mock;
-    
-    // Configure the mock to return a successful connection
-    mockedInteractiveBrokersService.mockImplementation(() => {
-      return {
-        connect: jest.fn().mockResolvedValue(true),
-      };
-    });
+    // Reset mock to return a successful connection
+    mockConnectFn.mockResolvedValueOnce(true);
     
     const { result } = renderHook(() => useIBKRTestHandlers({
       apiKey: 'new-key',
@@ -169,19 +144,12 @@ describe('useIBKRTestHandlers', () => {
     await result.current.handleTestConnection();
     
     // Should use saved config
-    expect(mockedInteractiveBrokersService.mock.calls[0][0]).toEqual(savedConfig);
+    expect(MockInteractiveBrokersService.mock.calls[0][0]).toEqual(savedConfig);
   });
 
   test('should handle connection failure', async () => {
-    // Get the mocked constructor
-    const mockedInteractiveBrokersService = InteractiveBrokersService as jest.Mock;
-    
-    // Configure the mock to return a failed connection
-    mockedInteractiveBrokersService.mockImplementation(() => {
-      return {
-        connect: jest.fn().mockResolvedValue(false),
-      };
-    });
+    // Reset mock to return a failed connection
+    mockConnectFn.mockResolvedValueOnce(false);
     
     const { result } = renderHook(() => useIBKRTestHandlers({
       apiKey: 'test-key',
@@ -200,15 +168,8 @@ describe('useIBKRTestHandlers', () => {
   });
 
   test('should handle connection errors', async () => {
-    // Get the mocked constructor
-    const mockedInteractiveBrokersService = InteractiveBrokersService as jest.Mock;
-    
-    // Configure the mock to throw an error
-    mockedInteractiveBrokersService.mockImplementation(() => {
-      return {
-        connect: jest.fn().mockRejectedValue(new Error('Connection error')),
-      };
-    });
+    // Reset mock to throw an error
+    mockConnectFn.mockRejectedValueOnce(new Error('Connection error'));
     
     const { result } = renderHook(() => useIBKRTestHandlers({
       apiKey: 'test-key',
