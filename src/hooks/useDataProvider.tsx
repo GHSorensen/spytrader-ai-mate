@@ -26,13 +26,19 @@ export const useDataProvider = (brokerSettings: BrokerSettings) => {
 
     // Get provider config from broker settings
     const config: DataProviderConfig = {
-      type: brokerSettings.type,
+      type: brokerSettings.type === 'interactive-brokers-tws' ? 'interactive-brokers' : brokerSettings.type,
       apiKey: brokerSettings.credentials.apiKey,
       secretKey: brokerSettings.credentials.secretKey,
       accountId: brokerSettings.credentials.accountId,
       appKey: brokerSettings.credentials.appKey,
       callbackUrl: brokerSettings.credentials.callbackUrl,
-      paperTrading: brokerSettings.paperTrading
+      paperTrading: brokerSettings.paperTrading,
+      // Add TWS specific configuration if using the TWS connection method
+      ...(brokerSettings.type === 'interactive-brokers-tws' && {
+        connectionMethod: 'tws',
+        twsHost: brokerSettings.credentials.twsHost,
+        twsPort: brokerSettings.credentials.twsPort
+      })
     };
 
     // Get provider

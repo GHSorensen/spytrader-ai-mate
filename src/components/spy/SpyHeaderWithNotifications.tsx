@@ -5,18 +5,26 @@ import { HeaderActions } from './header/HeaderActions';
 import { MobileMenu } from './header/MobileMenu';
 
 interface SpyHeaderWithNotificationsProps {
-  userProfile?: any; // Add userProfile prop
+  userProfile?: any; // User profile data
+  minimal?: boolean; // Add minimal prop for AuthenticationPage
 }
 
-export const SpyHeaderWithNotifications: React.FC<SpyHeaderWithNotificationsProps> = ({ userProfile }) => {
+export const SpyHeaderWithNotifications: React.FC<SpyHeaderWithNotificationsProps> = ({ 
+  userProfile,
+  minimal = false 
+}) => {
   // Display actual user name if available, otherwise fallback to defaults
   const userName = userProfile?.username || userProfile?.name || "User";
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
   return (
     <div className="flex justify-between items-center w-full">
-      <LogoAndNav />
+      <LogoAndNav minimal={minimal} />
       <HeaderActions userName={userName} />
-      <MobileMenu />
+      <MobileMenu 
+        isMobileMenuOpen={isMobileMenuOpen}
+        setIsMobileMenuOpen={setIsMobileMenuOpen}
+      />
     </div>
   );
 };
