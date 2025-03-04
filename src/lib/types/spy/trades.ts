@@ -1,4 +1,5 @@
-import { OptionType, TradeStatus } from "./options";
+
+import { OptionType, TradeStatus, MarketCondition } from "./common";
 
 /**
  * Trade data
@@ -6,6 +7,7 @@ import { OptionType, TradeStatus } from "./options";
 export interface SpyTrade {
   id: string;
   optionId?: string;
+  strategyId?: string;
   type: "CALL" | "PUT";
   strikePrice: number;
   expirationDate: Date;
@@ -17,9 +19,12 @@ export interface SpyTrade {
   status: TradeStatus;
   openedAt: Date;
   closedAt?: Date;
+  executionTime?: Date;
+  closingTime?: Date;
   profit: number;
   profitPercentage: number;
   confidenceScore: number;
   signal?: string;
   paperTrading?: boolean;
+  marketCondition?: MarketCondition;
 }
