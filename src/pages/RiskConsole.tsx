@@ -10,8 +10,7 @@ import { AITradingSettings, RiskToleranceType } from '@/lib/types/spy';
 const RiskConsole: React.FC = () => {
   const [autoMode, setAutoMode] = useState(false);
   
-  // Updated to match the AITradingSettings type structure 
-  // from src/components/spy/settings/AISettingsTypes.ts
+  // Updated to match the AITradingSettings type structure
   const defaultSettings: AITradingSettings = {
     enabledStrategies: ['moderate'],
     maxSimultaneousTrades: 3,

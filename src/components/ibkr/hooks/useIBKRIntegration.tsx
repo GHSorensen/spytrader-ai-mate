@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
@@ -6,7 +5,7 @@ import { IBKRAuth } from '@/services/dataProviders/interactiveBrokers/auth';
 import { DataProviderConfig } from '@/lib/types/spy/dataProvider';
 import { getDataProvider } from '@/services/dataProviders/dataProviderFactory';
 
-export function useIBKRIntegration() {
+export const useIBKRIntegration = () => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [apiMethod, setApiMethod] = useState<'webapi' | 'tws'>('webapi');
   const [apiKey, setApiKey] = useState('');
@@ -105,6 +104,26 @@ export function useIBKRIntegration() {
     }
   }, [connectionStatus]);
   
+  const connectToBrokerage = useCallback(async () => {
+    try {
+      setIsConnecting(true);
+      setConnectionStatus('connecting');
+      
+      // This would trigger a reconnection attempt
+      toast.info("Attempting to reconnect to TWS...");
+      
+      // Reset the connecting state after a timeout if no connection established
+      setTimeout(() => {
+        if (connectionStatus === 'connecting') { // This needs to match exactly
+          setConnectionStatus('disconnected');
+          setIsConnecting(false);
+        }
+      }, 5000);
+    } catch (error) {
+      // Error handling
+    }
+  }, [connectionStatus, setIsConnecting, setConnectionStatus]);
+  
   return {
     // State
     isConnecting,
@@ -129,6 +148,7 @@ export function useIBKRIntegration() {
     setAutoReconnectEnabled,
     saveConfiguration,
     navigate,
-    lastConnected
+    lastConnected,
+    connectToBrokerage
   };
 }

@@ -20,6 +20,7 @@ import AuthenticationPage from './components/auth/AuthenticationPage';
 import UserProfilePage from './components/auth/UserProfilePage';
 import { supabase } from './integrations/supabase/client';
 import { SpyHeaderWithNotifications } from './components/spy/SpyHeaderWithNotifications';
+import TradesPage from './pages/TradesPage';
 
 function App() {
   const [session, setSession] = useState(null);
@@ -134,6 +135,7 @@ function App() {
       <Routes>
         <Route path="/" element={session ? <Navigate to="/dashboard" replace /> : <Index />} />
         <Route path="/dashboard" element={<AuthenticatedRoute element={<Dashboard />} />} />
+        <Route path="/trades" element={<AuthenticatedRoute element={<TradesPage />} />} />
         <Route path="/trade-automation" element={<AuthenticatedRoute element={<TradeAutomation />} />} />
         <Route path="/performance" element={<AuthenticatedRoute element={<PerformanceDashboard />} />} />
         <Route path="/detailed-performance" element={<AuthenticatedRoute element={<DetailedPerformancePage />} />} />

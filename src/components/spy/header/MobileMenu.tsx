@@ -18,6 +18,10 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
   isMobileMenuOpen, 
   setIsMobileMenuOpen 
 }) => {
+  const handleNavigation = () => {
+    setIsMobileMenuOpen(false);
+  };
+  
   return (
     <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
       <SheetTrigger asChild>
@@ -31,56 +35,56 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
           <Link 
             to="/" 
             className="px-2 py-1 rounded hover:bg-accent"
-            onClick={() => setIsMobileMenuOpen(false)}
+            onClick={handleNavigation}
           >
             Dashboard
           </Link>
           <Link 
             to="/trades" 
             className="px-2 py-1 rounded hover:bg-accent"
-            onClick={() => setIsMobileMenuOpen(false)}
+            onClick={handleNavigation}
           >
             Trades
           </Link>
           <Link 
             to="/performance" 
             className="px-2 py-1 rounded hover:bg-accent"
-            onClick={() => setIsMobileMenuOpen(false)}
+            onClick={handleNavigation}
           >
             Performance
           </Link>
           <Link 
             to="/detailed-performance" 
             className="px-2 py-1 rounded hover:bg-accent"
-            onClick={() => setIsMobileMenuOpen(false)}
+            onClick={handleNavigation}
           >
             Analytics
           </Link>
           <Link 
             to="/risk-console" 
             className="px-2 py-1 rounded hover:bg-accent"
-            onClick={() => setIsMobileMenuOpen(false)}
+            onClick={handleNavigation}
           >
             Risk Console
           </Link>
           <Link 
             to="/schwab-integration" 
             className="px-2 py-1 rounded hover:bg-accent"
-            onClick={() => setIsMobileMenuOpen(false)}
+            onClick={handleNavigation}
           >
             Schwab Connect
           </Link>
           <Link 
             to="/ibkr-integration" 
             className="px-2 py-1 rounded hover:bg-accent"
-            onClick={() => setIsMobileMenuOpen(false)}
+            onClick={handleNavigation}
           >
             IBKR Connect
           </Link>
           <Link 
             to="/profile" 
             className="px-2 py-1 rounded hover:bg-accent"
-            onClick={() => setIsMobileMenuOpen(false)}
+            onClick={handleNavigation}
           >
             Profile
           </Link>
