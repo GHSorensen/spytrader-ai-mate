@@ -303,11 +303,29 @@ export const useMockPerformanceData = () => {
           outperformance: 22.75,
         },
       },
+      // Additional properties required by BacktestResult
+      totalReturn: 35.25,
+      totalTrades: 250,
+      winningTrades: 171,
+      losingTrades: 79,
+      winRate: 68.5,
+      profitFactor: 2.3,
+      sharpeRatio: 1.8,
+      trades: [], // Would contain actual trade data
       equityCurve: generateEquityCurveData(365, 100000).map(item => ({
         date: item.date,
         equity: item.value,
       })),
-      trades: [], // Would contain actual trade data
+      monthlyReturns: Array(12).fill(0).map((_, i) => ({
+        month: format(subMonths(new Date(), i), 'MMM yyyy'),
+        return: (Math.random() * 15 - 5) / 100, // -5% to 10%
+      })),
+      drawdowns: Array(5).fill(0).map(() => ({
+        startDate: subMonths(new Date(), Math.floor(Math.random() * 12)),
+        endDate: subMonths(new Date(), Math.floor(Math.random() * 6)),
+        depth: Math.random() * 15,
+        duration: Math.floor(Math.random() * 30) + 5,
+      })),
       startDate: subYears(new Date(), 1),
       endDate: new Date(),
       initialCapital: 100000,
@@ -367,11 +385,29 @@ export const useMockPerformanceData = () => {
           outperformance: 30.0,
         },
       },
+      // Additional properties required by BacktestResult
+      totalReturn: 42.5,
+      totalTrades: 350,
+      winningTrades: 228,
+      losingTrades: 122,
+      winRate: 65.2,
+      profitFactor: 2.1,
+      sharpeRatio: 1.6,
+      trades: [], // Would contain actual trade data
       equityCurve: generateEquityCurveData(365, 100000).map(item => ({
         date: item.date,
         equity: item.value,
       })),
-      trades: [], // Would contain actual trade data
+      monthlyReturns: Array(12).fill(0).map((_, i) => ({
+        month: format(subMonths(new Date(), i), 'MMM yyyy'),
+        return: (Math.random() * 20 - 8) / 100, // -8% to 12%
+      })),
+      drawdowns: Array(5).fill(0).map(() => ({
+        startDate: subMonths(new Date(), Math.floor(Math.random() * 12)),
+        endDate: subMonths(new Date(), Math.floor(Math.random() * 6)),
+        depth: Math.random() * 20,
+        duration: Math.floor(Math.random() * 35) + 5,
+      })),
       startDate: subYears(new Date(), 1),
       endDate: new Date(),
       initialCapital: 100000,
@@ -431,11 +467,29 @@ export const useMockPerformanceData = () => {
           outperformance: 42.5,
         },
       },
+      // Additional properties required by BacktestResult
+      totalReturn: 55.0,
+      totalTrades: 450,
+      winningTrades: 281,
+      losingTrades: 169,
+      winRate: 62.5,
+      profitFactor: 1.9,
+      sharpeRatio: 1.4,
+      trades: [], // Would contain actual trade data
       equityCurve: generateEquityCurveData(365, 100000).map(item => ({
         date: item.date,
         equity: item.value,
       })),
-      trades: [], // Would contain actual trade data
+      monthlyReturns: Array(12).fill(0).map((_, i) => ({
+        month: format(subMonths(new Date(), i), 'MMM yyyy'),
+        return: (Math.random() * 25 - 10) / 100, // -10% to 15%
+      })),
+      drawdowns: Array(5).fill(0).map(() => ({
+        startDate: subMonths(new Date(), Math.floor(Math.random() * 12)),
+        endDate: subMonths(new Date(), Math.floor(Math.random() * 6)),
+        depth: Math.random() * 25,
+        duration: Math.floor(Math.random() * 40) + 5,
+      })),
       startDate: subYears(new Date(), 1),
       endDate: new Date(),
       initialCapital: 100000,

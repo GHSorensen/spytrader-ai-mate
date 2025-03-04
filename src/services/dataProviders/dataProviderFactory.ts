@@ -1,4 +1,3 @@
-
 import { DataProviderInterface, DataProviderConfig } from "@/lib/types/spy/dataProvider";
 import { TDAmeritradeService } from "./tdAmeritradeService";
 import { SchwabService } from "./schwabService";
@@ -50,12 +49,7 @@ export const getDataProvider = (config?: DataProviderConfig): DataProviderInterf
     case 'interactive-brokers':
       console.log("Interactive Brokers not yet implemented, using mock provider");
       try {
-        if (typeof window !== 'undefined' && window.toast) {
-          window.toast.add({
-            title: "Using Mock Data",
-            description: "Interactive Brokers integration not yet implemented",
-          });
-        }
+        notifyUser("Interactive Brokers integration not yet implemented");
       } catch (err) {
         console.error("Failed to show toast:", err);
       }
@@ -74,4 +68,14 @@ export const getDataProvider = (config?: DataProviderConfig): DataProviderInterf
  */
 export const clearDataProvider = (): void => {
   dataProviderInstance = null;
+};
+
+const notifyUser = (message: string, isError: boolean = false) => {
+  if (typeof window !== 'undefined' && window.toast) {
+    window.toast({
+      title: isError ? 'Connection Error' : 'Connection Status',
+      description: message,
+      variant: isError ? 'destructive' : 'default',
+    });
+  }
 };

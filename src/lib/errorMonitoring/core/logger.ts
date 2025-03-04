@@ -1,4 +1,3 @@
-
 /**
  * Enhanced error logging implementation
  */
@@ -32,13 +31,7 @@ export function logError(error: Error, context?: ErrorContext): void {
       
       // In development we would show a toast, but we'll skip for now
       try {
-        if (typeof window !== 'undefined' && window.toast) {
-          window.toast.add({
-            title: 'Error',
-            description: error.message.substring(0, 100),
-            variant: 'destructive',
-          });
-        }
+        showErrorToast(error.message, error.stack);
       } catch (e) {
         console.error('Failed to show error toast:', e);
       }
@@ -61,3 +54,17 @@ export function logError(error: Error, context?: ErrorContext): void {
     console.error('Error in error logging system:', loggingError);
   }
 }
+
+export const showErrorToast = (message: string, details?: string) => {
+  try {
+    if (typeof window !== 'undefined' && window.toast) {
+      window.toast({
+        title: 'An error occurred',
+        description: details ? `${message}: ${details}` : message,
+        variant: 'destructive',
+      });
+    }
+  } catch (e) {
+    console.error('Failed to show error toast', e);
+  }
+};

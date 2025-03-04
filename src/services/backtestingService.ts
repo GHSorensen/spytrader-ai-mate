@@ -1,4 +1,3 @@
-
 import { 
   BacktestResult, 
   TradingStrategy,
@@ -152,18 +151,30 @@ export const runBacktest = async (
   // Calculate market benchmark return
   const marketBenchmarkReturn = (priceData[priceData.length - 1].close / priceData[0].close - 1) * 100;
   
+  // Calculate total return
+  const totalReturn = (equity / initialCapital - 1) * 100;
+  
   return {
     strategyId: strategy.id,
     strategyName: strategy.name,
     riskProfile: strategy.riskLevel <= 3 ? 'conservative' : strategy.riskLevel <= 7 ? 'moderate' : 'aggressive',
     performanceMetrics,
+    totalReturn,
+    totalTrades: trades.length,
+    winningTrades: trades.filter(t => (t.profit || 0) > 0).length,
+    losingTrades: trades.filter(t => (t.profit || 0) <= 0).length,
+    winRate: performanceMetrics.winRate,
+    profitFactor: performanceMetrics.profitFactor,
+    sharpeRatio: performanceMetrics.sharpeRatio,
     equityCurve,
     trades,
+    monthlyReturns: performanceMetrics.monthlyReturns,
+    drawdowns: maxDrawdown.drawdowns || [],
     startDate,
     endDate,
     initialCapital,
     finalCapital: equity,
-    maxDrawdown,
+    maxDrawdown: maxDrawdown,
     annualizedReturn: calculateAnnualizedReturn(initialCapital, equity, startDate, endDate),
     marketBenchmarkReturn
   };
@@ -862,6 +873,7 @@ function calculateMaxDrawdown(equityCurve: {date: Date; equity: number}[]): {
   percentage: number;
   startDate: Date;
   endDate: Date;
+  drawdowns?: { startDate: Date; endDate: Date; depth: number; duration: number }[];
 } {
   let maxDrawdown = 0;
   let maxDrawdownPercentage = 0;
@@ -870,14 +882,41 @@ function calculateMaxDrawdown(equityCurve: {date: Date; equity: number}[]): {
   let troughDate = equityCurve[0].date;
   let currentDrawdown, currentDrawdownPercentage;
   
+  // Track all drawdowns
+  const drawdowns: { startDate: Date; endDate: Date; depth: number; duration: number }[] = [];
+  let inDrawdown = false;
+  let drawdownStartDate = new Date();
+  let drawdownPeakValue = 0;
+  
   for (const { date, equity } of equityCurve) {
     if (equity > peakEquity) {
       peakEquity = equity;
       peakDate = date;
+      
+      // Reset drawdown tracking
+      if (inDrawdown) {
+        const duration = Math.floor((date.getTime() - drawdownStartDate.getTime()) / (1000 * 60 * 60 * 24));
+        if (duration > 3) { // Only track drawdowns that last more than 3 days
+          drawdowns.push({
+            startDate: drawdownStartDate,
+            endDate: date,
+            depth: (drawdownPeakValue - Math.min(...equityCurve.map(e => e.equity))) / drawdownPeakValue * 100,
+            duration
+          });
+        }
+        inDrawdown = false;
+      }
     }
     
     currentDrawdown = peakEquity - equity;
     currentDrawdownPercentage = (currentDrawdown / peakEquity) * 100;
+    
+    // Start tracking a new drawdown
+    if (currentDrawdownPercentage > 5 && !inDrawdown) {
+      inDrawdown = true;
+      drawdownStartDate = date;
+      drawdownPeakValue = peakEquity;
+    }
     
     if (currentDrawdownPercentage > maxDrawdownPercentage) {
       maxDrawdown = currentDrawdown;
@@ -890,7 +929,8 @@ function calculateMaxDrawdown(equityCurve: {date: Date; equity: number}[]): {
     amount: maxDrawdown,
     percentage: maxDrawdownPercentage,
     startDate: peakDate,
-    endDate: troughDate
+    endDate: troughDate,
+    drawdowns
   };
 }
 
