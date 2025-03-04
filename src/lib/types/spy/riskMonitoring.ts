@@ -1,9 +1,8 @@
-
 import { RiskToleranceType } from './common';
 
-export type RiskSignalSource = 'price' | 'volatility' | 'volume' | 'momentum' | 'sentiment' | 'technical' | 'fundamental';
+export type RiskSignalSource = 'price' | 'volatility' | 'volume' | 'momentum' | 'sentiment' | 'technical' | 'fundamental' | 'market_volatility' | 'price_action' | 'correlation' | 'news';
 export type RiskSignalCondition = 'bullish' | 'bearish' | 'neutral' | 'volatile' | 'trending' | 'ranging';
-export type RiskSignalStrength = 'weak' | 'moderate' | 'strong' | 'extreme';
+export type RiskSignalStrength = 'weak' | 'moderate' | 'strong' | 'extreme' | 'critical';
 export type RiskSignalDirection = 'bullish' | 'bearish' | 'neutral';
 export type RiskActionType = 
   'exit_trade' | 
@@ -13,9 +12,9 @@ export type RiskActionType =
   'adjust_take_profit' | 
   'increase_position_size' |
   'convert_to_spread' |
-  'no_action';
+  'no_action' |
+  'close_position';
 
-// Risk signal detected by the system
 export interface RiskSignal {
   id: string;
   timestamp: Date;
@@ -28,7 +27,6 @@ export interface RiskSignal {
   dataPoints?: any; // Optional data points related to the signal
 }
 
-// Risk action recommended based on signals
 export interface RiskAction {
   id: string;
   timestamp: Date;
@@ -51,7 +49,6 @@ export interface RiskAction {
   actionType?: RiskActionType; // Legacy field, use 'type' instead
 }
 
-// Learning insight from historical signals and actions
 export interface LearningInsight {
   id: string;
   timestamp: Date;
@@ -72,7 +69,6 @@ export interface LearningInsight {
   averageProfitImpact: number;
 }
 
-// Market risk profile
 export interface MarketRiskProfile {
   currentCondition: RiskSignalCondition;
   volatilityLevel: number; // 0 to 1
@@ -87,14 +83,12 @@ export interface MarketRiskProfile {
   compositeRiskScore: number; // 0 to 1
 }
 
-// Risk monitoring log
 export interface RiskMonitoringLog {
   signals: RiskSignal[];
   actions: RiskAction[];
   learningInsights: LearningInsight[];
 }
 
-// Statistical Anomaly Types
 export type AnomalyType = 
   'price_spike' | 
   'volume_surge' | 
@@ -156,7 +150,6 @@ export interface AnomalyProcessorResult {
   triggerThresholdMet: boolean;
 }
 
-// Strategy learning specific insight type
 export interface StrategyLearningAnomaly {
   anomalyType: AnomalyType;
   strategyId: string;

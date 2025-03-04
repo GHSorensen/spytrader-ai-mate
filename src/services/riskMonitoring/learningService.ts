@@ -8,8 +8,9 @@ import {
   RiskSignalSource,
   RiskSignalStrength,
   RiskSignalDirection,
-  RiskMonitoringLog
-} from './types';
+  RiskMonitoringLog,
+  RiskSignalCondition
+} from '@/lib/types/spy/riskMonitoring';
 import { 
   SpyTrade,
   MarketCondition 
@@ -43,7 +44,7 @@ export function learnFromOutcomes(
   for (const [patternKey, actions] of Object.entries(actionsByPattern)) {
     const [source, condition, strength, direction] = patternKey.split('|') as [
       RiskSignalSource, 
-      MarketCondition, 
+      RiskSignalCondition, // Updated to use RiskSignalCondition instead of MarketCondition
       RiskSignalStrength, 
       RiskSignalDirection
     ];
@@ -60,12 +61,12 @@ export function learnFromOutcomes(
     const actionTypeCounts: Record<RiskActionType, { count: number, profit: number }> = {} as any;
     
     for (const action of actions) {
-      if (!actionTypeCounts[action.type]) {  // Changed from actionType to type
-        actionTypeCounts[action.type] = { count: 0, profit: 0 };  // Changed from actionType to type
+      if (!actionTypeCounts[action.type]) {
+        actionTypeCounts[action.type] = { count: 0, profit: 0 };
       }
       
-      actionTypeCounts[action.type].count++;  // Changed from actionType to type
-      actionTypeCounts[action.type].profit += action.profitImpact || 0;  // Changed from actionType to type
+      actionTypeCounts[action.type].count++;
+      actionTypeCounts[action.type].profit += action.profitImpact || 0;
     }
     
     // Sort action types by average profit impact
@@ -84,14 +85,14 @@ export function learnFromOutcomes(
         strength,
         direction
       },
-      actionTaken: recommendedActions[0] || 'no_action',  // Added actionTaken
+      actionTaken: recommendedActions[0] || 'no_action',
       successRate,
-      profitImpact: averageProfitImpact,  // Added profitImpact
-      appliedCount: actions.length,  // Added appliedCount
-      relatedRiskTolerance: actions[0]?.userRiskTolerance || 'moderate',  // Added relatedRiskTolerance
+      profitImpact: averageProfitImpact,
+      appliedCount: actions.length,
+      relatedRiskTolerance: actions[0]?.userRiskTolerance || 'moderate',
       confidence: calculateInsightConfidence(actions.length, successRate),
       recommendedActions: recommendedActions.slice(0, 3), // Top 3 recommendations
-      averageProfitImpact  // Keep this field
+      averageProfitImpact
     };
     
     insights.push(insight);

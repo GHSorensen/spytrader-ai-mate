@@ -10,7 +10,7 @@ import {
   RiskActionType,
   MarketRiskProfile,
   RiskSignalDirection
-} from './types';
+} from '@/lib/types/spy/riskMonitoring';
 import { 
   AITradingSettings, 
   SpyMarketData, 
