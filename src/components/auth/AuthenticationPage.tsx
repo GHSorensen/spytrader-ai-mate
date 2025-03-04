@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { SpyHeaderWithNotifications } from '@/components/spy/SpyHeaderWithNotifications';
 import { toast } from "sonner";
 import { Separator } from '@/components/ui/separator';
+import { supabase } from '@/integrations/supabase/client';
 
 const AuthenticationPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -24,20 +25,52 @@ const AuthenticationPage: React.FC = () => {
   const [signupConfirmPassword, setSignupConfirmPassword] = useState('');
   const [signupName, setSignupName] = useState('');
   
-  const handleLogin = (e: React.FormEvent) => {
+  // Check if user is already logged in
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        // User is already logged in, redirect to dashboard
+        navigate('/dashboard');
+      }
+    };
+    
+    checkSession();
+    
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        navigate('/dashboard');
+      }
+    });
+    
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate]);
+  
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Mock successful login for demo purposes
-    setTimeout(() => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: loginEmail,
+        password: loginPassword,
+      });
+      
+      if (error) throw error;
+      
       toast.success('Successfully logged in');
+      // Navigation will be handled by the auth state change listener
+    } catch (error: any) {
+      toast.error(error.message || 'Error logging in');
+    } finally {
       setIsLoading(false);
-      // Redirect to dashboard
-      navigate('/dashboard');
-    }, 1500);
+    }
   };
   
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (signupPassword !== signupConfirmPassword) {
@@ -47,25 +80,46 @@ const AuthenticationPage: React.FC = () => {
     
     setIsLoading(true);
     
-    // Mock successful signup for demo purposes
-    setTimeout(() => {
-      toast.success('Account created successfully');
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: signupEmail,
+        password: signupPassword,
+        options: {
+          data: {
+            full_name: signupName,
+          },
+        },
+      });
+      
+      if (error) throw error;
+      
+      toast.success('Account created successfully. Please check your email for verification.');
+      // Stay on the page to allow them to sign in
+    } catch (error: any) {
+      toast.error(error.message || 'Error creating account');
+    } finally {
       setIsLoading(false);
-      // Redirect to dashboard
-      navigate('/dashboard');
-    }, 1500);
+    }
   };
 
-  const handleGoogleSignIn = () => {
+  const handleGoogleSignIn = async () => {
     setIsLoading(true);
     
-    // Mock Google authentication for demo purposes
-    setTimeout(() => {
-      toast.success('Google authentication successful');
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin + '/dashboard',
+        },
+      });
+      
+      if (error) throw error;
+      
+      // The redirect will be handled by Google OAuth
+    } catch (error: any) {
+      toast.error(error.message || 'Error signing in with Google');
       setIsLoading(false);
-      // Redirect to dashboard
-      navigate('/dashboard');
-    }, 1500);
+    }
   };
   
   return (
@@ -137,7 +191,26 @@ const AuthenticationPage: React.FC = () => {
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <Label htmlFor="password">Password</Label>
-                        <Button variant="link" className="px-0 text-xs h-auto" type="button">
+                        <Button 
+                          variant="link" 
+                          className="px-0 text-xs h-auto" 
+                          type="button"
+                          onClick={async () => {
+                            if (!loginEmail) {
+                              toast.error('Please enter your email address first');
+                              return;
+                            }
+                            try {
+                              const { error } = await supabase.auth.resetPasswordForEmail(loginEmail, {
+                                redirectTo: window.location.origin + '/auth',
+                              });
+                              if (error) throw error;
+                              toast.success('Password reset email sent. Please check your inbox');
+                            } catch (error: any) {
+                              toast.error(error.message || 'Failed to send reset email');
+                            }
+                          }}
+                        >
                           Forgot password?
                         </Button>
                       </div>
