@@ -2,24 +2,27 @@
 import { DataProviderConfig, DataProviderStatus, TradeOrder } from "@/lib/types/spy/dataProvider";
 import { SpyMarketData, SpyOption, SpyTrade } from "@/lib/types/spy";
 import { BaseDataProvider } from "./base/BaseDataProvider";
-import { IBKRAuth } from "./interactiveBrokers/auth";
 import { IBKRConnectionManager } from "./interactiveBrokers/IBKRConnectionManager";
 import { IBKRDataService } from "./interactiveBrokers/IBKRDataService";
+import { IBKRAuthService } from "./interactiveBrokers/IBKRAuthService";
+import { IBKRPaperTradeService } from "./interactiveBrokers/IBKRPaperTradeService";
 import { toast } from "sonner";
 
 /**
  * Interactive Brokers API service
  */
 export class InteractiveBrokersService extends BaseDataProvider {
-  private auth: IBKRAuth;
+  private authService: IBKRAuthService;
   private connectionManager: IBKRConnectionManager;
   private dataService: IBKRDataService;
+  private paperTradeService: IBKRPaperTradeService;
   
   constructor(config: DataProviderConfig) {
     super(config);
-    this.auth = new IBKRAuth(config);
+    this.authService = new IBKRAuthService(config);
     this.connectionManager = new IBKRConnectionManager(config);
     this.dataService = new IBKRDataService(config);
+    this.paperTradeService = new IBKRPaperTradeService();
     console.log("InteractiveBrokersService initialized with config:", config);
   }
   
@@ -30,20 +33,20 @@ export class InteractiveBrokersService extends BaseDataProvider {
     try {
       console.log(`Connecting to Interactive Brokers API via ${this.config.connectionMethod || 'webapi'}...`);
       
-      const connected = await this.connectionManager.connect(this.auth);
+      const connected = await this.connectionManager.connect(this.authService);
       console.log("Connection result:", connected);
       
       if (connected) {
-        if (this.connectionManager.getAccessToken()) {
-          this.accessToken = this.connectionManager.getAccessToken();
+        if (this.authService.getAccessToken()) {
+          this.accessToken = this.authService.getAccessToken();
           this.dataService.setAccessToken(this.accessToken);
           console.log("Access token set successfully");
         } else {
           console.warn("No access token received from connection manager");
         }
         
-        if (this.connectionManager.getTokenExpiry()) {
-          this.tokenExpiry = this.connectionManager.getTokenExpiry();
+        if (this.authService.getTokenExpiry()) {
+          this.tokenExpiry = this.authService.getTokenExpiry();
           console.log("Token expiry set:", this.tokenExpiry);
         }
         
@@ -145,7 +148,7 @@ export class InteractiveBrokersService extends BaseDataProvider {
         const connected = await this.connect();
         if (!connected) {
           console.log("Failed to connect to IBKR, falling back to paper trade");
-          return this.createPaperTrade(order);
+          return this.paperTradeService.createPaperTrade(order);
         } else {
           console.log("Successfully connected to IBKR");
         }
@@ -153,7 +156,7 @@ export class InteractiveBrokersService extends BaseDataProvider {
       
       // Always create a paper trade for immediate testing purposes
       // This guarantees we'll at least have a fallback when troubleshooting
-      const mockResult = this.createPaperTrade(order);
+      const mockResult = this.paperTradeService.createPaperTrade(order);
       
       // Check if paper trading is forced via config
       if (this.config.paperTrading) {
@@ -164,13 +167,8 @@ export class InteractiveBrokersService extends BaseDataProvider {
         return mockResult;
       }
       
-      // Check market hours (simplified check)
-      const now = new Date();
-      const hour = now.getHours();
-      const minute = now.getMinutes();
-      const day = now.getDay();
-      const isWeekend = day === 0 || day === 6;
-      const isMarketHours = !isWeekend && ((hour > 9 || (hour === 9 && minute >= 30)) && hour < 16);
+      // Check market hours
+      const isMarketHours = this.paperTradeService.isMarketHours();
       
       if (!isMarketHours) {
         console.log("Outside market hours, creating paper trade instead");
@@ -201,43 +199,7 @@ export class InteractiveBrokersService extends BaseDataProvider {
       });
       
       // Always fall back to paper trade on error
-      return this.createPaperTrade(order);
+      return this.paperTradeService.createPaperTrade(order);
     }
-  }
-  
-  /**
-   * Create a paper trade for testing or when real trading fails
-   */
-  private createPaperTrade(order: TradeOrder): any {
-    console.log("Creating paper trade for:", order);
-    
-    const now = new Date();
-    const expiryDate = new Date(now);
-    expiryDate.setDate(expiryDate.getDate() + 7); // 7 days from now
-    
-    const mockTrade: SpyTrade = {
-      id: `paper-${Date.now()}`,
-      type: order.action === 'BUY' ? "CALL" : "PUT",
-      strikePrice: 500,
-      expirationDate: expiryDate,
-      entryPrice: 3.45,
-      currentPrice: 3.45,
-      targetPrice: 5.0,
-      stopLoss: 2.0,
-      quantity: order.quantity,
-      status: "active",
-      openedAt: now,
-      profit: 0,
-      profitPercentage: 0,
-      confidenceScore: 0.75,
-      paperTrading: true
-    };
-    
-    return { 
-      trade: mockTrade, 
-      orderId: `PAPER-${Date.now()}`,
-      isPaperTrade: true,
-      message: "Created paper trade for testing purposes."
-    };
   }
 }
