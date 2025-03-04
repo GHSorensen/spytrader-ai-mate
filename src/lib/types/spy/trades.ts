@@ -1,10 +1,12 @@
+import { OptionType, TradeStatus } from "./options";
 
-import { OptionType, TradeStatus, MarketCondition } from './common';
-
+/**
+ * Trade data
+ */
 export interface SpyTrade {
   id: string;
-  optionId: string;
-  type: OptionType;
+  optionId?: string;
+  type: "CALL" | "PUT";
   strikePrice: number;
   expirationDate: Date;
   entryPrice: number;
@@ -15,14 +17,9 @@ export interface SpyTrade {
   status: TradeStatus;
   openedAt: Date;
   closedAt?: Date;
-  profit?: number;
-  profitPercentage?: number;
+  profit: number;
+  profitPercentage: number;
   confidenceScore: number;
-  
-  // Adding the missing properties used in strategyLearningService
-  strategyId?: string;
-  executionTime?: Date;
-  closingTime?: Date;
-  marketCondition?: MarketCondition;
+  signal?: string;
+  paperTrading?: boolean;
 }
-

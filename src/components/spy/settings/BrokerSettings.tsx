@@ -1,150 +1,71 @@
 
 import React from 'react';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Save, Server, X } from "lucide-react";
-import { BrokerSettings as BrokerSettingsType } from '@/lib/types/spy/broker';
-import { toast } from '@/components/ui/use-toast';
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useBrokerSettings } from '@/hooks/useBrokerSettings';
-import { InteractiveBrokersTabContent } from './broker/InteractiveBrokersTabContent';
-import { TDAmeritradeTabContent } from './broker/TDAmeritradeTabContent';
-import { SchwabTabContent } from './broker/SchwabTabContent';
-import { NoBrokerTabContent } from './broker/NoBrokerTabContent';
+import { DataProviderType } from '@/lib/types/spy/dataProvider';
+import NoBrokerTabContent from './broker/NoBrokerTabContent';
+import TDAmeritradeTabContent from './broker/TDAmeritradeTabContent';
+import SchwabTabContent from './broker/SchwabTabContent';
+import InteractiveBrokersTabContent from './broker/InteractiveBrokersTabContent';
 
 interface BrokerSettingsProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  currentSettings: BrokerSettingsType;
-  onSave: (settings: BrokerSettingsType) => void;
 }
 
-export const BrokerSettings: React.FC<BrokerSettingsProps> = ({
+const BrokerSettings: React.FC<BrokerSettingsProps> = ({
   open,
-  onOpenChange,
-  currentSettings,
-  onSave
+  onOpenChange
 }) => {
-  const {
-    settings,
-    activeTab,
-    setActiveTab,
-    status,
-    isConnecting,
-    updateCredential,
-    togglePaperTrading,
-    testConnection,
-    prepareSettingsForSave
-  } = useBrokerSettings({ currentSettings });
-
-  const handleSave = () => {
-    const updatedSettings = prepareSettingsForSave();
-    onSave(updatedSettings);
-    onOpenChange(false);
-    
-    toast({
-      title: "Broker Settings Saved",
-      description: `Settings saved for ${
-        updatedSettings.type === 'interactive-brokers' ? 'Interactive Brokers' : 
-        updatedSettings.type === 'td-ameritrade' ? 'TD Ameritrade' :
-        updatedSettings.type === 'schwab' ? 'Schwab' : 'No Broker'
-      }`,
-    });
-  };
-
-  const handleCancel = () => {
-    onOpenChange(false);
-  };
+  const brokerHook = useBrokerSettings();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Server className="h-5 w-5" />
-            Broker Connection Settings
-          </DialogTitle>
-          <DialogDescription>
-            Connect your brokerage account to execute trades automatically
-          </DialogDescription>
-        </DialogHeader>
-
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'ib' | 'td' | 'schwab' | 'none')}>
+      <DialogContent className="max-w-4xl">
+        <Tabs defaultValue="interactive-brokers" className="w-full">
           <TabsList className="grid grid-cols-4 mb-4">
-            <TabsTrigger value="ib">Interactive Brokers</TabsTrigger>
-            <TabsTrigger value="td">TD Ameritrade</TabsTrigger>
+            <TabsTrigger value="td-ameritrade">TD Ameritrade</TabsTrigger>
             <TabsTrigger value="schwab">Schwab</TabsTrigger>
-            <TabsTrigger value="none">No Broker</TabsTrigger>
+            <TabsTrigger value="interactive-brokers">Interactive Brokers</TabsTrigger>
+            <TabsTrigger value="none">None</TabsTrigger>
           </TabsList>
-
-          <TabsContent value="ib">
-            <InteractiveBrokersTabContent 
-              settings={settings}
-              updateCredential={updateCredential}
-              togglePaperTrading={togglePaperTrading}
-              testConnection={testConnection}
-              isConnecting={isConnecting}
-              status={status}
-            />
-          </TabsContent>
-
-          <TabsContent value="td">
+          
+          <TabsContent value="td-ameritrade">
             <TDAmeritradeTabContent 
-              settings={settings}
-              updateCredential={updateCredential}
-              togglePaperTrading={togglePaperTrading}
-              testConnection={testConnection}
-              isConnecting={isConnecting}
-              status={status}
+              isConnecting={brokerHook.isConnecting}
+              brokerStatus={brokerHook.brokerStatus}
+              onConnect={() => brokerHook.handleConnect('td-ameritrade')}
+              onDisconnect={brokerHook.handleDisconnect}
             />
           </TabsContent>
           
           <TabsContent value="schwab">
             <SchwabTabContent 
-              settings={settings}
-              updateCredential={updateCredential}
-              togglePaperTrading={togglePaperTrading}
-              testConnection={testConnection}
-              isConnecting={isConnecting}
-              status={status}
+              isConnecting={brokerHook.isConnecting}
+              brokerStatus={brokerHook.brokerStatus}
+              onConnect={() => brokerHook.handleConnect('schwab')}
+              onDisconnect={brokerHook.handleDisconnect}
             />
           </TabsContent>
-
+          
+          <TabsContent value="interactive-brokers">
+            <InteractiveBrokersTabContent 
+              isConnecting={brokerHook.isConnecting}
+              brokerStatus={brokerHook.brokerStatus}
+              onConnect={() => brokerHook.handleConnect('interactive-brokers')}
+              onDisconnect={brokerHook.handleDisconnect}
+              dataProvider={brokerHook.dataProvider}
+            />
+          </TabsContent>
+          
           <TabsContent value="none">
             <NoBrokerTabContent />
           </TabsContent>
         </Tabs>
-
-        <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0 mt-4">
-          <Button 
-            variant="outline" 
-            onClick={handleCancel} 
-            className="flex-1 sm:flex-none"
-          >
-            <X className="h-4 w-4 mr-2" />
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleSave} 
-            className="flex-1 sm:flex-none"
-          >
-            <Save className="h-4 w-4 mr-2" />
-            Save Settings
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 };
+
+export default BrokerSettings;

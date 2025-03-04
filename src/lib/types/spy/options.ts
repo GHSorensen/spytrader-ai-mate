@@ -1,6 +1,8 @@
-
 import { OptionType } from './common';
 
+/**
+ * Option data
+ */
 export interface SpyOption {
   id: string;
   strikePrice: number;
@@ -14,4 +16,6 @@ export interface SpyOption {
   gamma: number;
   theta: number;
   vega: number;
+  symbol?: string;
+  paperTrading?: boolean;
 }

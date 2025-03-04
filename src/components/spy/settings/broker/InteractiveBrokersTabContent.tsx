@@ -1,105 +1,89 @@
 
-import React from "react";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { RefreshCw, CheckCircle, AlertCircle } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BrokerSettings } from "@/lib/types/spy/broker";
-import { DataProviderStatus } from "@/lib/types/spy/dataProvider";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import ConnectionStatus from '@/components/ibkr/ConnectionStatus';
 
 interface InteractiveBrokersTabContentProps {
-  settings: BrokerSettings;
-  updateCredential: (key: string, value: string) => void;
-  togglePaperTrading: (enabled: boolean) => void;
-  testConnection: () => Promise<void>;
   isConnecting: boolean;
-  status: DataProviderStatus;
+  brokerStatus: string;
+  onConnect: () => Promise<boolean>;
+  onDisconnect: () => Promise<boolean>;
+  dataProvider: any;
 }
 
-export const InteractiveBrokersTabContent: React.FC<InteractiveBrokersTabContentProps> = ({
-  settings,
-  updateCredential,
-  togglePaperTrading,
-  testConnection,
+const InteractiveBrokersTabContent: React.FC<InteractiveBrokersTabContentProps> = ({
   isConnecting,
-  status,
+  brokerStatus,
+  onConnect,
+  onDisconnect,
+  dataProvider
 }) => {
+  const navigate = useNavigate();
+  
+  const handleGoToIntegration = () => {
+    navigate('/ibkr-integration');
+  };
+  
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Interactive Brokers API</CardTitle>
-        <CardDescription>
-          Enter your IBKR credentials to connect via the Client Portal API
-        </CardDescription>
+        <div className="flex justify-between items-center flex-wrap gap-4">
+          <div>
+            <CardTitle>Interactive Brokers Integration</CardTitle>
+            <CardDescription>
+              Connect to your Interactive Brokers account for live trading and market data.
+            </CardDescription>
+          </div>
+          <ConnectionStatus 
+            status={
+              brokerStatus === 'connected' ? 'connected' : 
+              brokerStatus === 'connecting' ? 'connecting' : 
+              brokerStatus === 'error' ? 'error' : 
+              'disconnected'
+            } 
+          />
+        </div>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="ibkr-api-key">API Key</Label>
-          <Input 
-            id="ibkr-api-key" 
-            placeholder="Enter your IBKR API key"
-            value={settings.credentials.apiKey || ''}
-            onChange={(e) => updateCredential('apiKey', e.target.value)}
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="ibkr-account-id">Account ID</Label>
-          <Input 
-            id="ibkr-account-id" 
-            placeholder="Enter your IBKR account ID"
-            value={settings.credentials.accountId || ''}
-            onChange={(e) => updateCredential('accountId', e.target.value)}
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="ibkr-callback-url">Callback URL</Label>
-          <Input 
-            id="ibkr-callback-url" 
-            placeholder="Enter your callback URL"
-            value={settings.credentials.callbackUrl || window.location.origin + '/auth/callback'}
-            onChange={(e) => updateCredential('callbackUrl', e.target.value)}
-          />
-          <p className="text-xs text-muted-foreground">
-            You must whitelist this URL in your IBKR API settings.
+      <CardContent>
+        <div className="space-y-4">
+          <p>
+            Interactive Brokers offers two connection methods:
+          </p>
+          <ul className="ml-6 list-disc space-y-2">
+            <li>Client Portal API - Web-based connection using OAuth</li>
+            <li>Trader Workstation (TWS) API - Direct connection to the TWS desktop application</li>
+          </ul>
+          <p className="text-sm text-muted-foreground mt-2">
+            We recommend using our dedicated integration page for a guided setup process.
           </p>
         </div>
-        
-        <div className="flex items-center justify-between pt-2">
-          <div className="space-y-0.5">
-            <Label htmlFor="paper-trading">Paper Trading</Label>
-            <div className="text-sm text-muted-foreground">
-              Use paper trading account for testing
-            </div>
-          </div>
-          <Switch
-            id="paper-trading"
-            checked={settings.paperTrading}
-            onCheckedChange={togglePaperTrading}
-          />
-        </div>
-        
-        <div className="pt-2">
+      </CardContent>
+      <CardFooter className="flex justify-between">
+        {brokerStatus === 'connected' ? (
+          <Button 
+            variant="destructive" 
+            onClick={onDisconnect}
+            disabled={isConnecting}
+          >
+            Disconnect
+          </Button>
+        ) : (
           <Button 
             variant="outline" 
-            onClick={testConnection} 
-            disabled={isConnecting || !settings.credentials.apiKey || !settings.credentials.accountId}
-            className="w-full"
+            onClick={onConnect}
+            disabled={isConnecting}
           >
-            {isConnecting ? (
-              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-            ) : status.connected ? (
-              <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
-            ) : (
-              <AlertCircle className="h-4 w-4 mr-2" />
-            )}
-            Test Connection
+            Quick Connect
           </Button>
-        </div>
-      </CardContent>
+        )}
+        <Button onClick={handleGoToIntegration} className="flex items-center">
+          Go to IBKR Setup
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </Button>
+      </CardFooter>
     </Card>
   );
 };

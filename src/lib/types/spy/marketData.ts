@@ -1,4 +1,3 @@
-
 // Types related to market data
 export interface SpyMarketData {
   price: number;
@@ -11,5 +10,6 @@ export interface SpyMarketData {
   low: number;
   open: number;
   timestamp: Date;
-  vix: number;
+  vix?: number;
+  paperTrading?: boolean;
 }
