@@ -35,42 +35,31 @@ node --version
 echo "NPM version:"
 npm --version
 
-# Explicitly make npm available
-export PATH="$PATH:/usr/local/bin:/usr/bin:/home/render/.npm-global/bin"
-which npm || { echo "npm not found in PATH. Installing..."; curl -L https://www.npmjs.com/install.sh | sh; }
+# Ensure npm is in PATH - use existing binary paths rather than creating new ones
+export PATH="$PATH:/usr/local/bin:/usr/bin"
+which npm || { echo "npm not found in PATH"; exit 1; }
 
-# Create global npm directory and add to PATH
-mkdir -p /home/render/.npm-global
-npm config set prefix '/home/render/.npm-global'
-export PATH="/home/render/.npm-global/bin:$PATH"
-
-# Install vite globally and make sure it's in the PATH
-npm install -g vite
-export PATH="$(npm bin -g):$PATH"
-which vite || echo "vite command not available even after global install"
-
-# First install express to ensure the server can run
+# Install dependencies - do not use global installs due to read-only filesystem
+echo "Installing express..."
 npm install express --no-audit --no-fund
 
-# Install core dependencies first (especially vite and its plugin)
+echo "Installing vite and React dependencies..."
 npm install vite @vitejs/plugin-react-swc --force --no-audit --no-fund
-
-# Then install React and other core dependencies
 npm install react react-dom @tanstack/react-query --force --no-audit --no-fund
 
-# Then install ALL dependencies with --force to bypass peer dependency conflicts
+echo "Installing all dependencies..."
 npm install --force --no-audit --no-fund
 
-# Run the build process - try multiple approaches
+# Run the build process with multiple fallbacks
 echo "Starting build process..."
-# Try with npx to ensure we're using the locally installed version
+# Try with local npx
 npx vite build || \
-# Try with the npm script
-npm run build --force || \
-# Try with NODE_ENV set and using npx
+# Try with npm script
+npm run build || \
+# Try with NODE_ENV explicitly set
 NODE_ENV=production npx vite build || \
-# Last resort - use the direct path to vite
-"$(npm bin)/vite" build
+# Last resort - use direct npx command with debug flags
+npx --no-install vite build --debug
 
 # Create a marker file to indicate this is a Node.js project
 touch .node-project
