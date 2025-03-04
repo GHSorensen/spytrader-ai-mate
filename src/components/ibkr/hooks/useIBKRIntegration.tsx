@@ -1,6 +1,4 @@
-
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { IBKRAccount, IBKRConnectionStatus } from '@/lib/types/ibkr';
 import { getIBKRConnectionStatus, getIBKRAccounts, connectToIBKR, disconnectFromIBKR } from '@/services/ibkrService';
@@ -42,13 +40,9 @@ interface IBKRIntegrationHook {
   // Actions
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
-  
-  // Navigation
-  navigate: (path: string) => void;
 }
 
 export const useIBKRIntegration = (): IBKRIntegrationHook => {
-  const navigate = useNavigate();
   const { toast } = useToast();
   
   // Connection state
@@ -242,9 +236,6 @@ export const useIBKRIntegration = (): IBKRIntegrationHook => {
     
     // Actions
     connect,
-    disconnect,
-    
-    // Navigation
-    navigate
+    disconnect
   };
 };
