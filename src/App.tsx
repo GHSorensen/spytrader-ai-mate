@@ -23,6 +23,7 @@ import { SpyHeaderWithNotifications } from './components/spy/SpyHeaderWithNotifi
 
 function App() {
   const [session, setSession] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
   const navigate = useNavigate();
 
   // Set up auth state monitoring
@@ -31,16 +32,49 @@ function App() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       console.log("Initial session check:", session ? "Authenticated" : "Not authenticated");
+      
+      // If we have a session, fetch the user profile
+      if (session?.user) {
+        fetchUserProfile(session.user.id);
+      }
     });
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       console.log("Auth state changed:", _event, session);
       setSession(session);
+      
+      // Fetch user profile when auth state changes
+      if (session?.user) {
+        fetchUserProfile(session.user.id);
+      } else {
+        setUserProfile(null);
+      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
+  
+  // Function to fetch user profile
+  const fetchUserProfile = async (userId) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+        
+      if (error) {
+        console.error("Error fetching user profile:", error);
+        return;
+      }
+      
+      console.log("Fetched user profile:", data);
+      setUserProfile(data);
+    } catch (error) {
+      console.error("Error in profile fetch process:", error);
+    }
+  };
 
   // Set up initial notifications on app load
   useEffect(() => {
@@ -78,7 +112,7 @@ function App() {
     <>
       <header className="border-b">
         <div className="container py-4">
-          <SpyHeaderWithNotifications />
+          <SpyHeaderWithNotifications userProfile={userProfile} />
         </div>
       </header>
       {children}
@@ -110,7 +144,7 @@ function App() {
         <Route path="/ibkr-integration" element={<AuthenticatedRoute element={<IBKRIntegrationPage />} />} />
         <Route path="/auth/ibkr/callback" element={<IBKRCallbackPage />} />
         <Route path="/auth" element={session ? <Navigate to="/dashboard" replace /> : <AuthenticationPage />} />
-        <Route path="/profile" element={<AuthenticatedRoute element={<UserProfilePage />} />} />
+        <Route path="/profile" element={<AuthenticatedRoute element={<UserProfilePage userProfile={userProfile} />} />} />
         <Route path="/not-found" element={<NotFound />} />
         <Route path="*" element={<Navigate to="/not-found" replace />} />
       </Routes>

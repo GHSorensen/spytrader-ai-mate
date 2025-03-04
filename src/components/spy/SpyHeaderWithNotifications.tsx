@@ -1,46 +1,24 @@
 
-import React, { useState } from 'react';
-import { AISettingsDialog } from './AISettingsDialog';
-import { RiskToleranceType } from '@/lib/types/spy';
-import { LogoAndNav, MobileMenu, HeaderActions } from './header';
+import React from 'react';
+import { LogoAndNav } from './header/LogoAndNav';
+import { HeaderActions } from './header/HeaderActions';
+import { MobileMenu } from './header/MobileMenu';
 
-interface SpyHeaderProps {
-  minimal?: boolean;
+interface SpyHeaderWithNotificationsProps {
+  userProfile?: any; // Add userProfile prop
 }
 
-export const SpyHeaderWithNotifications: React.FC<SpyHeaderProps> = ({ minimal = false }) => {
-  // Add state for AI settings dialog
-  const [isAISettingsOpen, setIsAISettingsOpen] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [riskTolerance, setRiskTolerance] = useState<RiskToleranceType>('moderate');
-
-  // Handler for risk tolerance changes
-  const handleRiskToleranceChange = (tolerance: RiskToleranceType) => {
-    setRiskTolerance(tolerance);
-  };
+export const SpyHeaderWithNotifications: React.FC<SpyHeaderWithNotificationsProps> = ({ userProfile }) => {
+  // Display actual user name if available, otherwise fallback to defaults
+  const userName = userProfile?.username || userProfile?.name || "User";
 
   return (
-    <div className="flex items-center justify-between w-full">
-      <LogoAndNav minimal={minimal} />
-      
-      <div className="flex items-center gap-2">
-        {/* Mobile Menu Button - only shown on small screens */}
-        <MobileMenu 
-          isMobileMenuOpen={isMobileMenuOpen} 
-          setIsMobileMenuOpen={setIsMobileMenuOpen} 
-        />
-
-        <HeaderActions setIsAISettingsOpen={setIsAISettingsOpen} />
-        
-        <AISettingsDialog 
-          open={isAISettingsOpen}
-          onOpenChange={setIsAISettingsOpen}
-          currentRiskTolerance={riskTolerance}
-          onRiskToleranceChange={handleRiskToleranceChange}
-        />
-      </div>
+    <div className="flex justify-between items-center w-full">
+      <LogoAndNav />
+      <HeaderActions userName={userName} />
+      <MobileMenu />
     </div>
   );
 };
 
-export default SpyHeaderWithNotifications;
+SpyHeaderWithNotifications.displayName = "SpyHeaderWithNotifications";

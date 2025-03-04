@@ -36,6 +36,27 @@ const LoginForm: React.FC<LoginFormProps> = ({ isLoading, setIsLoading, switchTo
       }
       
       console.log("Login successful:", data);
+      
+      // Fetch user profile if login successful
+      if (data?.user) {
+        try {
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', data.user.id)
+            .single();
+            
+          if (profileError) {
+            console.error("Error fetching user profile:", profileError);
+          } else {
+            console.log("User profile fetched:", profileData);
+            // You could store profile data in local storage or context here if needed
+          }
+        } catch (profileFetchError) {
+          console.error("Error in profile fetch process:", profileFetchError);
+        }
+      }
+      
       toast.success('Successfully logged in');
       // Navigation will be handled by the auth state change listener
     } catch (error: any) {
