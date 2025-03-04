@@ -25,6 +25,7 @@ function App() {
   const [session, setSession] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [isAISettingsOpen, setIsAISettingsOpen] = useState(false);
+  const [isAuthReady, setIsAuthReady] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -35,6 +36,7 @@ function App() {
       if (session?.user) {
         fetchUserProfile(session.user.id);
       }
+      setIsAuthReady(true);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
@@ -96,6 +98,13 @@ function App() {
     };
   }, []);
 
+  // Don't render anything until auth is ready to prevent flash
+  if (!isAuthReady) {
+    return <div className="flex items-center justify-center min-h-screen">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+    </div>;
+  }
+
   const AuthenticatedLayout = ({ children }) => (
     <>
       <header className="border-b">
@@ -133,7 +142,7 @@ function App() {
         <Route path="/schwab-integration" element={<AuthenticatedRoute element={<SchwabIntegrationPage />} />} />
         <Route path="/ibkr-integration" element={<AuthenticatedRoute element={<IBKRIntegrationPage />} />} />
         <Route path="/auth/ibkr/callback" element={<IBKRCallbackPage />} />
-        <Route path="/auth" element={session ? <Navigate to="/dashboard" replace /> : <AuthenticationPage />} />
+        <Route path="/auth" element={<AuthenticationPage />} />
         <Route path="/profile" element={<AuthenticatedRoute element={<UserProfilePage userProfile={userProfile} />} />} />
         <Route path="/not-found" element={<NotFound />} />
         <Route path="*" element={<Navigate to="/not-found" replace />} />

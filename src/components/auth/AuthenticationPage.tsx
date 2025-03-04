@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,69 +12,64 @@ import SignupForm from './SignupForm';
 const AuthenticationPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [defaultTab, setDefaultTab] = useState('signup');
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
   
   useEffect(() => {
+    // Check if the user is already logged in
     const checkSession = async () => {
       try {
+        setIsCheckingSession(true);
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
           console.error("Session check error:", error);
+          setIsCheckingSession(false);
           return;
         }
         
+        // If user is logged in, navigate to dashboard
         if (data.session) {
           console.log("User already logged in, redirecting to dashboard");
-          navigate('/dashboard');
-          toast.success('You are already logged in');
+          navigate('/dashboard', { replace: true });
+          return; // Don't set isCheckingSession to false - we're navigating away
         }
+        
+        setIsCheckingSession(false);
       } catch (err) {
         console.error("Failed to check session:", err);
+        setIsCheckingSession(false);
       }
     };
     
     checkSession();
     
-    const returnPath = location.state?.returnTo || '/dashboard';
-    console.log("Return path:", returnPath);
-    
+    // Check if there's an access token in the URL hash (for OAuth)
     const hash = window.location.hash;
     if (hash && hash.includes('access_token')) {
       console.log("Detected auth callback in URL");
       setDefaultTab('login');
     }
     
+    // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("Auth state changed:", event, session);
       
-      if (event === 'SIGNED_IN' && session) {
-        console.log("User signed in, redirecting to:", returnPath);
-        navigate(returnPath);
-        toast.success('Successfully logged in');
-      }
-      else if (event === 'SIGNED_OUT') {
-        toast.info('You have been signed out');
-      }
-      else if (event === 'USER_UPDATED') {
-        toast.info('Your account has been updated');
-      }
-      else if (event === 'PASSWORD_RECOVERY') {
-        toast.info('Password recovery initiated');
-      }
-      else if (event === 'TOKEN_REFRESHED') {
-        console.log("Token refreshed");
-      }
-      else if (event.toLowerCase() === 'user_deleted') {
-        toast.info('Your account has been deleted');
+      // Only handle state changes after the initial check is complete
+      if (!isCheckingSession) {
+        if (event === 'SIGNED_IN' && session) {
+          const returnPath = location.state?.returnTo || '/dashboard';
+          console.log("User signed in, redirecting to:", returnPath);
+          navigate(returnPath, { replace: true });
+        }
       }
     });
     
     return () => {
       subscription.unsubscribe();
     };
-  }, [navigate, location]);
+  }, [navigate, location, isCheckingSession]);
   
   const switchToLogin = () => {
     setDefaultTab('login');
@@ -87,6 +83,13 @@ const AuthenticationPage: React.FC = () => {
     switchToLogin();
     toast.info('Please log in with your new account');
   };
+  
+  // Don't render anything while checking session to prevent flashes
+  if (isCheckingSession) {
+    return <div className="flex items-center justify-center min-h-screen">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+    </div>;
+  }
   
   return (
     <div className="flex flex-col min-h-screen">

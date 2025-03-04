@@ -4,7 +4,7 @@ import { LogoAndNav } from './header/LogoAndNav';
 import { HeaderActions } from './header/HeaderActions';
 import { MobileMenu } from './header/MobileMenu';
 
-interface SpyHeaderWithNotificationsProps {
+export interface SpyHeaderWithNotificationsProps {
   userProfile?: any; // User profile data
   minimal?: boolean; // For AuthenticationPage
   setIsAISettingsOpen?: (open: boolean) => void;
