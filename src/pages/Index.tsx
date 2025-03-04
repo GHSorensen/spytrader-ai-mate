@@ -6,6 +6,7 @@ import { SpyOverview } from '@/components/spy/SpyOverview';
 import { OptionChain } from '@/components/spy/OptionChain';
 import { TradeJournal } from '@/components/spy/TradeJournal';
 import { AccountBalance } from '@/components/spy/AccountBalance';
+import { TodaysTrades } from '@/components/spy/TodaysTrades';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Shield, BarChart2, Settings, User, History, LineChart } from 'lucide-react';
@@ -55,7 +56,7 @@ export const Index = () => {
           </Card>
         </div>
         
-        {/* Account Balance - New component added between Account Management and SPY Overview */}
+        {/* Account Balance */}
         <div className="my-6">
           <AccountBalance 
             balance={accountData.balance} 
@@ -65,6 +66,11 @@ export const Index = () => {
         </div>
         
         <SpyOverview />
+        
+        {/* Today's Trades - shown on all screen sizes but optimized for mobile */}
+        <div className="my-6">
+          <TodaysTrades />
+        </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 my-6">
           <Card>
@@ -109,8 +115,15 @@ export const Index = () => {
         </div>
         
         <div className="grid grid-cols-1 gap-6">
-          <OptionChain />
-          <TradeJournal />
+          {/* Option Chain - hidden on mobile, shown on larger screens */}
+          <div className="hidden md:block">
+            <OptionChain />
+          </div>
+          
+          {/* Full Trade Journal - hidden on mobile (replaced by Today's Trades), shown on larger screens */}
+          <div className="hidden md:block">
+            <TradeJournal />
+          </div>
         </div>
       </main>
       
