@@ -52,7 +52,7 @@ describe('useIBKRIntegration', () => {
   test('should return combined state from all hooks', () => {
     const { result } = renderHook(() => useIBKRIntegration());
     
-    expect(result.current).toEqual(expect.objectContaining({
+    expect(result.current).toEqual({
       connectionStatus: 'disconnected',
       isConnecting: false,
       accounts: [],
@@ -65,18 +65,17 @@ describe('useIBKRIntegration', () => {
       twsPort: '7496',
       isPaperTrading: false,
       isConfigured: false,
-    }));
-    
-    // Check that functions exist
-    expect(typeof result.current.connect).toBe('function');
-    expect(typeof result.current.disconnect).toBe('function');
-    expect(typeof result.current.setApiMethod).toBe('function');
-    expect(typeof result.current.setApiKey).toBe('function');
-    expect(typeof result.current.setCallbackUrl).toBe('function');
-    expect(typeof result.current.setTwsHost).toBe('function');
-    expect(typeof result.current.setTwsPort).toBe('function');
-    expect(typeof result.current.setIsPaperTrading).toBe('function');
-    expect(typeof result.current.setIsConfigured).toBe('function');
+      // Check that functions exist
+      connect: expect.any(Function),
+      disconnect: expect.any(Function),
+      setApiMethod: expect.any(Function),
+      setApiKey: expect.any(Function),
+      setCallbackUrl: expect.any(Function),
+      setTwsHost: expect.any(Function),
+      setTwsPort: expect.any(Function),
+      setIsPaperTrading: expect.any(Function),
+      setIsConfigured: expect.any(Function),
+    });
   });
 
   test('should start monitoring when configured', () => {

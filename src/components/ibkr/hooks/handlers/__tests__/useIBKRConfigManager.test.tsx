@@ -21,7 +21,7 @@ describe('useIBKRConfigManager', () => {
       type: 'interactive-brokers' as DataProviderType,
       apiKey: 'test-api-key',
       callbackUrl: 'https://example.com/callback',
-      connectionMethod: 'webapi',
+      connectionMethod: 'webapi' as 'webapi' | 'tws',
       paperTrading: false
     };
     

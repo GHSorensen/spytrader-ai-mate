@@ -32,4 +32,6 @@ module.exports = {
       isolatedModules: true,
     }
   },
+  // Add types to list to fix type issues with Jest
+  types: ["jest", "node"]
 };

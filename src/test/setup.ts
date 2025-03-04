@@ -31,16 +31,6 @@ afterEach(() => {
   localStorageMock.clear();
 });
 
-// Add TypeScript declarations for Jest globals
-declare global {
-  namespace jest {
-    interface Mock<T = any, Y extends any[] = any[]> extends Function {
-      new(...args: Y): T;
-      (...args: Y): T;
-      mockImplementation(fn?: (...args: Y) => T): this;
-      mockImplementationOnce(fn?: (...args: Y) => T): this;
-      mockReturnValue(value: T): this;
-      mockReturnValueOnce(value: T): this;
-    }
-  }
-}
+// Note: We've removed the duplicate Mock interface definition
+// since it's now defined in jest.d.ts
+

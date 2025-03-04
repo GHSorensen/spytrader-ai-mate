@@ -16,6 +16,9 @@ export default tseslint.config(
         ...globals.browser,
         ...globals.jest,
       },
+      parserOptions: {
+        project: ['./tsconfig.json'],
+      },
     },
     plugins: {
       "react-hooks": reactHooks,
@@ -28,6 +31,7 @@ export default tseslint.config(
         { allowConstantExport: true },
       ],
       "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/ban-ts-comment": "off",
     },
   }
 );

@@ -4,7 +4,7 @@ import '@testing-library/jest-dom';
 declare global {
   // Add Jest globals to the TypeScript environment
   const describe: (name: string, fn: () => void) => void;
-  const test: (name: string, fn: (done: jest.DoneCallback) => void, timeout?: number) => void;
+  const test: (name: string, fn: (done?: jest.DoneCallback) => void, timeout?: number) => void;
   const it: typeof test;
   const expect: jest.Expect;
   const beforeEach: (fn: () => void) => void;
@@ -50,6 +50,10 @@ declare global {
     interface Expect {
       (actual: any): any;
       extend(matchers: any): void;
+      objectContaining(object: object): any;
+      stringContaining(str: string): any;
+      arrayContaining(arr: any[]): any;
+      stringMatching(str: string | RegExp): any;
     }
 
     interface DoneCallback {
@@ -59,17 +63,3 @@ declare global {
   }
 }
 
-// Mock interfaces for InteractiveBrokersService
-declare module '@/services/dataProviders/interactiveBrokersService' {
-  export class InteractiveBrokersService {
-    static mock: {
-      calls: any[][];
-      instances: any[];
-      results: Array<{ type: string; value: any }>;
-    };
-    static mockImplementation: (fn: (...args: any[]) => any) => typeof InteractiveBrokersService;
-    static mockImplementationOnce: (fn: (...args: any[]) => any) => typeof InteractiveBrokersService;
-    connect: jest.Mock;
-    constructor(config: any);
-  }
-}

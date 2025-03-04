@@ -13,15 +13,13 @@ jest.mock('sonner', () => ({
   },
 }));
 
-jest.mock('@/services/dataProviders/interactiveBrokersService', () => {
-  return {
-    InteractiveBrokersService: jest.fn().mockImplementation(() => {
-      return {
-        connect: jest.fn().mockResolvedValue(true),
-      };
-    }),
-  };
-});
+jest.mock('@/services/dataProviders/interactiveBrokersService', () => ({
+  InteractiveBrokersService: jest.fn().mockImplementation(() => {
+    return {
+      connect: jest.fn().mockResolvedValue(true),
+    };
+  }),
+}));
 
 jest.mock('@/services/dataProviders/dataProviderFactory', () => ({
   clearDataProvider: jest.fn(),
@@ -115,7 +113,7 @@ describe('useIBKRTwsHandlers', () => {
 
   test('should handle connection failure', async () => {
     // Override the mock to simulate connection failure
-    InteractiveBrokersService.mockImplementationOnce(() => {
+    (InteractiveBrokersService as jest.Mock).mockImplementation(() => {
       return {
         connect: jest.fn().mockResolvedValue(false),
       };
@@ -142,7 +140,7 @@ describe('useIBKRTwsHandlers', () => {
 
   test('should handle connection errors', async () => {
     // Override the mock to simulate error
-    InteractiveBrokersService.mockImplementationOnce(() => {
+    (InteractiveBrokersService as jest.Mock).mockImplementation(() => {
       return {
         connect: jest.fn().mockRejectedValue(new Error('Connection error')),
       };
