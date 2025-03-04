@@ -6,11 +6,11 @@ import { ibkrDocumentation } from '@/services/dataProviders/interactiveBrokers/d
 
 export const IBKRGuide: React.FC = () => {
   return (
-    <div className="hidden sm:relative sm:block group">
+    <div className="relative block group">
       <Button 
         variant="outline" 
         size="sm" 
-        className="text-xs hidden sm:inline-flex"
+        className="text-xs inline-flex"
         onClick={() => ibkrDocumentation.openUserGuide()}
       >
         IBKR Guide
