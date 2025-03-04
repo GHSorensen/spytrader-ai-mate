@@ -9,6 +9,7 @@ import { useIBKRRealTimeData } from '@/hooks/useIBKRRealTimeData';
 const IBKRIntegrationContainer: React.FC = () => {
   const navigate = useNavigate();
   
+  // Use the refactored hook
   const {
     isConnecting,
     setIsConnecting,
@@ -33,6 +34,7 @@ const IBKRIntegrationContainer: React.FC = () => {
   // Real-time data integration
   const { isConnected, dataSource, refreshAllData } = useIBKRRealTimeData();
   
+  // No change needed to useIBKRHandlers
   const {
     handleStartAuth,
     handleTwsConnect,
@@ -50,6 +52,7 @@ const IBKRIntegrationContainer: React.FC = () => {
     navigate
   });
 
+  // No change needed to the component render
   return (
     <IBKRIntegrationView
       isConnecting={isConnecting}

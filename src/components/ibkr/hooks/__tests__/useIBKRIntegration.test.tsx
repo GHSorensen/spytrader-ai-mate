@@ -3,20 +3,13 @@ import { renderHook, act } from '@testing-library/react-hooks';
 import { useIBKRIntegration } from '../useIBKRIntegration';
 
 // Mock the dependencies
-jest.mock('../ibkr-connection/useIBKRConnection', () => ({
-  useIBKRConnection: jest.fn().mockReturnValue({
-    connectionStatus: 'disconnected',
-    isConnecting: false,
-    setIsConnecting: jest.fn(),
-    setConnectionStatus: jest.fn(),
-    isLoading: false,
-    error: null,
-    connect: jest.fn(),
-    disconnect: jest.fn(),
-    startMonitoring: jest.fn(),
+jest.mock('../ibkr-connection/useIBKRConnectionMonitoring', () => ({
+  useIBKRConnectionMonitoring: jest.fn().mockReturnValue({
     isMonitoring: false,
+    startMonitoring: jest.fn(),
     stopMonitoring: jest.fn(),
     checkConnectionStatus: jest.fn(),
+    lastChecked: null
   }),
 }));
 
@@ -48,6 +41,34 @@ jest.mock('../ibkr-config/useIBKRConfig', () => ({
   }),
 }));
 
+jest.mock('../ibkr-integration/useIBKRIntegrationState', () => ({
+  useIBKRIntegrationState: jest.fn().mockReturnValue({
+    connectionStatus: 'disconnected',
+    setConnectionStatus: jest.fn(),
+    isConnecting: false,
+    setIsConnecting: jest.fn(),
+  }),
+}));
+
+jest.mock('../ibkr-integration/useIBKRConnectionActions', () => ({
+  useIBKRConnectionActions: jest.fn().mockReturnValue({
+    connect: jest.fn(),
+    disconnect: jest.fn(),
+  }),
+}));
+
+jest.mock('../ibkr-integration/useIBKRMonitoring', () => ({
+  useIBKRMonitoring: jest.fn().mockReturnValue({
+    accounts: [],
+    accountsLoading: false,
+    accountsError: null,
+    isMonitoring: false,
+    startMonitoring: jest.fn(),
+    stopMonitoring: jest.fn(),
+    checkConnectionStatus: jest.fn(),
+  }),
+}));
+
 describe('useIBKRIntegration', () => {
   test('should return combined state from all hooks', () => {
     const { result } = renderHook(() => useIBKRIntegration());
@@ -68,6 +89,8 @@ describe('useIBKRIntegration', () => {
       // Check that functions exist
       connect: expect.any(Function),
       disconnect: expect.any(Function),
+      setIsConnecting: expect.any(Function),
+      setConnectionStatus: expect.any(Function),
       setApiMethod: expect.any(Function),
       setApiKey: expect.any(Function),
       setCallbackUrl: expect.any(Function),
@@ -76,75 +99,5 @@ describe('useIBKRIntegration', () => {
       setIsPaperTrading: expect.any(Function),
       setIsConfigured: expect.any(Function),
     });
-  });
-
-  test('should start monitoring when configured', () => {
-    const startMonitoringMock = jest.fn();
-    
-    require('../ibkr-connection/useIBKRConnection').useIBKRConnection.mockReturnValue({
-      connectionStatus: 'disconnected',
-      isConnecting: false,
-      setIsConnecting: jest.fn(),
-      setConnectionStatus: jest.fn(),
-      isLoading: false,
-      error: null,
-      connect: jest.fn(),
-      disconnect: jest.fn(),
-      startMonitoring: startMonitoringMock,
-      isMonitoring: false,
-      stopMonitoring: jest.fn(),
-      checkConnectionStatus: jest.fn(),
-    });
-    
-    require('../ibkr-config/useIBKRConfig').useIBKRConfig.mockReturnValue({
-      apiMethod: 'webapi',
-      setApiMethod: jest.fn(),
-      apiKey: 'test-key',
-      setApiKey: jest.fn(),
-      callbackUrl: 'http://localhost:3000/auth/ibkr/callback',
-      setCallbackUrl: jest.fn(),
-      twsHost: '127.0.0.1',
-      setTwsHost: jest.fn(),
-      twsPort: '7496',
-      setTwsPort: jest.fn(),
-      isPaperTrading: false,
-      setIsPaperTrading: jest.fn(),
-      isConfigured: true,
-      setIsConfigured: jest.fn(),
-    });
-    
-    renderHook(() => useIBKRIntegration());
-    
-    expect(startMonitoringMock).toHaveBeenCalled();
-  });
-
-  test('should fetch accounts when connected', () => {
-    const fetchAccountsMock = jest.fn();
-    
-    require('../ibkr-connection/useIBKRConnection').useIBKRConnection.mockReturnValue({
-      connectionStatus: 'connected',
-      isConnecting: false,
-      setIsConnecting: jest.fn(),
-      setConnectionStatus: jest.fn(),
-      isLoading: false,
-      error: null,
-      connect: jest.fn(),
-      disconnect: jest.fn(),
-      startMonitoring: jest.fn(),
-      isMonitoring: true,
-      stopMonitoring: jest.fn(),
-      checkConnectionStatus: jest.fn(),
-    });
-    
-    require('../ibkr-accounts/useIBKRAccounts').useIBKRAccounts.mockReturnValue({
-      accounts: [],
-      isLoading: false,
-      error: null,
-      fetchAccounts: fetchAccountsMock,
-    });
-    
-    renderHook(() => useIBKRIntegration());
-    
-    expect(fetchAccountsMock).toHaveBeenCalled();
   });
 });

@@ -1,8 +1,8 @@
 
-import { useEffect } from 'react';
-import { useIBKRConnection } from './ibkr-connection/useIBKRConnection';
-import { useIBKRAccounts } from './ibkr-accounts/useIBKRAccounts';
 import { useIBKRConfig } from './ibkr-config/useIBKRConfig';
+import { useIBKRIntegrationState } from './ibkr-integration/useIBKRIntegrationState';
+import { useIBKRMonitoring } from './ibkr-integration/useIBKRMonitoring';
+import { useIBKRConnectionActions } from './ibkr-integration/useIBKRConnectionActions';
 import { IBKRAccount, IBKRConnectionStatus } from '@/lib/types/ibkr';
 
 interface IBKRIntegrationHook {
@@ -45,25 +45,7 @@ interface IBKRIntegrationHook {
 }
 
 export const useIBKRIntegration = (): IBKRIntegrationHook => {
-  const {
-    connectionStatus,
-    isConnecting,
-    setIsConnecting,
-    setConnectionStatus,
-    isLoading: connectionLoading,
-    error: connectionError,
-    connect,
-    disconnect,
-    startMonitoring
-  } = useIBKRConnection();
-  
-  const {
-    accounts,
-    isLoading: accountsLoading,
-    error: accountsError,
-    fetchAccounts
-  } = useIBKRAccounts();
-  
+  // Get configuration state from useIBKRConfig
   const {
     apiMethod,
     setApiMethod,
@@ -81,26 +63,34 @@ export const useIBKRIntegration = (): IBKRIntegrationHook => {
     setIsConfigured
   } = useIBKRConfig();
 
-  // Determine if we're loading or have an error
-  const isLoading = connectionLoading || accountsLoading;
-  const error = connectionError || accountsError;
+  // Get connection state management
+  const {
+    connectionStatus,
+    setConnectionStatus,
+    isConnecting,
+    setIsConnecting
+  } = useIBKRIntegrationState();
 
-  // Check connection status and fetch accounts
-  useEffect(() => {
-    // Start connection monitoring when component mounts
-    if (isConfigured) {
-      startMonitoring();
-    }
-    
-    // Fetch accounts when connected
-    if (connectionStatus === 'connected') {
-      fetchAccounts();
-    }
-    
-    return () => {
-      // Connection monitoring is cleaned up in the monitoring hook
-    };
-  }, [isConfigured, connectionStatus, fetchAccounts, startMonitoring]);
+  // Set up monitoring and account management
+  const {
+    accounts,
+    accountsLoading,
+    accountsError,
+    isMonitoring,
+    startMonitoring,
+    stopMonitoring,
+    checkConnectionStatus
+  } = useIBKRMonitoring(isConfigured, connectionStatus, setConnectionStatus);
+
+  // Set up connection actions
+  const {
+    connect,
+    disconnect
+  } = useIBKRConnectionActions(setConnectionStatus, startMonitoring, stopMonitoring);
+
+  // Determine if we're loading or have an error
+  const isLoading = accountsLoading;
+  const error = accountsError;
 
   return {
     connectionStatus,
