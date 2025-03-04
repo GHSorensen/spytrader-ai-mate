@@ -3,23 +3,24 @@ import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button"; 
 import { RiskHeader } from '../components/spy/risk-console/RiskHeader';
 import { Footer } from '../components/spy/risk-console/Footer';
-import { DemoNotifications } from '../components/spy/risk-console/DemoNotifications';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeftIcon } from 'lucide-react';
-import { RiskSignal, RiskAction, LearningInsight, StatisticalAnomaly } from '@/lib/types/spy/riskMonitoring';
-import { RiskInsights } from '@/components/spy/settings/risk/RiskInsights';
+import { ArrowLeftIcon, Shield, AlertTriangle, BarChart } from 'lucide-react';
+import { RiskSignal, RiskAction } from '@/lib/types/spy/riskMonitoring';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SignalsSection } from '@/components/spy/settings/risk/components/SignalsSection';
+import { ActionsSection } from '@/components/spy/settings/risk/components/ActionsSection';
+import { useAccountBalance } from '@/hooks/useAccountBalance';
+import { TodaysTrades } from '@/components/spy/TodaysTrades';
 
 const RiskConsole: React.FC = () => {
   const navigate = useNavigate();
+  const accountData = useAccountBalance();
   
   // State for risk data
   const [isLoading, setIsLoading] = useState(false);
   const [riskSignals, setRiskSignals] = useState<RiskSignal[]>([]);
   const [riskActions, setRiskActions] = useState<RiskAction[]>([]);
-  const [learningInsights, setLearningInsights] = useState<LearningInsight[]>([]);
-  const [anomalies, setAnomalies] = useState<StatisticalAnomaly[]>([]);
   const [lastDetectionTime, setLastDetectionTime] = useState<Date>(new Date());
   const [autoMode, setAutoMode] = useState(false);
   
@@ -72,51 +73,8 @@ const RiskConsole: React.FC = () => {
       }
     ];
     
-    // Mock insights - fixing the property name to match the type definition
-    const mockInsights: LearningInsight[] = [
-      {
-        id: 'insight-1',
-        timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-        signalPattern: {
-          source: 'volatility',
-          condition: 'volatile',
-          strength: 'strong',
-          direction: 'bearish'
-        },
-        actionTaken: 'reduce_position_size',
-        successRate: 0.8,
-        profitImpact: 750,
-        description: 'Reducing position size during volatility spikes has been 80% effective',
-        appliedCount: 12,
-        relatedRiskTolerance: 'moderate',
-        confidence: 0.75,
-        recommendedActions: ['reduce_position_size', 'adjust_stop_loss'],
-        averageProfitImpact: 680
-      }
-    ];
-    
-    // Mock anomalies
-    const mockAnomalies: StatisticalAnomaly[] = [
-      {
-        id: 'anomaly-1',
-        timestamp: new Date(),
-        type: 'volatility_explosion',
-        detectionMethod: 'zscore',
-        timeWindow: '1d',
-        metric: 'VIX',
-        value: 35.2,
-        expectedValue: 18.5,
-        deviation: 2.8,
-        zScore: 3.2,
-        confidence: 0.92,
-        description: 'Abnormal volatility expansion detected'
-      }
-    ];
-    
     setRiskSignals(mockSignals);
     setRiskActions(mockActions);
-    setLearningInsights(mockInsights);
-    setAnomalies(mockAnomalies);
   }, []);
   
   const performRiskMonitoring = () => {
@@ -141,55 +99,76 @@ const RiskConsole: React.FC = () => {
   return (
     <div className="container mx-auto py-6">
       <div className="flex flex-col min-h-[calc(100vh-8rem)]">
-        <RiskHeader
-          autoMode={autoMode}
-          isLoading={isLoading}
-          toggleAutoMode={toggleAutoMode}
-          performRiskMonitoring={performRiskMonitoring}
-        />
-        
-        <Tabs defaultValue="insights" className="mb-6">
-          <TabsList>
-            <TabsTrigger value="insights">Risk Insights</TabsTrigger>
-            <TabsTrigger value="positions">Active Positions</TabsTrigger>
-            <TabsTrigger value="history">Analysis History</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="insights" className="mt-4">
-            <RiskInsights 
-              signals={riskSignals}
-              actions={riskActions}
-              insights={learningInsights}
-              anomalies={anomalies}
-              lastAnomalyDetectionTime={lastDetectionTime}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold">Risk Console</h1>
+            <p className="text-muted-foreground">Monitor and manage SPY options trading risk</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="px-3 py-1 rounded-md bg-muted text-sm">
+              Balance: ${accountData.balance.toLocaleString()}
+            </div>
+            <RiskHeader
+              autoMode={autoMode}
               isLoading={isLoading}
+              toggleAutoMode={toggleAutoMode}
+              performRiskMonitoring={performRiskMonitoring}
             />
-          </TabsContent>
+          </div>
+        </div>
+        
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-6">
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-primary" />
+                Market Signals
+              </CardTitle>
+              <CardDescription>
+                Current detected risk signals in the market
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <SignalsSection 
+                signals={riskSignals}
+                isLoading={isLoading}
+              />
+            </CardContent>
+          </Card>
           
-          <TabsContent value="positions" className="mt-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Active Positions</CardTitle>
-                <CardDescription>Monitor your current risk exposure</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">Position risk monitoring coming soon</p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="history" className="mt-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Analysis History</CardTitle>
-                <CardDescription>Past analysis results and performance</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">Risk analysis history coming soon</p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5 text-primary" />
+                Recommended Actions
+              </CardTitle>
+              <CardDescription>
+                AI suggested risk management actions
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ActionsSection 
+                actions={riskActions}
+                isLoading={isLoading}
+              />
+            </CardContent>
+          </Card>
+        </div>
+        
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart className="h-5 w-5 text-primary" />
+              Recent Trades
+            </CardTitle>
+            <CardDescription>
+              Review your recent trading activity
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <TodaysTrades showHeader={false} />
+          </CardContent>
+        </Card>
         
         <div className="mt-auto">
           <div className="flex justify-end mb-4">
@@ -205,8 +184,6 @@ const RiskConsole: React.FC = () => {
           
           <Footer />
         </div>
-        
-        <DemoNotifications />
       </div>
     </div>
   );
