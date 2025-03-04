@@ -1,110 +1,96 @@
 
 import { useState, useEffect } from 'react';
-import { DataProviderInterface, DataProviderConfig, DataProviderStatus } from '@/lib/types/spy/dataProvider';
+import { DataProviderConfig, DataProviderInterface, DataProviderType } from '@/lib/types/spy/dataProvider';
 import { getDataProvider } from '@/services/dataProviders/dataProviderFactory';
-import { BrokerSettings } from '@/lib/types/spy/broker';
 
-/**
- * Hook to use a data provider
- */
-export const useDataProvider = (brokerSettings: BrokerSettings) => {
+// Define a custom hook for managing data provider interactions
+export function useDataProvider() {
+  const [config, setConfig] = useState<DataProviderConfig | null>(null);
   const [provider, setProvider] = useState<DataProviderInterface | null>(null);
-  const [status, setStatus] = useState<DataProviderStatus>({
-    connected: false,
-    lastUpdated: new Date(),
-    quotesDelayed: true
-  });
-  const [isConnecting, setIsConnecting] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Initialize provider based on broker settings
+  // Initialize or update provider when config changes
   useEffect(() => {
-    if (brokerSettings.type === 'none') {
-      // Use mock provider
-      setProvider(getDataProvider());
-      return;
+    if (config) {
+      try {
+        // Create a provider instance based on the config
+        const newProvider = getDataProvider(config);
+        setProvider(newProvider);
+        
+        // Attempt to connect
+        connectToProvider(newProvider);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to initialize provider');
+        setIsConnected(false);
+      }
     }
+  }, [config]);
 
-    // Get provider config from broker settings
-    const config: DataProviderConfig = {
-      type: brokerSettings.type === 'interactive-brokers-tws' ? 'interactive-brokers' : brokerSettings.type,
-      apiKey: brokerSettings.credentials.apiKey,
-      secretKey: brokerSettings.credentials.secretKey,
-      accountId: brokerSettings.credentials.accountId,
-      appKey: brokerSettings.credentials.appKey,
-      callbackUrl: brokerSettings.credentials.callbackUrl,
-      paperTrading: brokerSettings.paperTrading,
-      // Add TWS specific configuration if using the TWS connection method
-      ...(brokerSettings.type === 'interactive-brokers-tws' && {
-        connectionMethod: 'tws',
-        twsHost: brokerSettings.credentials.twsHost,
-        twsPort: brokerSettings.credentials.twsPort
-      })
+  // Set up provider with specific type and connection details
+  const setupProvider = (type: DataProviderType, options: Partial<DataProviderConfig> = {}) => {
+    // Handle the interactive-brokers-tws case by mapping to interactive-brokers with connectionMethod: 'tws'
+    const finalType = type === 'interactive-brokers-tws' 
+      ? 'interactive-brokers' 
+      : type;
+    
+    const newConfig: DataProviderConfig = {
+      type: finalType,
+      ...options,
+      connectionMethod: type === 'interactive-brokers-tws' ? 'tws' : options.connectionMethod
     };
+    
+    setConfig(newConfig);
+    return newConfig;
+  };
 
-    // Get provider
-    const dataProvider = getDataProvider(config);
-    setProvider(dataProvider);
-
-    // Connect if needed
-    if (brokerSettings.isConnected && !dataProvider.isConnected()) {
-      connectToProvider(dataProvider);
-    }
-  }, [brokerSettings]);
-
-  // Connect to provider
-  const connectToProvider = async (dataProvider: DataProviderInterface) => {
-    setIsConnecting(true);
+  // Connect to the provider
+  const connectToProvider = async (providerInstance: DataProviderInterface) => {
+    setIsLoading(true);
+    setError(null);
+    
     try {
-      const connected = await dataProvider.connect();
-      setStatus({
-        connected,
-        lastUpdated: new Date(),
-        quotesDelayed: true
-      });
-    } catch (error) {
-      console.error('Error connecting to data provider:', error);
-      setStatus({
-        connected: false,
-        lastUpdated: new Date(),
-        quotesDelayed: true,
-        errorMessage: error instanceof Error ? error.message : 'Unknown error'
-      });
+      const connected = await providerInstance.connect();
+      setIsConnected(connected);
+      
+      if (!connected) {
+        setError('Could not establish connection to provider');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Connection error');
+      setIsConnected(false);
     } finally {
-      setIsConnecting(false);
+      setIsLoading(false);
     }
   };
 
-  // Connect to provider
-  const connect = async () => {
+  // Disconnect from the provider
+  const disconnectFromProvider = async () => {
     if (!provider) return false;
-    return connectToProvider(provider);
-  };
-
-  // Disconnect from provider
-  const disconnect = async () => {
-    if (!provider) return false;
+    
+    setIsLoading(true);
     
     try {
       const disconnected = await provider.disconnect();
-      if (disconnected) {
-        setStatus({
-          connected: false,
-          lastUpdated: new Date(),
-          quotesDelayed: true
-        });
-      }
+      setIsConnected(!disconnected);
       return disconnected;
-    } catch (error) {
-      console.error('Error disconnecting from data provider:', error);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Disconnection error');
       return false;
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return {
     provider,
-    status,
-    isConnecting,
-    connect,
-    disconnect
+    config,
+    isConnected,
+    isLoading,
+    error,
+    setupProvider,
+    connectToProvider: () => provider && connectToProvider(provider),
+    disconnectFromProvider
   };
-};
+}
