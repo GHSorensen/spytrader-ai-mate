@@ -7,7 +7,15 @@ import { config, environment, isProduction } from '@/config/environment';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { ErrorContext } from './types';
-import { getErrorHash, reportedErrors, errorCount, ERROR_SAMPLING_RATE, MAX_STORED_ERRORS } from './utils';
+import { 
+  getErrorHash, 
+  reportedErrors, 
+  ERROR_SAMPLING_RATE, 
+  MAX_STORED_ERRORS,
+  getErrorCount,
+  incrementErrorCount,
+  resetErrorCount
+} from './utils';
 
 /**
  * Log errors to console in development and to monitoring service in production
@@ -52,12 +60,12 @@ export function logError(error: Error, context?: ErrorContext): void {
     
     // Store hash to avoid reporting duplicates
     reportedErrors.add(errorHash);
-    errorCount++;
+    incrementErrorCount();
     
     // Rotate error cache if it gets too large
-    if (errorCount > MAX_STORED_ERRORS) {
+    if (getErrorCount() > MAX_STORED_ERRORS) {
       reportedErrors.clear();
-      errorCount = 0;
+      resetErrorCount();
     }
     
     // Always log in development
