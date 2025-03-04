@@ -22,6 +22,7 @@ export class IBKRMarketDataService {
     this.connectionMethod = config.connectionMethod || 'webapi';
     this.twsDataService = twsDataService;
     this.webApiDataService = webApiDataService;
+    console.log("[IBKRMarketDataService] Initialized with method:", this.connectionMethod);
   }
   
   /**
@@ -29,15 +30,27 @@ export class IBKRMarketDataService {
    */
   async getMarketData(): Promise<SpyMarketData> {
     try {
-      console.log(`Getting market data from IBKR via ${this.connectionMethod}`);
+      console.log(`[IBKRMarketDataService] Getting market data from IBKR via ${this.connectionMethod}`);
+      console.log(`[IBKRMarketDataService] Paper trading mode: ${this.config.paperTrading ? 'Yes' : 'No'}`);
+      
+      let marketData: SpyMarketData;
+      const startTime = Date.now();
       
       if (this.connectionMethod === 'tws') {
-        return this.twsDataService.getMarketData();
+        console.log(`[IBKRMarketDataService] Calling TWS getMarketData()`);
+        marketData = await this.twsDataService.getMarketData();
+      } else {
+        console.log(`[IBKRMarketDataService] Calling WebAPI getMarketData()`);
+        marketData = await this.webApiDataService.getMarketData();
       }
       
-      return this.webApiDataService.getMarketData();
+      const endTime = Date.now();
+      console.log(`[IBKRMarketDataService] Market data fetch took ${endTime - startTime}ms`);
+      console.log(`[IBKRMarketDataService] Received market data:`, JSON.stringify(marketData, null, 2));
+      
+      return marketData;
     } catch (error) {
-      console.error("Error fetching market data from Interactive Brokers:", error);
+      console.error("[IBKRMarketDataService] Error fetching market data from Interactive Brokers:", error);
       throw error;
     }
   }
@@ -47,15 +60,26 @@ export class IBKRMarketDataService {
    */
   async getAccountData(): Promise<{balance: number, dailyPnL: number, allTimePnL: number}> {
     try {
-      console.log(`Getting account data from Interactive Brokers via ${this.connectionMethod}`);
+      console.log(`[IBKRMarketDataService] Getting account data from Interactive Brokers via ${this.connectionMethod}`);
+      
+      let accountData;
+      const startTime = Date.now();
       
       if (this.connectionMethod === 'tws') {
-        return this.twsDataService.getAccountData();
+        console.log(`[IBKRMarketDataService] Calling TWS getAccountData()`);
+        accountData = await this.twsDataService.getAccountData();
+      } else {
+        console.log(`[IBKRMarketDataService] Calling WebAPI getAccountData()`);
+        accountData = await this.webApiDataService.getAccountData();
       }
       
-      return this.webApiDataService.getAccountData();
+      const endTime = Date.now();
+      console.log(`[IBKRMarketDataService] Account data fetch took ${endTime - startTime}ms`);
+      console.log(`[IBKRMarketDataService] Received account data:`, JSON.stringify(accountData, null, 2));
+      
+      return accountData;
     } catch (error) {
-      console.error("Error fetching account data from Interactive Brokers:", error);
+      console.error("[IBKRMarketDataService] Error fetching account data from Interactive Brokers:", error);
       throw error;
     }
   }

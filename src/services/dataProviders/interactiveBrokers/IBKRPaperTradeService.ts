@@ -10,7 +10,7 @@ export class IBKRPaperTradeService {
    * Create a paper trade for testing or when real trading fails
    */
   createPaperTrade(order: TradeOrder): any {
-    console.log("Creating paper trade for:", order);
+    console.log("[IBKRPaperTradeService] Creating paper trade for:", JSON.stringify(order, null, 2));
     
     const now = new Date();
     const expiryDate = new Date(now);
@@ -34,6 +34,8 @@ export class IBKRPaperTradeService {
       paperTrading: true
     };
     
+    console.log("[IBKRPaperTradeService] Created paper trade:", JSON.stringify(mockTrade, null, 2));
+    
     return { 
       trade: mockTrade, 
       orderId: `PAPER-${Date.now()}`,
@@ -51,6 +53,17 @@ export class IBKRPaperTradeService {
     const minute = now.getMinutes();
     const day = now.getDay();
     const isWeekend = day === 0 || day === 6;
-    return !isWeekend && ((hour > 9 || (hour === 9 && minute >= 30)) && hour < 16);
+    const isMarketOpen = !isWeekend && ((hour > 9 || (hour === 9 && minute >= 30)) && hour < 16);
+    
+    console.log(`[IBKRPaperTradeService] Market hours check:`, {
+      now: now.toLocaleString(),
+      day,
+      hour,
+      minute,
+      isWeekend,
+      isMarketOpen
+    });
+    
+    return isMarketOpen;
   }
 }

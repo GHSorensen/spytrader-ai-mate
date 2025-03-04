@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import IBKRIntegrationView from './IBKRIntegrationView';
 import { useIBKRIntegration } from './hooks/useIBKRIntegration';
 import { useIBKRHandlers } from './hooks/useIBKRHandlers';
@@ -51,6 +51,36 @@ const IBKRIntegrationContainer: React.FC = () => {
     setIsConfigured,
     navigate
   });
+
+  // Add diagnostics on mount
+  useEffect(() => {
+    console.log("[IBKRIntegrationContainer] Component mounted");
+    console.log("[IBKRIntegrationContainer] Initial state:", {
+      isConnecting,
+      apiMethod,
+      apiKey: apiKey ? `${apiKey.substring(0, 3)}...` : 'not set',
+      twsHost,
+      twsPort,
+      isPaperTrading,
+      isConfigured,
+      connectionStatus,
+      isConnected,
+      dataSource
+    });
+    
+    // Check for configuration in localStorage
+    const savedConfig = localStorage.getItem('ibkr-config');
+    console.log("[IBKRIntegrationContainer] Saved config in localStorage:", savedConfig ? "Found" : "Not found");
+    
+    if (savedConfig) {
+      try {
+        const parsedConfig = JSON.parse(savedConfig);
+        console.log("[IBKRIntegrationContainer] Parsed config:", JSON.stringify(parsedConfig, null, 2));
+      } catch (e) {
+        console.error("[IBKRIntegrationContainer] Error parsing saved config:", e);
+      }
+    }
+  }, [isConnecting, apiMethod, apiKey, twsHost, twsPort, isPaperTrading, isConfigured, connectionStatus, isConnected, dataSource]);
 
   // No change needed to the component render
   return (
