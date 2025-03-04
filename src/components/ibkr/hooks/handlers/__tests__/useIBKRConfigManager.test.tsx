@@ -2,6 +2,7 @@
 import { renderHook } from '@testing-library/react-hooks';
 import { useIBKRConfigManager } from '../useIBKRConfigManager';
 import { clearDataProvider } from '@/services/dataProviders/dataProviderFactory';
+import { DataProviderType } from '@/lib/types/spy/dataProvider';
 
 // Mock the dependencies
 jest.mock('@/services/dataProviders/dataProviderFactory', () => ({
@@ -17,7 +18,7 @@ describe('useIBKRConfigManager', () => {
     const { result } = renderHook(() => useIBKRConfigManager());
     
     const mockConfig = {
-      type: 'interactive-brokers',
+      type: 'interactive-brokers' as DataProviderType,
       apiKey: 'test-api-key',
       callbackUrl: 'https://example.com/callback',
       connectionMethod: 'webapi',
