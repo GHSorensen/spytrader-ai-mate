@@ -113,15 +113,20 @@ export function setupGlobalErrorHandling(): void {
  * Initialize the error monitoring system
  */
 export function initErrorMonitoring(): void {
-  // Set up global error handling
-  setupGlobalErrorHandling();
-  
-  // Log initialization
-  console.log(`Error monitoring initialized for ${isProduction ? 'production' : 'development'} environment`);
-  
-  // In production, we would initialize external services here
-  if (isProduction) {
-    // Initialize third-party services like Sentry
-    // Example: Sentry.init({ dsn: config.sentryDsn });
+  try {
+    // Set up global error handling
+    setupGlobalErrorHandling();
+    
+    // Log initialization
+    console.log(`Error monitoring initialized for ${isProduction ? 'production' : 'development'} environment`);
+    
+    // In production, we would initialize external services here
+    if (isProduction) {
+      // Initialize third-party services like Sentry
+      // Example: Sentry.init({ dsn: config.sentryDsn });
+    }
+  } catch (err) {
+    // Failsafe for errors in the error monitoring system itself
+    console.error('Error initializing error monitoring:', err);
   }
 }
