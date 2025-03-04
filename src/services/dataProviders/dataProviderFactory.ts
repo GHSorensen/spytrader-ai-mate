@@ -2,7 +2,6 @@
 import { DataProviderInterface, DataProviderConfig } from "@/lib/types/spy/dataProvider";
 import { TDAmeritradeService } from "./tdAmeritradeService";
 import { SchwabService } from "./schwabService";
-import { toast } from "@/components/ui/use-toast";
 
 // Mock service for development
 class MockDataProvider implements DataProviderInterface {
@@ -50,10 +49,16 @@ export const getDataProvider = (config?: DataProviderConfig): DataProviderInterf
       break;
     case 'interactive-brokers':
       console.log("Interactive Brokers not yet implemented, using mock provider");
-      toast({
-        title: "Using Mock Data",
-        description: "Interactive Brokers integration not yet implemented",
-      });
+      try {
+        if (typeof window !== 'undefined' && window.toast) {
+          window.toast.add({
+            title: "Using Mock Data",
+            description: "Interactive Brokers integration not yet implemented",
+          });
+        }
+      } catch (err) {
+        console.error("Failed to show toast:", err);
+      }
       dataProviderInstance = new MockDataProvider();
       break;
     default:

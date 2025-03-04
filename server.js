@@ -69,9 +69,7 @@ app.get('*', (req, res) => {
     }
     
     // Read and send the index.html file
-    const indexContent = fs.readFileSync(indexPath, 'utf8');
-    res.set('Cache-Control', 'no-cache');
-    res.send(indexContent);
+    res.sendFile(indexPath);
   } catch (error) {
     console.error('Error serving index.html:', error);
     res.status(500).send('Server error while loading application');

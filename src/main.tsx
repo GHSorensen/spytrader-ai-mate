@@ -11,11 +11,7 @@ import ErrorBoundary from './components/ErrorBoundary.tsx'
 import QueryClientProvider from './components/QueryClientProvider.tsx'
 import UserProfilePage from './components/auth/UserProfilePage.tsx'
 import AuthenticationPage from './components/auth/AuthenticationPage.tsx'
-import { Toaster } from '@/components/ui/toaster'
 import { config, environment } from '@/config/environment'
-
-// Initialize error monitoring later in a separate useEffect to avoid startup issues
-// We'll let the app load first, then set up monitoring
 
 // Fix the root route path to use a wildcard (*) to allow nested routes
 const router = createBrowserRouter([
@@ -56,12 +52,15 @@ if (config.logLevel === 'debug') {
 // Performance marks for startup metrics
 performance.mark('app-init-start');
 
+// Create a window variable to store the toast functions
+window.toast = undefined;
+
+// Initialize the React app
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ErrorBoundary>
       <QueryClientProvider>
         <RouterProvider router={router} />
-        <Toaster />
       </QueryClientProvider>
     </ErrorBoundary>
   </React.StrictMode>,
@@ -71,3 +70,20 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 performance.mark('app-init-end');
 performance.measure('app-initialization', 'app-init-start', 'app-init-end');
 console.log(`App initialized in ${performance.getEntriesByName('app-initialization')[0].duration.toFixed(2)}ms`);
+
+// Initialize error monitoring after the app is loaded
+setTimeout(() => {
+  try {
+    import('./lib/errorMonitoring/index').then(module => {
+      try {
+        module.initErrorMonitoring();
+      } catch (error) {
+        console.error('Failed to initialize error monitoring:', error);
+      }
+    }).catch(error => {
+      console.error('Failed to load error monitoring module:', error);
+    });
+  } catch (error) {
+    console.error('Error setting up monitoring:', error);
+  }
+}, 3000);

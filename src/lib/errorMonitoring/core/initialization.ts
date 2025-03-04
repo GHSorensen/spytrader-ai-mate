@@ -18,17 +18,27 @@ export function initErrorMonitoring(): void {
       // Example: Sentry.init({ dsn: config.sentryDsn });
     }
     
-    // We'll set up global handlers after app is initialized
+    // We'll set up global handlers, but only do it after the app is initialized
+    // and make sure it doesn't crash the app if it fails
     setTimeout(() => {
       try {
+        // Load modules dynamically to prevent startup issues
         import('../handlers/globalErrorHandlers').then(module => {
-          module.setupGlobalErrorHandling();
+          try {
+            module.setupGlobalErrorHandling();
+          } catch (err) {
+            console.error('Failed to setup global error handling:', err);
+          }
         }).catch(err => {
           console.error('Failed to load globalErrorHandlers:', err);
         });
         
         import('../handlers/performanceMonitoring').then(module => {
-          module.setupPerformanceMonitoring();
+          try {
+            module.setupPerformanceMonitoring();
+          } catch (err) {
+            console.error('Failed to setup performance monitoring:', err);
+          }
         }).catch(err => {
           console.error('Failed to load performanceMonitoring:', err);
         });

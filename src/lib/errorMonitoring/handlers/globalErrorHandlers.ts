@@ -35,7 +35,8 @@ export function setupGlobalErrorHandling(): void {
         try {
           // Prevent logging the same error twice
           if (event.error) {
-            event.preventDefault();
+            // Do not call preventDefault() as it might break other error handlers
+            // event.preventDefault();
             
             logError(event.error, { 
               type: 'uncaughtError',

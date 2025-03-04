@@ -31,6 +31,17 @@ export function logError(error: Error, context?: ErrorContext): void {
       );
       
       // In development we would show a toast, but we'll skip for now
+      try {
+        if (typeof window !== 'undefined' && window.toast) {
+          window.toast.add({
+            title: 'Error',
+            description: error.message.substring(0, 100),
+            variant: 'destructive',
+          });
+        }
+      } catch (e) {
+        console.error('Failed to show error toast:', e);
+      }
     } 
     // In production, log and maybe send to monitoring service
     else {

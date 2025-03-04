@@ -12,6 +12,7 @@ import notificationService from './services/notification/notificationService';
 import ErrorBoundary from './components/ErrorBoundary';
 import SchwabIntegrationPage from './pages/SchwabIntegrationPage';
 import DetailedPerformancePage from './components/performance/DetailedPerformancePage';
+import { Toaster } from './components/ui/toaster';
 
 function App() {
   // Set up initial notifications on app load
@@ -50,6 +51,7 @@ function App() {
         <Route path="/schwab-integration" element={<SchwabIntegrationPage />} />
         <Route path="*" element={<Navigate to="/not-found" replace />} />
       </Routes>
+      <Toaster />
     </ErrorBoundary>
   );
 }

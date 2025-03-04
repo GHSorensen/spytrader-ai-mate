@@ -1,121 +1,91 @@
 
-import { Toast, ToastActionElement, ToastProps } from "@/components/ui/toast"
+// This is your toast hook implementation
+import { useState, useEffect, useCallback } from 'react'
 
-type ToasterToast = ToastProps & {
+const TOAST_TIMEOUT = 5000
+
+export type ToastProps = {
   id: string
-  title?: React.ReactNode
-  description?: React.ReactNode
-  action?: ToastActionElement
+  title?: string
+  description?: string
+  action?: React.ReactNode
+  variant?: 'default' | 'destructive' | 'success' | 'warning'
 }
 
-const TOAST_LIMIT = 5
-const TOAST_REMOVE_DELAY = 1000000
-
-type ToastState = {
-  toasts: ToasterToast[]
+type ToastActionType = {
+  add: (toast: Omit<ToastProps, "id">) => string
+  remove: (id: string) => void
+  update: (id: string, toast: Partial<ToastProps>) => void
 }
 
-const state: ToastState = {
-  toasts: [],
-}
+let count = 0
 
-const listeners: ((state: ToastState) => void)[] = []
-
-function notify(listeners: ((state: ToastState) => void)[]) {
-  listeners.forEach((listener) => {
-    listener({ ...state })
-  })
-}
-
-function updateState(newState: ToastState) {
-  state.toasts = newState.toasts
-  notify(listeners)
+function generateId() {
+  return `${++count}`
 }
 
 export function useToast() {
-  return {
-    toasts: state.toasts,
-    toast,
-    dismiss: (toastId?: string) => {
-      try {
-        if (toastId) {
-          updateState({
-            toasts: state.toasts.map((t) =>
-              t.id === toastId
-                ? {
-                    ...t,
-                    open: false,
-                  }
-                : t
-            ),
-          })
-        } else {
-          updateState({
-            toasts: state.toasts.map((t) => ({
-              ...t,
-              open: false,
-            })),
-          })
-        }
-      } catch (err) {
-        console.error('Error dismissing toast:', err);
-      }
-    },
-  }
-}
+  const [toasts, setToasts] = useState<ToastProps[]>([])
 
-export function toast({
-  ...props
-}: Omit<ToasterToast, "id"> & { id?: string }) {
-  try {
-    const id = props.id || String(Math.random())
+  const add = useCallback(
+    (toast: Omit<ToastProps, "id">) => {
+      const id = generateId()
 
-    const update = (props: Omit<ToasterToast, "id">) => {
-      updateState({
-        toasts: state.toasts.map((t) =>
-          t.id === id
-            ? { ...t, ...props }
-            : t
-        ),
-      })
+      setToasts((toasts) => [
+        ...toasts,
+        { ...toast, id },
+      ])
+
       return id
-    }
+    },
+    []
+  )
 
-    const dismiss = () => {
-      updateState({
-        toasts: state.toasts.map((t) =>
-          t.id === id
-            ? { ...t, open: false }
-            : t
-        ),
-      })
-    }
+  const remove = useCallback((id: string) => {
+    setToasts((toasts) => toasts.filter((toast) => toast.id !== id))
+  }, [])
 
-    updateState({
-      toasts: [
-        {
-          ...props,
-          id,
-          open: true,
-          onOpenChange: (open) => {
-            if (!open) dismiss()
-          },
-        },
-        ...state.toasts.filter((t) => t.id !== id),
-      ].slice(0, TOAST_LIMIT),
-    })
+  const update = useCallback((id: string, toast: Partial<ToastProps>) => {
+    setToasts((toasts) =>
+      toasts.map((t) => (t.id === id ? { ...t, ...toast } : t))
+    )
+  }, [])
 
-    return {
-      id,
-      dismiss,
-      update,
-    }
-  } catch (err) {
-    console.error('Error creating toast:', err);
-    return {
-      id: String(Math.random()),
-      dismiss: () => {},
-      update: () => String(Math.random()),
-    }
+  return {
+    toasts,
+    add,
+    remove,
+    update,
   }
 }
+
+type ToastFunction = {
+  (props: Omit<ToastProps, "id">): string
+  success: (props: Omit<ToastProps, "id" | "variant">) => string
+  error: (props: Omit<ToastProps, "id" | "variant">) => string
+  warning: (props: Omit<ToastProps, "id" | "variant">) => string
+}
+
+const toastFunction = ((props) => {
+  return window.toast?.add(props) || ""
+}) as ToastFunction
+
+toastFunction.success = (props) => {
+  return toastFunction({ ...props, variant: "success" })
+}
+
+toastFunction.error = (props) => {
+  return toastFunction({ ...props, variant: "destructive" })
+}
+
+toastFunction.warning = (props) => {
+  return toastFunction({ ...props, variant: "warning" })
+}
+
+declare global {
+  interface Window {
+    toast?: ToastActionType
+  }
+}
+
+export const toast = toastFunction
