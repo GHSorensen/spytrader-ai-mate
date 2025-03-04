@@ -1,5 +1,5 @@
-
 import { DataProviderConfig, DataProviderInterface, DataProviderType } from '@/lib/types/spy/dataProvider';
+import { InteractiveBrokersDataProvider } from './interactiveBrokersDataProvider';
 
 // Mock implementation that implements the DataProviderInterface
 class MockDataProvider implements DataProviderInterface {
@@ -67,14 +67,40 @@ class MockDataProvider implements DataProviderInterface {
   }
 }
 
+// Keep track of the current provider instance
+let currentProvider: DataProviderInterface | null = null;
+
 // Factory function to get a data provider instance
-// Simplified to always return a mock provider for now
 export const getDataProvider = (config?: DataProviderConfig): DataProviderInterface => {
-  return new MockDataProvider(config);
+  // If no config is provided, return the current provider or create a mock one
+  if (!config) {
+    return currentProvider || new MockDataProvider();
+  }
+
+  // Create a new provider based on the type
+  switch(config.type) {
+    case 'interactive-brokers':
+    case 'interactive-brokers-tws':
+      currentProvider = new InteractiveBrokersDataProvider(config);
+      break;
+    case 'td-ameritrade':
+      // For now, return a mock provider for TD Ameritrade
+      currentProvider = new MockDataProvider(config);
+      break;
+    case 'schwab':
+      // For now, return a mock provider for Schwab
+      currentProvider = new MockDataProvider(config);
+      break;
+    case 'mock':
+    default:
+      currentProvider = new MockDataProvider(config);
+  }
+
+  return currentProvider;
 };
 
 // Added to match imported function in test files
 export const clearDataProvider = () => {
-  // This would normally clear a cached provider instance
+  currentProvider = null;
   console.log('Data provider cleared');
 };
