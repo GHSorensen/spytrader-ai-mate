@@ -1,102 +1,81 @@
 
-import React, { useState, useCallback, useEffect } from 'react';
-import { toast } from 'sonner';
+import React, { useState } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAccountBalance } from '@/hooks/useAccountBalance';
+import { Button } from "@/components/ui/button";
+import { PlusCircle } from "lucide-react";
+import TradeCard from '@/components/trades/TradeCard';
 import { useTrades } from '@/hooks/useTrades';
-import { getDataProvider } from '@/services/dataProviders/dataProviderFactory';
-import TradePageHeader from '@/components/trades/TradePageHeader';
-import ConnectionStatus from '@/components/trades/ConnectionStatus';
-import SignInPrompt from '@/components/trades/SignInPrompt';
-import TradeTabs from '@/components/trades/TradeTabs';
-import { RefreshCw } from "lucide-react";
 
 const TradesPage: React.FC = () => {
+  const accountData = useAccountBalance();
   const [activeTab, setActiveTab] = useState<string>('active');
-  const { trades, isLoading, handleCreateTestTrade, isPending, isAuthenticated, refetch, lastError } = useTrades(activeTab);
-  const [connectionDiagnostics, setConnectionDiagnostics] = useState<string | null>(null);
+  const { trades, isLoading, handleCreateTestTrade, isPending } = useTrades(activeTab);
 
-  // Log component mounting to debug
-  useEffect(() => {
-    console.log("TradesPage mounted", "Authentication state:", isAuthenticated);
-    return () => console.log("TradesPage unmounted");
-  }, [isAuthenticated]);
-
-  // Check connection status on mount
-  useEffect(() => {
-    const checkConnection = async () => {
-      try {
-        const provider = getDataProvider();
-        // Only use public methods and properties from the provider
-        const status = {
-          providerType: provider.constructor.name,
-          isConnected: provider.isConnected(),
-          // Don't access protected properties
-        };
-        console.log("Provider status:", status);
-        setConnectionDiagnostics(null);
-      } catch (error) {
-        console.error("Error checking provider:", error);
-        setConnectionDiagnostics(error instanceof Error ? error.message : String(error));
-      }
-    };
-    
-    if (isAuthenticated) {
-      checkConnection();
-    }
-  }, [isAuthenticated]);
-
-  const onCreateTestTrade = useCallback(() => {
-    console.log("Create Test Trade button clicked", "Authentication state:", isAuthenticated);
-    if (isPending) {
-      toast.info("Trade creation already in progress");
-      return;
-    }
-    
-    if (!isAuthenticated) {
-      toast.error("You need to sign in to create trades");
-      return;
-    }
-    
-    try {
-      toast.info("Attempting to create test trade...");
-      handleCreateTestTrade();
-    } catch (error) {
-      console.error("Error in onCreateTestTrade:", error);
-      toast.error("Failed to create test trade: " + (error instanceof Error ? error.message : "Unknown error"));
-    }
-  }, [handleCreateTestTrade, isPending, isAuthenticated]);
-
-  const onRefreshTrades = useCallback(() => {
-    console.log("Manually refreshing trades");
-    refetch();
-    toast.info("Refreshing trades data");
-  }, [refetch]);
-
-  // If not authenticated, show sign-in prompt
-  if (!isAuthenticated) {
-    return <SignInPrompt onRefreshBalance={onRefreshTrades} />;
-  }
+  const onCreateTestTrade = () => {
+    console.log("Create Test Trade button clicked");
+    handleCreateTestTrade();
+  };
 
   return (
-    <div className="container mx-auto py-4 md:py-6 px-4 md:px-6 space-y-4 md:space-y-6">
-      <TradePageHeader 
-        isAuthenticated={isAuthenticated}
-        isPending={isPending}
-        onCreateTestTrade={onCreateTestTrade}
-        onRefreshTrades={onRefreshTrades}
-        isLoading={isLoading}
-      />
+    <div className="container mx-auto py-6 space-y-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Trades</h1>
+          <p className="text-muted-foreground">
+            Manage your trading activity and orders
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="px-3 py-1 rounded-md bg-muted text-sm">
+            Balance: ${accountData.balance.toLocaleString()}
+          </div>
+          <Button 
+            onClick={onCreateTestTrade} 
+            disabled={isPending}
+            size="sm"
+            className="flex items-center gap-1"
+          >
+            <PlusCircle className="h-4 w-4" />
+            {isPending ? "Creating..." : "Create Test Trade"}
+          </Button>
+        </div>
+      </div>
 
-      <ConnectionStatus 
-        connectionDiagnostics={connectionDiagnostics}
-        lastError={lastError}
-      />
+      <Tabs defaultValue="active" value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full md:w-auto grid-cols-3">
+          <TabsTrigger value="active">Active Trades</TabsTrigger>
+          <TabsTrigger value="history">History</TabsTrigger>
+          <TabsTrigger value="orders">Orders</TabsTrigger>
+        </TabsList>
 
-      <TradeTabs 
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        trades={trades}
-        isLoading={isLoading}
-      />
+        <TabsContent value="active" className="space-y-4 mt-4">
+          <TradeCard 
+            title="Active Positions" 
+            description="Currently open trades in your portfolio" 
+            trades={trades} 
+            isLoading={isLoading} 
+          />
+        </TabsContent>
+
+        <TabsContent value="history" className="space-y-4 mt-4">
+          <TradeCard 
+            title="Trade History" 
+            description="Your past trades and their outcomes" 
+            trades={trades} 
+            isLoading={isLoading} 
+          />
+        </TabsContent>
+
+        <TabsContent value="orders" className="space-y-4 mt-4">
+          <TradeCard 
+            title="Order Status" 
+            description="Pending and recently filled orders" 
+            trades={trades} 
+            isLoading={isLoading} 
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

@@ -38,79 +38,65 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
           <span className="sr-only">Menu</span>
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-[250px] sm:w-[300px] py-6 px-4">
-        <div className="flex flex-col space-y-1 mt-6">
-          <div className="text-sm font-medium text-muted-foreground mb-2 px-2">Navigation</div>
+      <SheetContent side="left" className="w-[250px] sm:w-[300px]">
+        <nav className="flex flex-col gap-4 mt-8">
           <Button
             variant="ghost"
-            className="justify-start text-sm px-2 py-1.5 h-auto font-normal hover:bg-accent"
+            className="justify-start px-2 py-1 h-auto font-normal hover:bg-accent"
             onClick={() => handleNavigation('/')}
           >
             Dashboard
           </Button>
           <Button
             variant="ghost"
-            className="justify-start text-sm px-2 py-1.5 h-auto font-normal hover:bg-accent"
+            className="justify-start px-2 py-1 h-auto font-normal hover:bg-accent"
             onClick={() => handleNavigation('/trades')}
           >
             Trades
           </Button>
           <Button
             variant="ghost"
-            className="justify-start text-sm px-2 py-1.5 h-auto font-normal hover:bg-accent"
+            className="justify-start px-2 py-1 h-auto font-normal hover:bg-accent"
             onClick={() => handleNavigation('/performance')}
           >
             Performance
           </Button>
           <Button
             variant="ghost"
-            className="justify-start text-sm px-2 py-1.5 h-auto font-normal hover:bg-accent"
+            className="justify-start px-2 py-1 h-auto font-normal hover:bg-accent"
             onClick={() => handleNavigation('/detailed-performance')}
           >
             Analytics
           </Button>
-          
-          <div className="text-sm font-medium text-muted-foreground mb-2 mt-4 px-2">Risk Management</div>
           <Button
             variant="ghost"
-            className="justify-start text-sm px-2 py-1.5 h-auto font-normal hover:bg-accent"
+            className="justify-start px-2 py-1 h-auto font-normal hover:bg-accent"
             onClick={() => handleNavigation('/risk-console')}
           >
             Risk Console
           </Button>
-          
-          <div className="text-sm font-medium text-muted-foreground mb-2 mt-4 px-2">Integrations</div>
           <Button
             variant="ghost"
-            className="justify-start text-sm px-2 py-1.5 h-auto font-normal hover:bg-accent"
+            className="justify-start px-2 py-1 h-auto font-normal hover:bg-accent"
             onClick={() => handleNavigation('/schwab-integration')}
           >
             Schwab Connect
           </Button>
           <Button
             variant="ghost"
-            className="justify-start text-sm px-2 py-1.5 h-auto font-normal hover:bg-accent"
+            className="justify-start px-2 py-1 h-auto font-normal hover:bg-accent"
             onClick={() => handleNavigation('/ibkr-integration')}
           >
             IBKR Connect
           </Button>
-          
-          <div className="text-sm font-medium text-muted-foreground mb-2 mt-4 px-2">Account</div>
           <Button
             variant="ghost"
-            className="justify-start text-sm px-2 py-1.5 h-auto font-normal hover:bg-accent"
+            className="justify-start px-2 py-1 h-auto font-normal hover:bg-accent"
             onClick={() => handleNavigation('/profile')}
           >
             Profile
           </Button>
-          <Button
-            variant="ghost"
-            className="justify-start text-sm px-2 py-1.5 h-auto font-normal hover:bg-accent"
-            onClick={() => handleNavigation('/auth')}
-          >
-            Sign In / Sign Up
-          </Button>
-        </div>
+        </nav>
       </SheetContent>
     </Sheet>
   );

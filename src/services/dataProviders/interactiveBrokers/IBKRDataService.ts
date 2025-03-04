@@ -3,13 +3,9 @@ import { DataProviderConfig, TradeOrder } from "@/lib/types/spy/dataProvider";
 import { SpyMarketData, SpyOption, SpyTrade } from "@/lib/types/spy";
 import { TwsDataService } from "./tws/TwsDataService";
 import { WebApiDataService } from "./webapi/WebApiDataService";
-import { IBKRMarketDataService } from "./services/IBKRMarketDataService";
-import { IBKROptionsService } from "./services/IBKROptionsService";
-import { IBKRTradesService } from "./services/IBKRTradesService";
-import { IBKRConnectionService } from "./services/IBKRAuthService";
 
 /**
- * Unified data service facade for Interactive Brokers
+ * Unified data service for Interactive Brokers
  */
 export class IBKRDataService {
   private config: DataProviderConfig;
@@ -17,80 +13,119 @@ export class IBKRDataService {
   private webApiDataService: WebApiDataService;
   private connectionMethod: 'webapi' | 'tws';
   
-  // Specialized services
-  private marketDataService: IBKRMarketDataService;
-  private optionsService: IBKROptionsService;
-  private tradesService: IBKRTradesService;
-  private connectionService: IBKRConnectionService;
-  
   constructor(config: DataProviderConfig) {
     this.config = config;
     this.connectionMethod = config.connectionMethod || 'webapi';
-    
-    // Initialize base services
     this.twsDataService = new TwsDataService(config);
     this.webApiDataService = new WebApiDataService(config);
-    
-    // Initialize specialized services
-    this.marketDataService = new IBKRMarketDataService(config, this.twsDataService, this.webApiDataService);
-    this.optionsService = new IBKROptionsService(config, this.twsDataService, this.webApiDataService);
-    this.tradesService = new IBKRTradesService(config, this.twsDataService, this.webApiDataService);
-    this.connectionService = new IBKRConnectionService(config, this.twsDataService, this.webApiDataService);
   }
   
   /**
    * Set access token for Web API
    */
   setAccessToken(token: string) {
-    this.connectionService.setAccessToken(token);
-  }
-  
-  /**
-   * Connect to IBKR services
-   */
-  async connect(): Promise<boolean> {
-    return this.connectionService.connect();
+    this.webApiDataService.setAccessToken(token);
   }
   
   /**
    * Get market data
    */
   async getMarketData(): Promise<SpyMarketData> {
-    return this.marketDataService.getMarketData();
+    try {
+      console.log(`Getting market data from IBKR via ${this.connectionMethod}`);
+      
+      if (this.connectionMethod === 'tws') {
+        return this.twsDataService.getMarketData();
+      }
+      
+      return this.webApiDataService.getMarketData();
+    } catch (error) {
+      console.error("Error fetching market data from Interactive Brokers:", error);
+      throw error;
+    }
   }
   
   /**
    * Get options
    */
   async getOptions(): Promise<SpyOption[]> {
-    return this.optionsService.getOptions();
+    try {
+      if (this.connectionMethod === 'tws') {
+        return this.twsDataService.getOptions();
+      }
+      
+      return this.webApiDataService.getOptions();
+    } catch (error) {
+      console.error("Error fetching options from Interactive Brokers:", error);
+      throw error;
+    }
   }
   
   /**
    * Get option chain
    */
   async getOptionChain(symbol: string): Promise<SpyOption[]> {
-    return this.optionsService.getOptionChain(symbol);
+    try {
+      if (this.connectionMethod === 'tws') {
+        return this.twsDataService.getOptionChain(symbol);
+      }
+      
+      return this.webApiDataService.getOptionChain(symbol);
+    } catch (error) {
+      console.error(`Error fetching option chain for ${symbol} from Interactive Brokers:`, error);
+      throw error;
+    }
   }
   
   /**
    * Get trades
    */
   async getTrades(): Promise<SpyTrade[]> {
-    return this.tradesService.getTrades();
+    try {
+      if (this.connectionMethod === 'tws') {
+        return this.twsDataService.getTrades();
+      }
+      
+      return this.webApiDataService.getTrades();
+    } catch (error) {
+      console.error("Error fetching trades from Interactive Brokers:", error);
+      throw error;
+    }
   }
   
   /**
    * Get account data
    */
   async getAccountData(): Promise<{balance: number, dailyPnL: number, allTimePnL: number}> {
-    return this.marketDataService.getAccountData();
+    try {
+      console.log(`Getting account data from Interactive Brokers via ${this.connectionMethod}`);
+      
+      if (this.connectionMethod === 'tws') {
+        return this.twsDataService.getAccountData();
+      }
+      
+      return this.webApiDataService.getAccountData();
+    } catch (error) {
+      console.error("Error fetching account data from Interactive Brokers:", error);
+      throw error;
+    }
   }
   
   /**
    * Place a trade
    */
   async placeTrade(order: TradeOrder): Promise<any> {
-    return this.tradesService.placeTrade(order);
+    try {
+      console.log(`Placing trade with Interactive Brokers via ${this.connectionMethod}`);
+      
+      if (this.connectionMethod === 'tws') {
+        return this.twsDataService.placeTrade(order);
+      }
+      
+      return this.webApiDataService.placeTrade(order);
+    } catch (error) {
+      console.error("Error placing trade with Interactive Brokers:", error);
+      throw error;
+    }
   }
 }

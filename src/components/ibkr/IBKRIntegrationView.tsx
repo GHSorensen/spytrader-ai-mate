@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -9,9 +10,6 @@ import IBKRApiKeyInfo from './IBKRApiKeyInfo';
 import IBKRActionButtons from './IBKRActionButtons';
 import ConnectionStatus from './ConnectionStatus';
 import IBKRStatusIndicator from './IBKRStatusIndicator';
-import { Button } from "@/components/ui/button";
-import { ArrowRight, Bug } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 
 interface IBKRIntegrationViewProps {
   isConnecting: boolean;
@@ -62,10 +60,8 @@ const IBKRIntegrationView: React.FC<IBKRIntegrationViewProps> = ({
   onStartAuth,
   onTwsConnect
 }) => {
-  const navigate = useNavigate();
-  
   return (
-    <div className="container mx-auto p-4 space-y-6">
+    <div className="flex flex-col min-h-screen">
       <IBKRHeader />
       
       <main className="flex-1 container mx-auto py-12 px-4">
@@ -132,18 +128,6 @@ const IBKRIntegrationView: React.FC<IBKRIntegrationViewProps> = ({
           </Card>
         </div>
       </main>
-      
-      <div className="flex justify-end mt-4">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="flex items-center"
-          onClick={() => navigate('/ibkr/debug')}
-        >
-          <Bug className="h-4 w-4 mr-2" />
-          Advanced Diagnostics
-        </Button>
-      </div>
     </div>
   );
 };

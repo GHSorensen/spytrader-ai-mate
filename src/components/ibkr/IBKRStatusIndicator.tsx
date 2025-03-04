@@ -1,25 +1,22 @@
 
 import React, { useEffect, useState } from 'react';
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, AlertCircle, Clock, Wifi, WifiOff, RefreshCcw } from 'lucide-react';
+import { CheckCircle, AlertCircle, Clock, Wifi, WifiOff } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { getDataProvider } from '@/services/dataProviders/dataProviderFactory';
 import { useIBKRRealTimeData } from '@/hooks/useIBKRRealTimeData';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { supabase } from '@/integrations/supabase/client';
 
 interface IBKRStatusIndicatorProps {
   showDetails?: boolean;
 }
 
-export const IBKRStatusIndicator: React.FC<IBKRStatusIndicatorProps> = ({ 
+const IBKRStatusIndicator: React.FC<IBKRStatusIndicatorProps> = ({ 
   showDetails = false 
 }) => {
   const { isConnected, dataSource, refreshAllData, reconnect, lastUpdated } = useIBKRRealTimeData();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
   const [status, setStatus] = useState({
     connected: false,
     errorMessage: null as string | null,
@@ -27,46 +24,13 @@ export const IBKRStatusIndicator: React.FC<IBKRStatusIndicatorProps> = ({
     lastChecked: new Date()
   });
 
-  // Check authentication status on mount
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data } = await supabase.auth.getSession();
-      const hasSession = !!data.session;
-      console.log("IBKRStatusIndicator - Auth check:", hasSession);
-      setIsAuthenticated(hasSession);
-      
-      // Set up auth state change listener
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-        console.log('Auth state changed in IBKRStatusIndicator:', event, !!session);
-        setIsAuthenticated(!!session);
-      });
-      
-      return () => {
-        subscription.unsubscribe();
-      };
-    };
-    
-    checkAuth();
-  }, []);
-
   // Check detailed status on mount and when connection changes
   useEffect(() => {
     const checkDetailedStatus = async () => {
       try {
-        if (!isAuthenticated) {
-          setStatus({
-            connected: false,
-            errorMessage: "Not authenticated",
-            quotesDelayed: true,
-            lastChecked: new Date()
-          });
-          return;
-        }
-        
         const provider = getDataProvider();
-        console.log("IBKRStatusIndicator - Provider:", provider?.constructor.name);
         
-        if (provider && provider.isConnected()) {
+        if (provider.isConnected()) {
           // If provider has status property, use it for detailed status
           const providerStatus = (provider as any).status || {
             connected: true,
@@ -80,8 +44,6 @@ export const IBKRStatusIndicator: React.FC<IBKRStatusIndicatorProps> = ({
             quotesDelayed: providerStatus.quotesDelayed,
             lastChecked: providerStatus.lastUpdated || new Date()
           });
-          
-          console.log("IBKRStatusIndicator - Provider status:", providerStatus);
         } else {
           setStatus({
             connected: false,
@@ -89,8 +51,6 @@ export const IBKRStatusIndicator: React.FC<IBKRStatusIndicatorProps> = ({
             quotesDelayed: true,
             lastChecked: new Date()
           });
-          
-          console.log("IBKRStatusIndicator - Not connected to provider");
         }
       } catch (error) {
         console.error("Error checking IBKR status:", error);
@@ -104,36 +64,7 @@ export const IBKRStatusIndicator: React.FC<IBKRStatusIndicatorProps> = ({
     };
     
     checkDetailedStatus();
-  }, [isConnected, isAuthenticated]);
-
-  // Handle manual reconnect with better feedback
-  const handleReconnect = async () => {
-    try {
-      setRefreshing(true);
-      toast.info("Attempting to reconnect to Interactive Brokers...");
-      
-      await reconnect();
-      
-      // Force refresh provider status after reconnection attempt
-      const provider = getDataProvider();
-      if (!provider.isConnected()) {
-        console.log("Reconnect didn't work, trying explicit connect");
-        const connected = await provider.connect();
-        if (connected) {
-          toast.success("Successfully connected to Interactive Brokers");
-        } else {
-          toast.error("Failed to connect to Interactive Brokers");
-        }
-      }
-      
-      refreshAllData();
-    } catch (error) {
-      console.error("Error in reconnect:", error);
-      toast.error(`Reconnection error: ${error instanceof Error ? error.message : "Unknown error"}`);
-    } finally {
-      setRefreshing(false);
-    }
-  };
+  }, [isConnected]);
 
   // Format the last update time
   const formatTime = (date?: Date) => {
@@ -143,14 +74,6 @@ export const IBKRStatusIndicator: React.FC<IBKRStatusIndicatorProps> = ({
 
   // Get appropriate badge color and icon based on status
   const getBadgeProps = () => {
-    if (!isAuthenticated) {
-      return {
-        variant: "outline" as const,
-        icon: <AlertCircle className="h-3 w-3 mr-1" />,
-        text: "Not Signed In"
-      };
-    }
-    
     if (!isConnected) {
       return {
         variant: "destructive" as const,
@@ -196,16 +119,14 @@ export const IBKRStatusIndicator: React.FC<IBKRStatusIndicatorProps> = ({
           {badgeProps.text}
         </Badge>
         
-        {showDetails && isAuthenticated && (
+        {showDetails && (
           <Button 
             variant="ghost" 
             size="sm" 
             className="h-6 text-xs"
-            onClick={handleReconnect}
-            disabled={refreshing}
+            onClick={refreshAllData}
           >
-            <RefreshCcw className={`h-3 w-3 mr-1 ${refreshing ? 'animate-spin' : ''}`} />
-            {refreshing ? 'Connecting...' : 'Reconnect'}
+            Refresh
           </Button>
         )}
       </div>
@@ -221,26 +142,19 @@ export const IBKRStatusIndicator: React.FC<IBKRStatusIndicatorProps> = ({
             </DialogHeader>
             
             <div className="space-y-4 py-4">
-              {!isAuthenticated ? (
-                <div className="bg-yellow-100 p-3 rounded-md text-yellow-800 text-sm">
-                  <span className="font-medium">Not signed in. </span>
-                  Please sign in to connect to Interactive Brokers.
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <span className="font-medium">Connection Status:</span>
-                  <span>{status.connected ? "Connected" : "Disconnected"}</span>
-                  
-                  <span className="font-medium">Data Type:</span>
-                  <span className="capitalize">{dataSource}</span>
-                  
-                  <span className="font-medium">Last Updated:</span>
-                  <span>{formatTime(lastUpdated)}</span>
-                  
-                  <span className="font-medium">Last Status Check:</span>
-                  <span>{formatTime(status.lastChecked)}</span>
-                </div>
-              )}
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <span className="font-medium">Connection Status:</span>
+                <span>{status.connected ? "Connected" : "Disconnected"}</span>
+                
+                <span className="font-medium">Data Type:</span>
+                <span className="capitalize">{dataSource}</span>
+                
+                <span className="font-medium">Last Updated:</span>
+                <span>{formatTime(lastUpdated)}</span>
+                
+                <span className="font-medium">Last Status Check:</span>
+                <span>{formatTime(status.lastChecked)}</span>
+              </div>
               
               {status.errorMessage && (
                 <div className="bg-red-100 p-3 rounded-md text-red-800 text-sm">
@@ -253,21 +167,9 @@ export const IBKRStatusIndicator: React.FC<IBKRStatusIndicatorProps> = ({
                 <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Close
                 </Button>
-                {isAuthenticated && (
-                  <Button 
-                    onClick={handleReconnect} 
-                    disabled={refreshing}
-                  >
-                    {refreshing ? (
-                      <>
-                        <RefreshCcw className="h-4 w-4 mr-2 animate-spin" />
-                        Connecting...
-                      </>
-                    ) : (
-                      <>Reconnect</>
-                    )}
-                  </Button>
-                )}
+                <Button onClick={reconnect}>
+                  Reconnect
+                </Button>
               </div>
             </div>
           </DialogContent>
