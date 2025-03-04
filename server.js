@@ -31,6 +31,13 @@ app.get('/auth/callback', (req, res) => {
   res.redirect(redirectUrl);
 });
 
+// Handle Supabase auth callbacks
+app.get('/auth/v1/callback', (req, res) => {
+  console.log('Received Supabase callback with query params:', req.query);
+  // For Supabase auth, we just need to pass through all query parameters
+  res.redirect(`/auth?${new URLSearchParams(req.query).toString()}`);
+});
+
 // For any request that doesn't match a static file, send the index.html
 // This is crucial for client-side routing to work properly
 app.get('*', (req, res) => {

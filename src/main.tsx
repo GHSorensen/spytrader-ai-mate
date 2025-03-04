@@ -15,7 +15,7 @@ import AuthenticationPage from './components/auth/AuthenticationPage.tsx'
 // Fix the root route path to use a wildcard (*) to allow nested routes
 const router = createBrowserRouter([
   {
-    path: '/',
+    path: '/*', // Changed from '/' to '/*' to support nested routes properly
     element: <App />,
     errorElement: <RouterErrorBoundary />,
   },
