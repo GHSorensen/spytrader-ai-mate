@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowUp, ArrowDown, DollarSign } from 'lucide-react';
+import { ArrowUp, ArrowDown, DollarSign, LineChart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface AccountBalanceProps {
@@ -21,43 +21,44 @@ export const AccountBalance: React.FC<AccountBalanceProps> = ({
   return (
     <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20 shadow-lg">
       <CardContent className="p-4">
-        <div className="flex flex-col items-center justify-center space-y-2">
-          <div className="flex items-center justify-center gap-2">
-            <DollarSign className="h-5 w-5 text-primary" />
+        <div className="flex flex-col items-center space-y-2">
+          <div className="flex items-center justify-center gap-2 w-full text-center">
+            <LineChart className="h-5 w-5 text-primary" />
             <h2 className="text-xl md:text-2xl font-bold tracking-tight">Account Balance</h2>
           </div>
           
-          <div className="text-2xl md:text-3xl lg:text-4xl font-bold">
+          <div className="text-2xl md:text-3xl lg:text-4xl font-bold mt-2">
             ${balance.toLocaleString()}
           </div>
           
-          <div className="flex flex-col sm:flex-row items-center justify-between w-full mt-2 text-xs md:text-sm gap-2">
-            <div className="flex items-center gap-1">
-              <span className="text-muted-foreground">Daily:</span>
-              <div className={cn("flex items-center", 
+          {/* PnL information - redesigned for better mobile display */}
+          <div className="grid grid-cols-2 w-full gap-4 mt-2">
+            <div className="flex flex-col items-center">
+              <span className="text-xs text-muted-foreground mb-1">Daily:</span>
+              <div className={cn("flex items-center justify-center", 
                 isDailyPositive ? "text-emerald-500" : "text-red-500")}>
-                {isDailyPositive ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
-                <span className="font-medium">
+                {isDailyPositive ? <ArrowUp className="h-4 w-4 mr-1" /> : <ArrowDown className="h-4 w-4 mr-1" />}
+                <span className="font-medium text-sm md:text-base">
                   ${Math.abs(dailyPnL).toLocaleString()}
-                  <span className="text-xs md:text-sm">
-                    ({isDailyPositive ? "+" : "-"}{Math.abs(dailyPnL / (balance - dailyPnL) * 100).toFixed(2)}%)
-                  </span>
                 </span>
               </div>
+              <span className="text-xs">
+                ({isDailyPositive ? "+" : "-"}{Math.abs(dailyPnL / (balance - dailyPnL) * 100).toFixed(2)}%)
+              </span>
             </div>
             
-            <div className="flex items-center gap-1">
-              <span className="text-muted-foreground">All Time:</span>
-              <div className={cn("flex items-center", 
+            <div className="flex flex-col items-center">
+              <span className="text-xs text-muted-foreground mb-1">All Time:</span>
+              <div className={cn("flex items-center justify-center", 
                 isAllTimePositive ? "text-emerald-500" : "text-red-500")}>
-                {isAllTimePositive ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
-                <span className="font-medium">
+                {isAllTimePositive ? <ArrowUp className="h-4 w-4 mr-1" /> : <ArrowDown className="h-4 w-4 mr-1" />}
+                <span className="font-medium text-sm md:text-base">
                   ${Math.abs(allTimePnL).toLocaleString()}
-                  <span className="text-xs md:text-sm">
-                    ({isAllTimePositive ? "+" : "-"}{Math.abs(allTimePnL / (balance - allTimePnL) * 100).toFixed(2)}%)
-                  </span>
                 </span>
               </div>
+              <span className="text-xs">
+                ({isAllTimePositive ? "+" : "-"}{Math.abs(allTimePnL / (balance - allTimePnL) * 100).toFixed(2)}%)
+              </span>
             </div>
           </div>
         </div>

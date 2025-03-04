@@ -12,7 +12,13 @@ import { ArrowUpRight, ArrowDownRight, ChevronRight, Clock, Calendar } from "luc
 import { cn } from "@/lib/utils";
 import { Link } from 'react-router-dom';
 
-export const TodaysTrades: React.FC = () => {
+interface TodaysTradesProps {
+  showHeader?: boolean;
+}
+
+export const TodaysTrades: React.FC<TodaysTradesProps> = ({ 
+  showHeader = true
+}) => {
   // Fetch today's trades
   const { data: trades = [], isLoading } = useQuery({
     queryKey: ['todaysTrades'],
@@ -36,82 +42,83 @@ export const TodaysTrades: React.FC = () => {
   };
 
   return (
-    <Card className="col-span-full">
-      <CardHeader className="pb-2 flex flex-row items-center justify-between">
-        <CardTitle className="text-xl font-bold tracking-tight">Today's Trades</CardTitle>
-        <Link to="/trades">
-          <Button variant="ghost" size="sm" className="text-xs flex items-center gap-1">
-            View All
-            <ChevronRight className="h-3 w-3 ml-1" />
-          </Button>
-        </Link>
-      </CardHeader>
-      <CardContent>
-        {isLoading ? (
-          <div className="h-24 flex items-center justify-center">
-            <div className="animate-spin h-6 w-6 border-4 border-primary border-t-transparent rounded-full"></div>
-          </div>
-        ) : trades.length > 0 ? (
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Strike</TableHead>
-                  <TableHead>Time</TableHead>
-                  <TableHead className="text-right">P/L</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {trades.map((trade) => {
-                  const isProfit = (trade.profit && trade.profit > 0) || false;
-                  
-                  return (
-                    <TableRow key={trade.id}>
-                      <TableCell>
-                        <Badge variant={trade.type === 'CALL' ? 'outline' : 'secondary'}>
-                          {trade.type}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="font-medium">${trade.strikePrice}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center">
-                          <Clock className="h-3 w-3 mr-1 opacity-70" />
-                          {formatTime(trade.openedAt)}
+    <div className="col-span-full">
+      {showHeader && (
+        <div className="mb-3 flex flex-row items-center justify-between">
+          <h3 className="text-xl font-bold tracking-tight">Today's Trades</h3>
+          <Link to="/trades">
+            <Button variant="ghost" size="sm" className="text-xs flex items-center gap-1">
+              View All
+              <ChevronRight className="h-3 w-3 ml-1" />
+            </Button>
+          </Link>
+        </div>
+      )}
+      
+      {isLoading ? (
+        <div className="h-24 flex items-center justify-center">
+          <div className="animate-spin h-6 w-6 border-4 border-primary border-t-transparent rounded-full"></div>
+        </div>
+      ) : trades.length > 0 ? (
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Type</TableHead>
+                <TableHead>Strike</TableHead>
+                <TableHead>Time</TableHead>
+                <TableHead className="text-right">P/L</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {trades.map((trade) => {
+                const isProfit = (trade.profit && trade.profit > 0) || false;
+                
+                return (
+                  <TableRow key={trade.id}>
+                    <TableCell>
+                      <Badge variant={trade.type === 'CALL' ? 'outline' : 'secondary'}>
+                        {trade.type}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="font-medium">${trade.strikePrice}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center">
+                        <Clock className="h-3 w-3 mr-1 opacity-70" />
+                        {formatTime(trade.openedAt)}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {trade.profit !== undefined ? (
+                        <div className="flex items-center justify-end gap-1">
+                          {isProfit ? 
+                            <ArrowUpRight className="h-4 w-4 text-green-500" /> : 
+                            <ArrowDownRight className="h-4 w-4 text-red-500" />
+                          }
+                          <span className={cn(
+                            "font-medium",
+                            isProfit ? "text-green-500" : "text-red-500"
+                          )}>
+                            {isProfit ? "+" : ""}{trade.profit.toFixed(2)}$
+                          </span>
                         </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {trade.profit !== undefined ? (
-                          <div className="flex items-center justify-end gap-1">
-                            {isProfit ? 
-                              <ArrowUpRight className="h-4 w-4 text-green-500" /> : 
-                              <ArrowDownRight className="h-4 w-4 text-red-500" />
-                            }
-                            <span className={cn(
-                              "font-medium",
-                              isProfit ? "text-green-500" : "text-red-500"
-                            )}>
-                              {isProfit ? "+" : ""}{trade.profit.toFixed(2)}$
-                            </span>
-                          </div>
-                        ) : (
-                          "-"
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
-        ) : (
-          <div className="h-24 flex items-center justify-center flex-col gap-2">
-            <p className="text-muted-foreground">No trades today</p>
-            <p className="text-xs text-muted-foreground">AI will execute trades based on market conditions</p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+                      ) : (
+                        "-"
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
+      ) : (
+        <div className="h-24 flex items-center justify-center flex-col gap-2">
+          <p className="text-muted-foreground">No trades today</p>
+          <p className="text-xs text-muted-foreground">AI will execute trades based on market conditions</p>
+        </div>
+      )}
+    </div>
   );
 };
 
