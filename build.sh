@@ -44,38 +44,46 @@ echo "Cleaning existing dependencies..."
 npm cache clean --force || true
 rm -rf node_modules || true
 
-# Important: Install dependencies with the --include=dev flag to ensure development dependencies 
-# like Vite and plugins are installed even though NODE_ENV is set to production
-echo "Installing dependencies including dev dependencies..."
-npm install --include=dev || npm install --also=dev || npm ci --also=dev || npm install
+# Temporarily set NODE_ENV to development to ensure dev dependencies are installed
+NODE_ENV_BACKUP=$NODE_ENV
+export NODE_ENV=development
+echo "Installing dependencies in development mode first..."
+npm install || npm ci
 
-# Explicitly install Vite and its React plugin to ensure they are available
+# Important: Explicitly install Vite and its plugins as dev dependencies
 echo "Ensuring build tools are installed..."
-npm install --no-save vite@latest @vitejs/plugin-react-swc
+npm install --save-dev vite@latest @vitejs/plugin-react-swc@latest
 
-# Try the build using various methods to handle different npm versions
+# List installed packages to verify Vite installation
+echo "Verifying vite installation:"
+npm list vite
+npm list @vitejs/plugin-react-swc
+
+# Restore NODE_ENV
+export NODE_ENV=$NODE_ENV_BACKUP
+
+# Try the build using multiple approaches
 echo "Starting build process..."
 if [ -f ./node_modules/.bin/vite ]; then
   echo "Using local vite command"
-  ./node_modules/.bin/vite build
+  NODE_ENV=development ./node_modules/.bin/vite build
 elif command -v vite >/dev/null 2>&1; then
   echo "Using global vite command"
-  vite build
+  NODE_ENV=development vite build
 else
   echo "Using npx to run vite"
-  npx vite build
+  NODE_ENV=development npx vite build
 fi
 
-# If the build failed, try with an alternative approach
+# If the build failed, try alternative approaches
 if [ $? -ne 0 ]; then
   echo "First build attempt failed, trying alternative approach..."
   # Try with npm run build command if it exists in package.json
   if grep -q '"build":' package.json; then
-    npm run build
+    NODE_ENV=development npm run build
   else
-    # Last resort: use npx with --no-install flag
-    npm install -D vite@latest @vitejs/plugin-react-swc
-    NODE_ENV=development npx --no-install vite build
+    # Last resort: directly use npx
+    NODE_ENV=development npx --no-install vite build || NODE_ENV=development npx vite build
   fi
 fi
 

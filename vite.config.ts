@@ -1,12 +1,14 @@
 
-// vite.config.ts
+// vite.config.ts - Hybrid CommonJS/ESM compatible
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { fileURLToPath } from 'url';
 
-// Dynamically create __dirname equivalent for ESM
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+// Get __dirname equivalent in ESM
+const __dirname = typeof __dirname !== 'undefined' 
+  ? __dirname 
+  : path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   server: {
