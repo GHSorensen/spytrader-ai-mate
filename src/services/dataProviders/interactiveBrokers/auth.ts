@@ -14,6 +14,8 @@ export class IBKRAuth {
   
   /**
    * Get OAuth URL for authorization
+   * Based on IBKR Web API documentation at:
+   * https://www.interactivebrokers.com/campus/ibkr-api-page/web-api/#getting-started-1
    */
   getAuthorizationUrl(): string {
     if (!this.config.callbackUrl) {
@@ -29,7 +31,8 @@ export class IBKRAuth {
       redirectUri: this.config.callbackUrl
     });
     
-    return `${endpoints.API_BASE_URL}/oauth/authorize?client_id=${this.config.apiKey}&redirect_uri=${encodeURIComponent(this.config.callbackUrl)}&response_type=code`;
+    // Updated to match the official IBKR authorization endpoint format
+    return `${endpoints.AUTH_BASE_URL}/oauth/authorize?client_id=${this.config.apiKey}&redirect_uri=${encodeURIComponent(this.config.callbackUrl)}&response_type=code&scope=trading`;
   }
   
   /**
@@ -38,8 +41,16 @@ export class IBKRAuth {
   async getAccessToken(authCode: string): Promise<{ accessToken: string, refreshToken: string, expiresIn: number }> {
     console.log("Exchanging auth code for access token", authCode);
     
-    // In a real implementation, we would make a POST request to the token endpoint
-    // For development, using mock implementation
+    if (!this.config.apiKey) {
+      throw new Error("API Key is required for token exchange");
+    }
+    
+    // In a real implementation, this would call the IBKR token endpoint with:
+    // - client_id (API key)
+    // - client_secret (if required by IBKR)
+    // - grant_type=authorization_code
+    // - code=authCode
+    // - redirect_uri=this.config.callbackUrl
     
     try {
       // Simulate API call delay
@@ -64,12 +75,20 @@ export class IBKRAuth {
   async refreshAccessToken(refreshToken: string): Promise<{ accessToken: string, refreshToken: string, expiresIn: number }> {
     console.log("Refreshing access token with refresh token", refreshToken);
     
+    if (!this.config.apiKey) {
+      throw new Error("API Key is required for token refresh");
+    }
+    
     try {
       // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Mock token refresh response
-      // In production, this would be a real API call to IBKR's token endpoint
+      // In production, this would be a real API call to IBKR's token endpoint with:
+      // - client_id (API key)
+      // - client_secret (if required by IBKR)
+      // - grant_type=refresh_token
+      // - refresh_token=refreshToken
       return {
         accessToken: `mock-ibkr-access-token-refreshed-${Date.now()}`,
         refreshToken: `mock-ibkr-refresh-token-new-${Date.now()}`,
@@ -91,7 +110,8 @@ export class IBKRAuth {
       // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 800));
       
-      // Mock validation - in production this would check with IBKR API
+      // In production, this would make a lightweight API call to IBKR
+      // to verify the token is still valid
       return accessToken.includes('mock-ibkr-access-token');
     } catch (error) {
       console.error("Error validating access token:", error);

@@ -5,11 +5,17 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { SpyHeaderWithNotifications } from '@/components/spy/SpyHeaderWithNotifications';
 import { Separator } from "@/components/ui/separator";
-import { ExternalLink, ArrowRight, Terminal } from "lucide-react";
+import { ExternalLink, ArrowRight, Terminal, Info, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { IBKRAuth } from '@/services/dataProviders/interactiveBrokers/auth';
 import { DataProviderConfig } from '@/lib/types/spy/dataProvider';
 import { getDataProvider } from '@/services/dataProviders/dataProviderFactory';
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const IBKRIntegrationPage: React.FC = () => {
   const [isConnecting, setIsConnecting] = useState(false);
@@ -140,47 +146,86 @@ const IBKRIntegrationPage: React.FC = () => {
                 </ul>
                 <div className="mt-4 text-sm">
                   <a 
-                    href="https://www.interactivebrokers.com/en/software/am/am/manageaccount/enterapikey.htm" 
+                    href="https://www.interactivebrokers.com/campus/ibkr-api-page/web-api/" 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="flex items-center text-primary hover:underline"
                   >
-                    <span>View IBKR API Key documentation</span>
+                    <span>IBKR Web API Documentation</span>
                     <ExternalLink className="h-3 w-3 ml-1" />
                   </a>
                 </div>
+              </div>
+              
+              <div className="bg-blue-50 dark:bg-blue-950/30 p-4 rounded-lg border border-blue-100 dark:border-blue-900">
+                <h3 className="font-medium mb-2 flex items-center text-blue-700 dark:text-blue-400">
+                  <Info className="h-4 w-4 mr-2" />
+                  Web API Integration Steps
+                </h3>
+                <ol className="list-decimal list-inside space-y-2 text-sm text-blue-700 dark:text-blue-300">
+                  <li>Log in to your IBKR account on their website</li>
+                  <li>Navigate to User Settings &gt; API Settings</li>
+                  <li>Register a new API application to get your Client ID (API Key)</li>
+                  <li>Add <code className="bg-blue-100 dark:bg-blue-900 px-1 rounded text-xs">{callbackUrl}</code> as an allowed redirect URL</li>
+                  <li>Copy your Client ID and paste it below</li>
+                </ol>
               </div>
               
               <Separator />
               
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <label htmlFor="apiKey" className="text-sm font-medium">
-                    IBKR API Key
+                  <label htmlFor="apiKey" className="text-sm font-medium flex items-center">
+                    <span>IBKR Client ID (API Key)</span>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="h-4 w-4 ml-2 text-gray-400 cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="w-80 text-xs">This is the Client ID you registered in the IBKR API Settings. It's used to identify your application when connecting to IBKR's services.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </label>
                   <input
                     id="apiKey"
                     type="text"
                     value={apiKey}
                     onChange={(e) => setApiKey(e.target.value)}
-                    placeholder="Enter your IBKR API Key"
+                    placeholder="Enter your IBKR Client ID"
                     className="w-full p-2 border rounded-md"
                     disabled={isConnecting}
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <label htmlFor="callbackUrl" className="text-sm font-medium">
-                    Callback URL (must match URL configured in IBKR)
+                  <label htmlFor="callbackUrl" className="text-sm font-medium flex items-center">
+                    <span>Callback URL (must match URL configured in IBKR)</span>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="h-4 w-4 ml-2 text-gray-400 cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="w-80 text-xs">This URL must be registered in your IBKR API Settings as an authorized redirect URL. After authorization, IBKR will redirect back to this URL.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </label>
-                  <input
-                    id="callbackUrl"
-                    type="text"
-                    value={callbackUrl}
-                    onChange={(e) => setCallbackUrl(e.target.value)}
-                    className="w-full p-2 border rounded-md"
-                    disabled={isConnecting}
-                  />
+                  <div className="flex items-center">
+                    <input
+                      id="callbackUrl"
+                      type="text"
+                      value={callbackUrl}
+                      onChange={(e) => setCallbackUrl(e.target.value)}
+                      className="w-full p-2 border rounded-md"
+                      disabled={isConnecting}
+                    />
+                    {callbackUrl === `${window.location.origin}/auth/ibkr/callback` && (
+                      <CheckCircle className="h-5 w-5 ml-2 text-green-500" />
+                    )}
+                  </div>
                 </div>
               </div>
             </CardContent>

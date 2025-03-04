@@ -7,7 +7,7 @@ export const ibkrDocumentation = {
    * Open the IBKR user guide in a new window
    */
   openUserGuide: (): void => {
-    window.open('https://www.interactivebrokers.com/en/software/api/api.htm', '_blank');
+    window.open('https://www.interactivebrokers.com/campus/ibkr-api-page/web-api/', '_blank');
   },
 
   /**
@@ -15,8 +15,8 @@ export const ibkrDocumentation = {
    */
   downloadUserGuide: (): void => {
     const link = document.createElement('a');
-    link.href = 'https://www.interactivebrokers.com/en/software/api/apiguide.pdf';
-    link.download = 'ibkr-api-guide.pdf';
+    link.href = 'https://www.interactivebrokers.com/campus/ibkr-api-page/web-api/docs/web-api-guide.pdf';
+    link.download = 'ibkr-web-api-guide.pdf';
     link.target = '_blank';
     document.body.appendChild(link);
     link.click();
@@ -27,6 +27,6 @@ export const ibkrDocumentation = {
    * Open the IBKR client portal API documentation
    */
   openClientPortalDocs: (): void => {
-    window.open('https://www.interactivebrokers.com/api/doc.html', '_blank');
+    window.open('https://www.interactivebrokers.com/campus/ibkr-api-page/web-api/reference/trading/', '_blank');
   }
 };
