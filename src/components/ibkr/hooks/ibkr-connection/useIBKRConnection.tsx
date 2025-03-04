@@ -2,7 +2,8 @@
 import { useState, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { IBKRConnectionStatus } from '@/lib/types/ibkr';
-import { getIBKRConnectionStatus, connectToIBKR, disconnectFromIBKR } from '@/services/ibkrService';
+import { connectToIBKR, disconnectFromIBKR } from '@/services/ibkrService';
+import { useIBKRConnectionMonitoring } from './useIBKRConnectionMonitoring';
 
 interface UseIBKRConnectionReturn {
   connectionStatus: IBKRConnectionStatus;
@@ -13,6 +14,10 @@ interface UseIBKRConnectionReturn {
   error: string | null;
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
+  isMonitoring: boolean;
+  startMonitoring: () => void;
+  stopMonitoring: () => void;
+  checkConnectionStatus: () => Promise<IBKRConnectionStatus>;
 }
 
 export const useIBKRConnection = (): UseIBKRConnectionReturn => {
@@ -24,23 +29,13 @@ export const useIBKRConnection = (): UseIBKRConnectionReturn => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const checkConnectionStatus = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const status = await getIBKRConnectionStatus();
-      setConnectionStatus(status);
-      setError(null);
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch connection status');
-      toast({
-        title: 'Error',
-        description: `Failed to fetch IBKR connection status: ${err.message}`,
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [toast]);
+  const {
+    isMonitoring,
+    lastChecked,
+    startMonitoring,
+    stopMonitoring,
+    checkConnectionStatus
+  } = useIBKRConnectionMonitoring(setConnectionStatus);
 
   const connect = useCallback(async () => {
     setIsLoading(true);
@@ -49,6 +44,10 @@ export const useIBKRConnection = (): UseIBKRConnectionReturn => {
       await connectToIBKR();
       setConnectionStatus('connected');
       setError(null);
+      
+      // Start monitoring once connected
+      startMonitoring();
+      
       toast({
         title: 'IBKR Connected',
         description: 'Successfully connected to IBKR',
@@ -64,11 +63,14 @@ export const useIBKRConnection = (): UseIBKRConnectionReturn => {
     } finally {
       setIsLoading(false);
     }
-  }, [toast]);
+  }, [toast, startMonitoring]);
 
   const disconnect = useCallback(async () => {
     setIsLoading(true);
     try {
+      // Stop monitoring before disconnecting
+      stopMonitoring();
+      
       await disconnectFromIBKR();
       setConnectionStatus('disconnected');
       setError(null);
@@ -86,7 +88,7 @@ export const useIBKRConnection = (): UseIBKRConnectionReturn => {
     } finally {
       setIsLoading(false);
     }
-  }, [toast]);
+  }, [toast, stopMonitoring]);
 
   return {
     connectionStatus,
@@ -96,6 +98,10 @@ export const useIBKRConnection = (): UseIBKRConnectionReturn => {
     isLoading,
     error,
     connect,
-    disconnect
+    disconnect,
+    isMonitoring,
+    startMonitoring,
+    stopMonitoring,
+    checkConnectionStatus
   };
 };

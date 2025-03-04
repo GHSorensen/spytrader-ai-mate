@@ -53,7 +53,8 @@ export const useIBKRIntegration = (): IBKRIntegrationHook => {
     isLoading: connectionLoading,
     error: connectionError,
     connect,
-    disconnect
+    disconnect,
+    startMonitoring
   } = useIBKRConnection();
   
   const {
@@ -84,21 +85,22 @@ export const useIBKRIntegration = (): IBKRIntegrationHook => {
   const isLoading = connectionLoading || accountsLoading;
   const error = connectionError || accountsError;
 
-  // Check connection status and fetch accounts periodically
+  // Check connection status and fetch accounts
   useEffect(() => {
-    // Initial check
+    // Start connection monitoring when component mounts
+    if (isConfigured) {
+      startMonitoring();
+    }
+    
+    // Fetch accounts when connected
     if (connectionStatus === 'connected') {
       fetchAccounts();
     }
     
-    const intervalId = setInterval(() => {
-      if (connectionStatus === 'connected') {
-        fetchAccounts();
-      }
-    }, 60000);
-
-    return () => clearInterval(intervalId);
-  }, [connectionStatus, fetchAccounts]);
+    return () => {
+      // Connection monitoring is cleaned up in the monitoring hook
+    };
+  }, [isConfigured, connectionStatus, fetchAccounts, startMonitoring]);
 
   return {
     connectionStatus,
