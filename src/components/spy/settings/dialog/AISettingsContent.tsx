@@ -40,47 +40,49 @@ export const AISettingsContent: React.FC<AISettingsContentProps> = ({
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
           <AISettingsTabs activeTab={activeTab} />
           
-          <ScrollArea className="pr-4 mt-4 max-h-[calc(90vh-220px)]">
-            <TabsContent value="strategy" className="space-y-4 mt-2 pb-4">
-              <StrategyTabContent 
-                settings={settings}
-                updateSettings={updateSettings}
-                currentRiskTolerance={currentRiskTolerance}
-                onRiskToleranceChange={onRiskToleranceChange}
-              />
-            </TabsContent>
-            
-            <TabsContent value="risk" className="space-y-4 mt-2 pb-4">
-              <RiskManagementTabContent 
-                settings={settings}
-                updateSettings={updateSettings}
-                updateNestedSettings={updateNestedSettings}
-                currentRiskTolerance={currentRiskTolerance}
-              />
-            </TabsContent>
-            
-            <TabsContent value="market" className="space-y-4 mt-2 pb-4">
-              <MarketConditionsTabContent 
-                settings={settings}
-                updateSettings={updateSettings}
-                currentRiskTolerance={currentRiskTolerance}
-              />
-            </TabsContent>
-            
-            <TabsContent value="backtest" className="space-y-4 mt-2 pb-4">
-              <BacktestingTabContent 
-                settings={settings}
-                updateNestedSettings={updateNestedSettings}
-              />
-            </TabsContent>
-            
-            <TabsContent value="advanced" className="space-y-4 mt-2 pb-4">
-              <AdvancedTabContent 
-                settings={settings}
-                updateSettings={updateSettings}
-              />
-            </TabsContent>
-          </ScrollArea>
+          <div className="mt-4">
+            <ScrollArea className="h-[calc(70vh-180px)] pr-4 pb-4">
+              <TabsContent value="strategy" className="space-y-4 mt-2 pb-6 data-[state=active]:block">
+                <StrategyTabContent 
+                  settings={settings}
+                  updateSettings={updateSettings}
+                  currentRiskTolerance={currentRiskTolerance}
+                  onRiskToleranceChange={onRiskToleranceChange}
+                />
+              </TabsContent>
+              
+              <TabsContent value="risk" className="space-y-4 mt-2 pb-6 data-[state=active]:block">
+                <RiskManagementTabContent 
+                  settings={settings}
+                  updateSettings={updateSettings}
+                  updateNestedSettings={updateNestedSettings}
+                  currentRiskTolerance={currentRiskTolerance}
+                />
+              </TabsContent>
+              
+              <TabsContent value="market" className="space-y-4 mt-2 pb-6 data-[state=active]:block">
+                <MarketConditionsTabContent 
+                  settings={settings}
+                  updateSettings={updateSettings}
+                  currentRiskTolerance={currentRiskTolerance}
+                />
+              </TabsContent>
+              
+              <TabsContent value="backtest" className="space-y-4 mt-2 pb-6 data-[state=active]:block">
+                <BacktestingTabContent 
+                  settings={settings}
+                  updateNestedSettings={updateNestedSettings}
+                />
+              </TabsContent>
+              
+              <TabsContent value="advanced" className="space-y-4 mt-2 pb-6 data-[state=active]:block">
+                <AdvancedTabContent 
+                  settings={settings}
+                  updateSettings={updateSettings}
+                />
+              </TabsContent>
+            </ScrollArea>
+          </div>
         </Tabs>
       </div>
     </div>

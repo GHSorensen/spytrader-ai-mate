@@ -43,22 +43,24 @@ export const AISettingsDialog = ({
       }) => (
         <>
           <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[800px] max-h-[90vh] p-0 overflow-hidden">
-              <div className="p-6 pb-0">
+            <DialogContent className="sm:max-w-[800px] h-[85vh] p-0 overflow-hidden flex flex-col">
+              <div className="p-6 pb-0 flex-shrink-0">
                 <AISettingsHeader activeTab={activeTab} />
               </div>
               
-              <AISettingsContent
-                activeTab={activeTab}
-                setActiveTab={setActiveTab}
-                settings={settings}
-                updateSettings={updateSettings}
-                updateNestedSettings={updateNestedSettings}
-                currentRiskTolerance={currentRiskTolerance}
-                onRiskToleranceChange={onRiskToleranceChange}
-              />
+              <div className="flex-grow overflow-hidden">
+                <AISettingsContent
+                  activeTab={activeTab}
+                  setActiveTab={setActiveTab}
+                  settings={settings}
+                  updateSettings={updateSettings}
+                  updateNestedSettings={updateNestedSettings}
+                  currentRiskTolerance={currentRiskTolerance}
+                  onRiskToleranceChange={onRiskToleranceChange}
+                />
+              </div>
               
-              <div className="p-6 pt-0">
+              <div className="p-6 pt-4 flex-shrink-0 border-t">
                 <AISettingsFooter 
                   onCancel={handleCancel}
                   onSave={handleSaveSettings}

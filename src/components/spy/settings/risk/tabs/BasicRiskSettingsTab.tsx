@@ -27,13 +27,13 @@ export const BasicRiskSettingsTab: React.FC<BasicRiskSettingsTabProps> = ({
   updateNestedSettings,
 }) => {
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <PositionSizingCard 
         positionSizing={settings.positionSizing}
         updateNestedSettings={updateNestedSettings}
       />
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <StopLossCard 
           stopLossSettings={settings.stopLossSettings}
           updateNestedSettings={updateNestedSettings}
