@@ -34,6 +34,7 @@ export const SpyHeaderWithNotifications: React.FC<SpyHeaderProps> = ({ minimal =
             <Link to="/trades" className="text-muted-foreground hover:text-foreground">Trades</Link>
             <Link to="/performance" className="text-muted-foreground hover:text-foreground">Performance</Link>
             <Link to="/risk-console" className="text-muted-foreground hover:text-foreground">Risk Console</Link>
+            <Link to="/schwab-integration" className="text-muted-foreground hover:text-foreground">Schwab Connect</Link>
           </nav>
         )}
       </div>
@@ -61,6 +62,12 @@ export const SpyHeaderWithNotifications: React.FC<SpyHeaderProps> = ({ minimal =
             >
               Download Guide
             </button>
+            <Link 
+              to="/schwab-integration"
+              className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              Setup Integration
+            </Link>
           </div>
         </div>
         <NotificationCenter />

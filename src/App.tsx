@@ -11,6 +11,7 @@ import PerformanceDashboard from './components/spy/PerformanceDashboard';
 import RiskMonitoringTest from './pages/RiskMonitoringTest';
 import notificationService from './services/notification/notificationService';
 import ErrorBoundary from './components/ErrorBoundary';
+import SchwabIntegrationPage from './pages/SchwabIntegrationPage';
 
 function App() {
   // Set up initial notifications on app load
@@ -43,6 +44,7 @@ function App() {
           <Route path="/performance" element={<PerformanceDashboard />} />
           <Route path="/risk-console" element={<RiskConsole />} />
           <Route path="/risk-monitoring-test" element={<RiskMonitoringTest />} />
+          <Route path="/schwab-integration" element={<SchwabIntegrationPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </ErrorBoundary>
