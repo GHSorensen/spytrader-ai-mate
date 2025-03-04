@@ -17,24 +17,30 @@ export const ExpiryChart: React.FC<ExpiryChartProps> = ({
           data={expiryData}
           margin={{ 
             top: 5, 
-            right: 20, 
-            left: 5, 
+            right: 10, 
+            left: 0, 
             bottom: 20 
           }}
         >
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis 
             dataKey="expiry" 
-            tick={{ fontSize: 12 }}
+            tick={{ fontSize: 10 }}
             tickMargin={10}
             height={40}
+            interval="preserveStartEnd"
+            angle={-45}
+            textAnchor="end"
           />
           <YAxis 
             tickFormatter={(value) => `${value}%`}
-            tick={{ fontSize: 12 }}
-            width={45}
+            tick={{ fontSize: 10 }}
+            width={40}
           />
-          <Tooltip formatter={(value) => [`${value}%`, 'Win Rate']} />
+          <Tooltip 
+            formatter={(value) => [`${value}%`, 'Win Rate']}
+            contentStyle={{fontSize: '12px'}}
+          />
           <Legend wrapperStyle={{ fontSize: 12, paddingTop: 10 }} />
           <Bar dataKey="winRate" name="Win Rate" fill="#8884d8" />
         </BarChart>

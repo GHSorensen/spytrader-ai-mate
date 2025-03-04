@@ -31,12 +31,11 @@ export function ensureSecureCallbackUrl(config: DataProviderConfig): string {
   
   // Show a toast to notify the user about the callback URL
   try {
-    if (window.toast) {
-      window.toast.add({
-        title: "Callback URL Notice",
-        description: `Using ${secureCallbackUrl} for Schwab authentication.`,
-      });
-    }
+    // Use the proper toast function from hooks
+    toast({
+      title: "Callback URL Notice",
+      description: `Using ${secureCallbackUrl} for Schwab authentication.`,
+    });
   } catch (error) {
     console.error("Failed to show toast notification:", error);
   }

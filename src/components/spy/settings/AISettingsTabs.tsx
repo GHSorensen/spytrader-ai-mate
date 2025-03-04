@@ -15,26 +15,26 @@ export const AISettingsTabs: React.FC<AISettingsTabsProps> = ({
   return (
     <>
       {/* Mobile tabs (vertical stack) */}
-      <TabsList className="flex flex-col space-y-1 w-full md:hidden">
-        <TabsTrigger value="strategy" className="w-full justify-start p-3">
+      <TabsList className="flex flex-col space-y-1 w-full md:hidden bg-background">
+        <TabsTrigger value="strategy" className="w-full justify-start p-2 rounded-none">
           <Shield className={`h-4 w-4 mr-2 ${activeTab === 'strategy' ? 'text-primary' : ''}`} />
-          Strategy
+          <span className="text-sm">Strategy</span>
         </TabsTrigger>
-        <TabsTrigger value="risk" className="w-full justify-start p-3">
+        <TabsTrigger value="risk" className="w-full justify-start p-2 rounded-none">
           <Settings className={`h-4 w-4 mr-2 ${activeTab === 'risk' ? 'text-primary' : ''}`} />
-          Risk Management
+          <span className="text-sm">Risk Management</span>
         </TabsTrigger>
-        <TabsTrigger value="market" className="w-full justify-start p-3">
+        <TabsTrigger value="market" className="w-full justify-start p-2 rounded-none">
           <BarChart4 className={`h-4 w-4 mr-2 ${activeTab === 'market' ? 'text-primary' : ''}`} />
-          Market Conditions
+          <span className="text-sm">Market Conditions</span>
         </TabsTrigger>
-        <TabsTrigger value="backtest" className="w-full justify-start p-3">
+        <TabsTrigger value="backtest" className="w-full justify-start p-2 rounded-none">
           <LineChart className={`h-4 w-4 mr-2 ${activeTab === 'backtest' ? 'text-primary' : ''}`} />
-          Backtesting
+          <span className="text-sm">Backtesting</span>
         </TabsTrigger>
-        <TabsTrigger value="advanced" className="w-full justify-start p-3">
+        <TabsTrigger value="advanced" className="w-full justify-start p-2 rounded-none">
           <Sliders className={`h-4 w-4 mr-2 ${activeTab === 'advanced' ? 'text-primary' : ''}`} />
-          Advanced
+          <span className="text-sm">Advanced</span>
         </TabsTrigger>
       </TabsList>
       
