@@ -1,213 +1,86 @@
 
-import { DataProviderConfig, DataProviderInterface, DataProviderType } from '@/lib/types/spy/dataProvider';
-import { InteractiveBrokersDataProvider } from './interactiveBrokersDataProvider';
+import { DataProviderInterface, DataProviderConfig } from "@/lib/types/spy/dataProvider";
+import { TDAmeritradeService } from "./tdAmeritradeService";
+import { SchwabService } from "./schwabService";
+import { InteractiveBrokersService } from "./interactiveBrokersService";
+import { toast } from "@/hooks/use-toast";
 
-// Mock implementation that implements the DataProviderInterface
+// Mock service for development
 class MockDataProvider implements DataProviderInterface {
-  private connected: boolean = false;
-  
-  constructor(config?: DataProviderConfig) {
-    // Store config if needed
-    console.log('[Mock Provider] Initialized with config:', config);
-  }
-
-  async getMarketData() {
-    console.log('[Mock Provider] Getting market data');
-    return { 
-      status: 'success', 
-      data: [
-        {
-          symbol: 'SPY',
-          price: 432.89,
-          change: 2.15,
-          percentChange: 0.5,
-          volume: 28500000,
-          timestamp: new Date().toISOString()
-        },
-        {
-          symbol: 'QQQ',
-          price: 387.45,
-          change: 1.76,
-          percentChange: 0.46,
-          volume: 19800000,
-          timestamp: new Date().toISOString()
-        }
-      ] 
+  // Return mock implementations of all required methods
+  // ... implementation would be similar to our existing mock data services
+  async getMarketData() { return import('@/services/spyOptionsService').then(m => m.getSpyMarketData()); }
+  async getOptions() { return import('@/services/spyOptionsService').then(m => m.getSpyOptions()); }
+  async getOptionsByType(type) { return import('@/services/spyOptionsService').then(m => m.getSpyOptionsByType(type)); }
+  async getOptionChain() { return import('@/services/spyOptionsService').then(m => m.getSpyOptions()); }
+  async getTrades() { return import('@/services/spyOptionsService').then(m => m.getSpyTrades()); }
+  async getTradesByStatus(status) { return import('@/services/spyOptionsService').then(m => m.getSpyTradesByStatus(status)); }
+  async getAccountData() { 
+    return {
+      balance: 1600,
+      dailyPnL: 0,
+      allTimePnL: 0
     };
   }
-
-  async getOptions() {
-    console.log('[Mock Provider] Getting options data');
-    return { 
-      status: 'success', 
-      data: [
-        {
-          symbol: 'SPY',
-          expirationDate: '2023-12-15',
-          strikePrice: 430,
-          optionType: 'call',
-          lastPrice: 6.25,
-          volume: 13800
-        },
-        {
-          symbol: 'SPY',
-          expirationDate: '2023-12-15',
-          strikePrice: 430,
-          optionType: 'put',
-          lastPrice: 5.10,
-          volume: 11500
-        }
-      ] 
-    };
-  }
-
-  async getOptionChain(symbol: string) {
-    console.log(`[Mock Provider] Getting option chain for ${symbol}`);
-    return { 
-      status: 'success', 
-      data: {
-        symbol,
-        expirations: ['2023-12-15', '2023-12-22', '2023-12-29'],
-        calls: [
-          {
-            strike: 430,
-            lastPrice: 6.25,
-            bid: 6.20,
-            ask: 6.30,
-            volume: 13800,
-            openInterest: 48000,
-            delta: 0.58
-          }
-        ],
-        puts: [
-          {
-            strike: 430,
-            lastPrice: 5.10,
-            bid: 5.05,
-            ask: 5.15,
-            volume: 11500,
-            openInterest: 42000,
-            delta: -0.42
-          }
-        ]
-      } 
-    };
-  }
-
-  async getTrades() {
-    console.log('[Mock Provider] Getting trade history');
-    return { 
-      status: 'success', 
-      data: [
-        {
-          id: 'trade-001',
-          symbol: 'SPY',
-          quantity: 10,
-          price: 432.89,
-          action: 'BUY',
-          orderType: 'MARKET',
-          status: 'FILLED',
-          timestamp: new Date().toISOString()
-        },
-        {
-          id: 'trade-002',
-          symbol: 'QQQ',
-          quantity: 5,
-          price: 387.45,
-          action: 'BUY',
-          orderType: 'LIMIT',
-          status: 'FILLED',
-          timestamp: new Date(Date.now() - 3600000).toISOString()
-        }
-      ] 
-    };
-  }
-
-  async getAccountData() {
-    console.log('[Mock Provider] Getting account data');
-    return { 
-      status: 'success',
-      data: {
-        accountId: 'mock-account-123',
-        balance: 100000,
-        availableFunds: 95000,
-        buyingPower: 190000,
-        currency: 'USD'
-      } 
-    };
-  }
-
-  async placeTrade(order: any) {
-    console.log('[Mock Provider] Placing trade:', order);
-    return { 
-      status: 'success', 
-      data: {
-        orderId: 'mock-order-' + Date.now(),
-        status: 'submitted'
-      } 
-    };
-  }
-
-  isConnected() {
-    console.log('[Mock Provider] Checking connection status:', this.connected);
-    return this.connected;
-  }
-
-  async connect() {
-    console.log('[Mock Provider] Connecting...');
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    this.connected = true;
-    console.log('[Mock Provider] Connected');
-    return true;
-  }
-
-  async disconnect() {
-    console.log('[Mock Provider] Disconnecting...');
-    this.connected = false;
-    console.log('[Mock Provider] Disconnected');
-    return true;
-  }
+  isConnected() { return true; }
+  async connect() { return true; }
+  async disconnect() { return true; }
 }
 
-// Keep track of the current provider instance
-let currentProvider: DataProviderInterface | null = null;
+// Singleton instance of data provider
+let dataProviderInstance: DataProviderInterface | null = null;
 
-// Factory function to get a data provider instance
+/**
+ * Get or create a data provider based on configuration
+ */
 export const getDataProvider = (config?: DataProviderConfig): DataProviderInterface => {
-  // If no config is provided, return the current provider or create a mock one
-  if (!config) {
-    console.log('[Data Provider Factory] No config provided, returning current or mock provider');
-    return currentProvider || new MockDataProvider();
+  // If no config provided and instance exists, return existing instance
+  if (!config && dataProviderInstance) {
+    return dataProviderInstance;
   }
 
-  console.log('[Data Provider Factory] Creating provider with type:', config.type);
+  // If no config provided, use mock provider
+  if (!config) {
+    console.log("No data provider config provided, using mock provider");
+    dataProviderInstance = new MockDataProvider();
+    return dataProviderInstance;
+  }
 
-  // Create a new provider based on the type
-  switch(config.type) {
-    case 'interactive-brokers':
-    case 'interactive-brokers-tws':
-      console.log('[Data Provider Factory] Creating Interactive Brokers provider');
-      currentProvider = new InteractiveBrokersDataProvider(config);
-      break;
+  // Create provider based on type
+  switch (config.type) {
     case 'td-ameritrade':
-      console.log('[Data Provider Factory] Creating TD Ameritrade provider (mock)');
-      currentProvider = new MockDataProvider(config);
+      console.log("Creating TD Ameritrade data provider");
+      dataProviderInstance = new TDAmeritradeService(config);
       break;
     case 'schwab':
-      console.log('[Data Provider Factory] Creating Schwab provider (mock)');
-      currentProvider = new MockDataProvider(config);
+      console.log("Creating Schwab data provider");
+      dataProviderInstance = new SchwabService(config);
       break;
-    case 'mock':
+    case 'interactive-brokers':
+      console.log("Creating Interactive Brokers data provider");
+      dataProviderInstance = new InteractiveBrokersService(config);
+      break;
     default:
-      console.log('[Data Provider Factory] Creating Mock provider');
-      currentProvider = new MockDataProvider(config);
+      console.log("Unknown provider type, using mock provider");
+      dataProviderInstance = new MockDataProvider();
   }
 
-  return currentProvider;
+  return dataProviderInstance;
 };
 
-// Clears the current data provider instance
-export const clearDataProvider = () => {
-  currentProvider = null;
-  console.log('[Data Provider Factory] Data provider cleared');
+/**
+ * Clear the current data provider instance
+ */
+export const clearDataProvider = (): void => {
+  dataProviderInstance = null;
+};
+
+const notifyUser = (message: string, isError: boolean = false) => {
+  if (typeof window !== 'undefined') {
+    toast({
+      title: isError ? 'Connection Error' : 'Connection Status',
+      description: message,
+      variant: isError ? 'destructive' : 'default',
+    });
+  }
 };

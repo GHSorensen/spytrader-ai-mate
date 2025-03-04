@@ -1,9 +1,11 @@
 
 import React from 'react';
 import {
-  BrowserRouter,
+  createBrowserRouter,
+  RouterProvider,
   Route,
   Routes,
+  BrowserRouter,
   Outlet
 } from "react-router-dom";
 import DashboardPage from './pages/DashboardPage';
