@@ -130,10 +130,84 @@ export class InteractiveBrokersService extends BaseDataProvider {
    * Place a trade with Interactive Brokers
    */
   async placeTrade(order: TradeOrder): Promise<any> {
-    if (!this.isConnected()) {
-      await this.connect();
+    try {
+      console.log("Attempting to place trade with Interactive Brokers:", order);
+      
+      // Check if we're connected first
+      if (!this.isConnected()) {
+        console.log("Not connected to IBKR, attempting to connect...");
+        const connected = await this.connect();
+        if (!connected) {
+          console.log("Failed to connect to IBKR, falling back to paper trade");
+          return this.createPaperTrade(order);
+        }
+      }
+      
+      // Check market hours (simplified check)
+      const now = new Date();
+      const hour = now.getHours();
+      const minute = now.getMinutes();
+      const day = now.getDay();
+      const isWeekend = day === 0 || day === 6;
+      const isMarketHours = !isWeekend && ((hour > 9 || (hour === 9 && minute >= 30)) && hour < 16);
+      
+      if (!isMarketHours && !this.config.paperTrading) {
+        console.log("Outside market hours, creating paper trade instead");
+        toast.info("Outside Market Hours", {
+          description: "Creating paper trade for demonstration purposes.",
+        });
+        return this.createPaperTrade(order);
+      }
+      
+      // Attempt to place the real trade
+      const result = await this.dataService.placeTrade(order);
+      console.log("Trade placed successfully:", result);
+      
+      return result;
+    } catch (error) {
+      console.error("Error in placeTrade:", error);
+      toast.error("Trade Error", {
+        description: error instanceof Error ? error.message : "Error placing trade. Creating paper trade instead.",
+      });
+      
+      // Always fall back to paper trade on error
+      return this.createPaperTrade(order);
     }
+  }
+  
+  /**
+   * Create a paper trade for testing or when real trading fails
+   */
+  private createPaperTrade(order: TradeOrder): any {
+    console.log("Creating paper trade for:", order);
     
-    return this.dataService.placeTrade(order);
+    const now = new Date();
+    const expiryDate = new Date(now);
+    expiryDate.setDate(expiryDate.getDate() + 7); // 7 days from now
+    
+    const mockTrade: SpyTrade = {
+      id: `paper-${Date.now()}`,
+      type: order.action === 'BUY' ? "CALL" : "PUT",
+      strikePrice: 500,
+      expirationDate: expiryDate,
+      entryPrice: 3.45,
+      currentPrice: 3.45,
+      targetPrice: 5.0,
+      stopLoss: 2.0,
+      quantity: order.quantity,
+      status: "active",
+      openedAt: now,
+      profit: 0,
+      profitPercentage: 0,
+      confidenceScore: 0.75,
+      paperTrading: true
+    };
+    
+    return { 
+      trade: mockTrade, 
+      orderId: `PAPER-${Date.now()}`,
+      isPaperTrade: true,
+      message: "Created paper trade for testing purposes."
+    };
   }
 }

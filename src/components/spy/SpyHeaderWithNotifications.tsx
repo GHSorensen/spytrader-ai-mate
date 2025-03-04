@@ -53,15 +53,17 @@ export const SpyHeaderWithNotifications: React.FC<SpyHeaderWithNotificationsProp
   return (
     <div className="flex justify-between items-center w-full">
       <LogoAndNav minimal={minimal} />
-      <HeaderActions 
-        userName={userName} 
-        setIsAISettingsOpen={setIsAISettingsOpen}
-        isAuthenticated={isAuthenticated}
-      />
-      <MobileMenu 
-        isMobileMenuOpen={isMobileMenuOpen}
-        setIsMobileMenuOpen={setIsMobileMenuOpen}
-      />
+      <div className="flex items-center gap-1 md:gap-2">
+        <HeaderActions 
+          userName={userName} 
+          setIsAISettingsOpen={setIsAISettingsOpen}
+          isAuthenticated={isAuthenticated}
+        />
+        <MobileMenu 
+          isMobileMenuOpen={isMobileMenuOpen}
+          setIsMobileMenuOpen={setIsMobileMenuOpen}
+        />
+      </div>
     </div>
   );
 };
