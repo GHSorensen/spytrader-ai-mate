@@ -1,29 +1,25 @@
-import { BaseDataProvider } from "./base/BaseDataProvider";
-import { DataProviderConfig, DataProviderStatus } from "@/lib/types/spy/dataProvider";
+
+import { DataProviderConfig, DataProviderStatus, TradeOrder } from "@/lib/types/spy/dataProvider";
 import { SpyMarketData, SpyOption, SpyTrade } from "@/lib/types/spy";
+import { BaseDataProvider } from "./base/BaseDataProvider";
 import { IBKRAuth } from "./interactiveBrokers/auth";
-import { TwsConnectionManager } from "./interactiveBrokers/tws/TwsConnectionManager";
-import { TwsDataService } from "./interactiveBrokers/tws/TwsDataService";
-import { WebApiDataService } from "./interactiveBrokers/webapi/WebApiDataService";
-import { toast } from "@/hooks/use-toast";
+import { IBKRConnectionManager } from "./interactiveBrokers/IBKRConnectionManager";
+import { IBKRDataService } from "./interactiveBrokers/IBKRDataService";
+import { toast } from "sonner";
 
 /**
  * Interactive Brokers API service
  */
 export class InteractiveBrokersService extends BaseDataProvider {
   private auth: IBKRAuth;
-  private connectionMethod: 'webapi' | 'tws';
-  private twsConnectionManager: TwsConnectionManager;
-  private twsDataService: TwsDataService;
-  private webApiDataService: WebApiDataService;
+  private connectionManager: IBKRConnectionManager;
+  private dataService: IBKRDataService;
   
   constructor(config: DataProviderConfig) {
     super(config);
     this.auth = new IBKRAuth(config);
-    this.connectionMethod = config.connectionMethod || 'webapi';
-    this.twsConnectionManager = new TwsConnectionManager(config);
-    this.twsDataService = new TwsDataService(config);
-    this.webApiDataService = new WebApiDataService(config);
+    this.connectionManager = new IBKRConnectionManager(config);
+    this.dataService = new IBKRDataService(config);
   }
   
   /**
@@ -31,57 +27,34 @@ export class InteractiveBrokersService extends BaseDataProvider {
    */
   async connect(): Promise<boolean> {
     try {
-      console.log(`Connecting to Interactive Brokers API via ${this.connectionMethod}...`);
+      console.log(`Connecting to Interactive Brokers API via ${this.config.connectionMethod || 'webapi'}...`);
       
-      if (this.connectionMethod === 'tws') {
-        // Logic for TWS connection
-        const connected = await this.twsConnectionManager.connect();
-        
-        if (connected) {
-          this.status.connected = true;
-          this.status.lastUpdated = new Date();
-          this.status.quotesDelayed = false;
-          return true;
+      const connected = await this.connectionManager.connect(this.auth);
+      
+      if (connected) {
+        if (this.connectionManager.getAccessToken()) {
+          this.accessToken = this.connectionManager.getAccessToken();
+          this.dataService.setAccessToken(this.accessToken);
         }
         
-        this.status.connected = false;
-        this.status.lastUpdated = new Date();
-        return false;
-      }
-      
-      // Web API connection logic
-      if (this.config.refreshToken) {
-        const authResult = await this.auth.refreshAccessToken(this.config.refreshToken);
-        this.accessToken = authResult.accessToken;
-        this.webApiDataService.setAccessToken(authResult.accessToken);
+        if (this.connectionManager.getTokenExpiry()) {
+          this.tokenExpiry = this.connectionManager.getTokenExpiry();
+        }
         
-        const expiryDate = new Date();
-        expiryDate.setSeconds(expiryDate.getSeconds() + authResult.expiresIn);
-        this.tokenExpiry = expiryDate;
         this.status.connected = true;
         this.status.lastUpdated = new Date();
-        return true;
-      }
-      
-      if (this.config.accessToken) {
-        this.accessToken = this.config.accessToken;
-        this.webApiDataService.setAccessToken(this.config.accessToken);
-        
-        const expiryDate = new Date();
-        expiryDate.setHours(expiryDate.getHours() + 1); // Assume 1 hour expiry
-        this.tokenExpiry = expiryDate;
-        this.status.connected = true;
-        this.status.lastUpdated = new Date();
+        this.status.quotesDelayed = this.config.quotesDelayed || false;
         return true;
       }
       
       this.status.connected = false;
       this.status.lastUpdated = new Date();
       
-      toast({
-        title: "Connection Required",
-        description: "Please complete the Interactive Brokers authorization process.",
-      });
+      if (!this.status.errorMessage) {
+        toast.error("Connection Required", {
+          description: "Please complete the Interactive Brokers authorization process.",
+        });
+      }
       
       return false;
     } catch (error) {
@@ -90,10 +63,8 @@ export class InteractiveBrokersService extends BaseDataProvider {
       this.status.lastUpdated = new Date();
       this.status.errorMessage = error instanceof Error ? error.message : "Unknown error";
       
-      toast({
-        title: "Connection Error",
+      toast.error("Connection Error", {
         description: this.status.errorMessage,
-        variant: "destructive",
       });
       
       return false;
@@ -108,16 +79,7 @@ export class InteractiveBrokersService extends BaseDataProvider {
       await this.connect();
     }
     
-    try {
-      if (this.connectionMethod === 'tws') {
-        return this.twsDataService.getMarketData();
-      }
-      
-      return this.webApiDataService.getMarketData();
-    } catch (error) {
-      console.error("Error fetching market data from Interactive Brokers:", error);
-      throw error;
-    }
+    return this.dataService.getMarketData();
   }
   
   /**
@@ -128,16 +90,7 @@ export class InteractiveBrokersService extends BaseDataProvider {
       await this.connect();
     }
     
-    try {
-      if (this.connectionMethod === 'tws') {
-        return this.twsDataService.getOptions();
-      }
-      
-      return this.webApiDataService.getOptions();
-    } catch (error) {
-      console.error("Error fetching options from Interactive Brokers:", error);
-      throw error;
-    }
+    return this.dataService.getOptions();
   }
   
   /**
@@ -148,16 +101,7 @@ export class InteractiveBrokersService extends BaseDataProvider {
       await this.connect();
     }
     
-    try {
-      if (this.connectionMethod === 'tws') {
-        return this.twsDataService.getOptionChain(symbol);
-      }
-      
-      return this.webApiDataService.getOptionChain(symbol);
-    } catch (error) {
-      console.error(`Error fetching option chain for ${symbol} from Interactive Brokers:`, error);
-      throw error;
-    }
+    return this.dataService.getOptionChain(symbol);
   }
   
   /**
@@ -168,16 +112,7 @@ export class InteractiveBrokersService extends BaseDataProvider {
       await this.connect();
     }
     
-    try {
-      if (this.connectionMethod === 'tws') {
-        return this.twsDataService.getTrades();
-      }
-      
-      return this.webApiDataService.getTrades();
-    } catch (error) {
-      console.error("Error fetching trades from Interactive Brokers:", error);
-      throw error;
-    }
+    return this.dataService.getTrades();
   }
   
   /**
@@ -188,17 +123,17 @@ export class InteractiveBrokersService extends BaseDataProvider {
       await this.connect();
     }
     
-    try {
-      // In a real implementation, this would fetch actual account data from TWS or Web API
-      // For now, return mock data
-      return {
-        balance: 1600, // Mock account balance
-        dailyPnL: this.connectionMethod === 'tws' ? 25.75 : 20.50, // Slightly different values based on connection method
-        allTimePnL: this.connectionMethod === 'tws' ? 342.50 : 340.25
-      };
-    } catch (error) {
-      console.error("Error fetching account data from Interactive Brokers:", error);
-      throw error;
+    return this.dataService.getAccountData();
+  }
+  
+  /**
+   * Place a trade with Interactive Brokers
+   */
+  async placeTrade(order: TradeOrder): Promise<any> {
+    if (!this.isConnected()) {
+      await this.connect();
     }
+    
+    return this.dataService.placeTrade(order);
   }
 }
