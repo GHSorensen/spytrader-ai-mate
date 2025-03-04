@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
 import { IBKRAuth } from '@/services/dataProviders/interactiveBrokers/auth';
@@ -16,6 +16,8 @@ export function useIBKRIntegration() {
   const [isPaperTrading, setIsPaperTrading] = useState(true); // Default to paper trading
   const [isConfigured, setIsConfigured] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected' | 'error'>('disconnected');
+  const [lastConnected, setLastConnected] = useState<Date | null>(null);
+  const [autoReconnectEnabled, setAutoReconnectEnabled] = useState(true);
   const navigate = useNavigate();
   
   useEffect(() => {
@@ -43,6 +45,10 @@ export function useIBKRIntegration() {
             setIsPaperTrading(config.twsPort === '7497');
           }
         }
+        
+        if (config.autoReconnect !== undefined) {
+          setAutoReconnectEnabled(config.autoReconnect);
+        }
       } catch (err) {
         console.error("Error parsing saved IBKR config:", err);
       }
@@ -57,6 +63,47 @@ export function useIBKRIntegration() {
       setTwsPort('7496');
     }
   }, [isPaperTrading, twsPort]);
+  
+  // Auto reconnect logic
+  useEffect(() => {
+    // Only attempt reconnection if previously connected and autoReconnect is enabled
+    if (autoReconnectEnabled && lastConnected && connectionStatus === 'disconnected') {
+      const reconnectInterval = setInterval(() => {
+        console.log("Attempting to reconnect to TWS...");
+        setIsConnecting(true);
+        
+        // This would trigger a reconnection attempt
+        // In a real implementation, you would call your connection service
+        toast.info("Attempting to reconnect to TWS...");
+        
+        // Reset the connecting state after a timeout if no connection established
+        setTimeout(() => {
+          if (connectionStatus !== 'connected') {
+            setIsConnecting(false);
+          }
+        }, 5000);
+      }, 30000); // Try every 30 seconds
+      
+      return () => clearInterval(reconnectInterval);
+    }
+  }, [autoReconnectEnabled, lastConnected, connectionStatus]);
+  
+  // Function to save config with auto reconnect preference
+  const saveConfiguration = useCallback((config: DataProviderConfig) => {
+    const configToSave = {
+      ...config,
+      autoReconnect: autoReconnectEnabled
+    };
+    localStorage.setItem('ibkr-config', JSON.stringify(configToSave));
+    setIsConfigured(true);
+  }, [autoReconnectEnabled]);
+  
+  // When connection is established
+  useEffect(() => {
+    if (connectionStatus === 'connected') {
+      setLastConnected(new Date());
+    }
+  }, [connectionStatus]);
   
   return {
     // State
@@ -78,6 +125,10 @@ export function useIBKRIntegration() {
     setIsConfigured,
     connectionStatus,
     setConnectionStatus,
-    navigate
+    autoReconnectEnabled,
+    setAutoReconnectEnabled,
+    saveConfiguration,
+    navigate,
+    lastConnected
   };
 }

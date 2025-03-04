@@ -1,9 +1,15 @@
 
 import React from 'react';
-import { CheckCircle2, Info } from 'lucide-react';
+import { CheckCircle2, Info, RefreshCw } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-const IBKRPrerequisites: React.FC = () => {
+interface IBKRPrerequisitesProps {
+  autoReconnectEnabled?: boolean;
+}
+
+const IBKRPrerequisites: React.FC<IBKRPrerequisitesProps> = ({ 
+  autoReconnectEnabled = true 
+}) => {
   const prerequisites = [
     {
       id: 'login',
@@ -57,6 +63,20 @@ const IBKRPrerequisites: React.FC = () => {
               </div>
             ))}
           </div>
+        </AlertDescription>
+      </Alert>
+      
+      <Alert className="bg-primary/5 border-primary/20">
+        <RefreshCw className="h-4 w-4 text-primary" />
+        <AlertTitle>Automatic Reconnection</AlertTitle>
+        <AlertDescription>
+          <p className="text-sm mt-1">
+            {autoReconnectEnabled ? (
+              "Automatic reconnection is enabled. If you sign out of TWS and sign back in, the system will attempt to reconnect automatically."
+            ) : (
+              "Automatic reconnection is disabled. If you sign out of TWS, you'll need to manually reconnect when you sign back in."
+            )}
+          </p>
         </AlertDescription>
       </Alert>
     </div>

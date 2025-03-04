@@ -18,6 +18,8 @@ export const HeaderActions: React.FC<HeaderActionsProps> = ({
   setIsAISettingsOpen 
 }) => {
   const navigate = useNavigate();
+  // Extract first letter of username for the badge
+  const userInitial = userName && userName.length > 0 ? userName.substring(0, 1) : "U";
 
   const handleSignOut = async () => {
     try {
@@ -38,13 +40,13 @@ export const HeaderActions: React.FC<HeaderActionsProps> = ({
             <User className="h-5 w-5" />
             <span className="sr-only">User Profile</span>
             {userName && (
-              <span className="absolute -bottom-1 -right-1 text-xs font-medium bg-primary text-primary-foreground rounded-full px-1.5 hidden md:block">
-                {userName.substring(0, 1)}
+              <span className="absolute -bottom-1 -right-1 text-xs font-medium bg-primary text-primary-foreground rounded-full w-4 h-4 flex items-center justify-center">
+                {userInitial}
               </span>
             )}
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
+        <DropdownMenuContent align="end" className="bg-background border border-border">
           <DropdownMenuLabel>{userName}</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
