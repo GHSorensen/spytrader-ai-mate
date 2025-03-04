@@ -50,9 +50,10 @@ export NODE_ENV=development
 echo "Installing dependencies in development mode first..."
 npm install || npm ci
 
-# Important: Explicitly install Vite and its plugins as dev dependencies
+# Important: Explicitly install Vite 5.x and its plugins as dev dependencies
+# This ensures compatibility with lovable-tagger which requires Vite 5.x
 echo "Ensuring build tools are installed..."
-npm install --save-dev vite@latest @vitejs/plugin-react-swc@latest
+npm install --save-dev vite@^5.0.0 @vitejs/plugin-react-swc@latest
 
 # List installed packages to verify Vite installation
 echo "Verifying vite installation:"

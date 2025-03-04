@@ -6,9 +6,8 @@ import path from "path";
 import { fileURLToPath } from 'url';
 
 // Get __dirname equivalent in ESM
-const __dirname = typeof __dirname !== 'undefined' 
-  ? __dirname 
-  : path.dirname(fileURLToPath(import.meta.url));
+const __filename = typeof __filename !== 'undefined' ? __filename : fileURLToPath(import.meta.url);
+const __dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(__filename);
 
 export default defineConfig({
   server: {
