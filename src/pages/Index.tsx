@@ -9,7 +9,7 @@ import { AccountBalance } from '@/components/spy/AccountBalance';
 import { TodaysTrades } from '@/components/spy/TodaysTrades';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Shield, BarChart2, Settings, User, History, LineChart } from 'lucide-react';
+import { Shield, BarChart2, Settings, User, History, LineChart, UserPlus } from 'lucide-react';
 
 export const Index = () => {
   // Mock data for account balance - in a real app, this would come from a data source
@@ -28,7 +28,7 @@ export const Index = () => {
       </header>
       
       <main className="flex-1 container mx-auto px-4 py-6 space-y-6">
-        {/* Account Management Card */}
+        {/* Account Management Card with prominent Sign Up button */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <Card>
             <CardHeader className="pb-3">
@@ -42,18 +42,28 @@ export const Index = () => {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground mb-4">
-                Update your profile, security settings, and notification preferences.
+                Create an account to start trading with AI-powered strategies
               </p>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 gap-3">
                 <Link to="/auth">
-                  <Button variant="outline" className="w-full">Sign In</Button>
+                  <Button className="w-full bg-primary" size="lg">
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Create Account
+                  </Button>
                 </Link>
-                <Link to="/profile">
-                  <Button variant="outline" className="w-full">Profile</Button>
-                </Link>
+                <div className="flex items-center gap-2 mt-2">
+                  <Link to="/auth">
+                    <Button variant="outline" size="sm">Sign In</Button>
+                  </Link>
+                  <Link to="/profile">
+                    <Button variant="outline" size="sm">Profile</Button>
+                  </Link>
+                </div>
               </div>
             </CardContent>
           </Card>
+          
+          {/* Additional cards can go here */}
         </div>
         
         {/* Account Balance */}

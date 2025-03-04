@@ -29,6 +29,7 @@ const AuthenticationPage: React.FC = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session) {
         navigate('/dashboard');
+        toast.success('Successfully logged in');
       }
     });
     
@@ -45,17 +46,17 @@ const AuthenticationPage: React.FC = () => {
         </div>
       </header>
       
-      <main className="flex-1 container mx-auto flex items-center justify-center py-12">
+      <main className="flex-1 container mx-auto flex items-center justify-center py-12 px-4">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-center">SPY Trading AI</CardTitle>
             <CardDescription className="text-center">
-              Enter your credentials to access your account
+              Join thousands of traders using AI to optimize their SPY options trades
             </CardDescription>
           </CardHeader>
           
           <CardContent>
-            <Tabs defaultValue="login" className="w-full">
+            <Tabs defaultValue="signup" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="login">Login</TabsTrigger>
                 <TabsTrigger value="signup">Sign Up</TabsTrigger>
