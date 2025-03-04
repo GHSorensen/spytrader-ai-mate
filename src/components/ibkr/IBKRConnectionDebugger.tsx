@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, CheckCircle2, ServerCrash, Settings } from "lucide-react";
+import { AlertCircle, CheckCircle2, Settings } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { InteractiveBrokersService } from '@/services/dataProviders/interactiveBrokersService';
 import { DataProviderConfig } from '@/lib/types/spy/dataProvider';

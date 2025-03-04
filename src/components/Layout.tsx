@@ -1,9 +1,7 @@
 
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu } from 'lucide-react';
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
+import MobileMenu from '@/components/spy/header/MobileMenu';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -16,13 +14,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const isActive = (path: string) => {
     return location.pathname === path || 
            (path !== '/' && location.pathname.startsWith(path));
-  };
-
-  const handleNavigation = (path: string) => {
-    setIsMobileMenuOpen(false);
-    setTimeout(() => {
-      window.location.href = path;
-    }, 100);
   };
 
   return (
@@ -65,56 +56,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               IBKR Integration
             </Link>
           </nav>
-          <div className="md:hidden">
-            <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Menu className="h-5 w-5" />
-                  <span className="sr-only">Menu</span>
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-[250px] sm:w-[300px] py-6 px-4">
-                <div className="flex flex-col space-y-1 mt-6">
-                  <div className="text-sm font-medium text-muted-foreground mb-2 px-2">Navigation</div>
-                  <Button
-                    variant="ghost"
-                    className="justify-start text-sm px-2 py-1.5 h-auto font-normal hover:bg-accent"
-                    onClick={() => handleNavigation('/')}
-                  >
-                    Dashboard
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    className="justify-start text-sm px-2 py-1.5 h-auto font-normal hover:bg-accent"
-                    onClick={() => handleNavigation('/data-providers')}
-                  >
-                    Data Providers
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    className="justify-start text-sm px-2 py-1.5 h-auto font-normal hover:bg-accent"
-                    onClick={() => handleNavigation('/interactive-brokers')}
-                  >
-                    Interactive Brokers
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    className="justify-start text-sm px-2 py-1.5 h-auto font-normal hover:bg-accent"
-                    onClick={() => handleNavigation('/td-ameritrade')}
-                  >
-                    TD Ameritrade
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    className="justify-start text-sm px-2 py-1.5 h-auto font-normal hover:bg-accent"
-                    onClick={() => handleNavigation('/ibkr')}
-                  >
-                    IBKR Integration
-                  </Button>
-                </div>
-              </SheetContent>
-            </Sheet>
-          </div>
+          <MobileMenu 
+            isMobileMenuOpen={isMobileMenuOpen}
+            setIsMobileMenuOpen={setIsMobileMenuOpen}
+          />
         </div>
       </header>
       <main>
