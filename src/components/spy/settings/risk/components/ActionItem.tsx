@@ -1,44 +1,59 @@
 
 import React from 'react';
+import { Badge } from "@/components/ui/badge";
 import { RiskAction } from '@/lib/types/spy/riskMonitoring';
-import { CheckIcon, XIcon } from 'lucide-react';
-import { getActionBadge } from '../utils/insightFormatters';
 
 interface ActionItemProps {
   action: RiskAction;
 }
 
 export const ActionItem: React.FC<ActionItemProps> = ({ action }) => {
+  const getActionColor = () => {
+    switch (action.type) {
+      case 'exit_trade':
+        return 'text-red-500';
+      case 'reduce_position_size':
+        return 'text-amber-500';
+      case 'increase_position_size':
+        return 'text-green-500';
+      default:
+        return 'text-blue-500';
+    }
+  };
+
+  const getActionBadge = () => {
+    const type = action.type.replace(/_/g, ' ');
+    
+    switch (action.type) {
+      case 'exit_trade':
+        return <Badge variant="destructive">{type}</Badge>;
+      case 'reduce_position_size':
+        return <Badge variant="outline" className="text-amber-500 border-amber-500">{type}</Badge>;
+      case 'hedge_position':
+        return <Badge variant="outline">{type}</Badge>;
+      case 'adjust_stop_loss':
+      case 'adjust_take_profit':
+        return <Badge variant="secondary">{type}</Badge>;
+      case 'increase_position_size':
+        return <Badge variant="outline" className="text-green-500 border-green-500">{type}</Badge>;
+      case 'no_action':
+        return <Badge variant="outline" className="text-muted-foreground">{type}</Badge>;
+      default:
+        return <Badge>{type}</Badge>;
+    }
+  };
+
   return (
-    <div className="p-2 border rounded-md mb-1.5 hover:bg-accent/5 transition-colors">
-      <div className="flex justify-between items-center mb-1">
-        <div className="flex items-center gap-1.5">
-          {getActionBadge(action.type)}
+    <div className="border rounded-md p-3 mb-2 bg-card hover:bg-muted/50 transition-colors">
+      <div className="flex justify-between items-start mb-1">
+        <div className={`font-medium ${getActionColor()}`}>
+          {action.description}
         </div>
-        <div className="text-xs text-muted-foreground">
-          {new Date(action.timestamp).toLocaleTimeString()}
-        </div>
+        {getActionBadge()}
       </div>
-      
-      <p className="text-xs text-muted-foreground mb-1.5">{action.description}</p>
-      
-      <div className="flex justify-between items-center text-xs">
-        <div className="flex gap-3">
-          <span className="text-green-500">+{action.expectedImpact.profitPotential}% profit</span>
-          <span className="text-blue-500">-{action.expectedImpact.riskReduction}% risk</span>
-        </div>
-        
-        {action.appliedSuccess !== undefined && (
-          <div className="flex items-center">
-            {action.appliedSuccess ? 
-              <CheckIcon className="h-3 w-3 text-green-500 mr-1" /> : 
-              <XIcon className="h-3 w-3 text-red-500 mr-1" />
-            }
-            <span className={action.appliedSuccess ? "text-green-500" : "text-red-500"}>
-              {action.appliedSuccess ? "Applied" : "Ignored"}
-            </span>
-          </div>
-        )}
+      <div className="text-xs text-muted-foreground">
+        Trade ID: {action.tradeId.substring(0, 8)} • 
+        <span className="ml-1">{action.reason}</span>
       </div>
     </div>
   );

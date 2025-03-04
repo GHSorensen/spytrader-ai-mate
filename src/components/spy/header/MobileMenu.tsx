@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Menu } from 'lucide-react';
 import {
   Sheet,
@@ -18,8 +18,11 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
   isMobileMenuOpen, 
   setIsMobileMenuOpen 
 }) => {
-  const handleNavigation = () => {
+  const navigate = useNavigate();
+  
+  const handleNavigation = (path: string) => {
     setIsMobileMenuOpen(false);
+    navigate(path);
   };
   
   return (
@@ -32,62 +35,62 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
       </SheetTrigger>
       <SheetContent side="left" className="w-[250px] sm:w-[300px]">
         <nav className="flex flex-col gap-4 mt-8">
-          <Link 
-            to="/" 
-            className="px-2 py-1 rounded hover:bg-accent"
-            onClick={handleNavigation}
+          <Button
+            variant="ghost"
+            className="justify-start px-2 py-1 h-auto font-normal hover:bg-accent"
+            onClick={() => handleNavigation('/')}
           >
             Dashboard
-          </Link>
-          <Link 
-            to="/trades" 
-            className="px-2 py-1 rounded hover:bg-accent"
-            onClick={handleNavigation}
+          </Button>
+          <Button
+            variant="ghost"
+            className="justify-start px-2 py-1 h-auto font-normal hover:bg-accent"
+            onClick={() => handleNavigation('/trades')}
           >
             Trades
-          </Link>
-          <Link 
-            to="/performance" 
-            className="px-2 py-1 rounded hover:bg-accent"
-            onClick={handleNavigation}
+          </Button>
+          <Button
+            variant="ghost"
+            className="justify-start px-2 py-1 h-auto font-normal hover:bg-accent"
+            onClick={() => handleNavigation('/performance')}
           >
             Performance
-          </Link>
-          <Link 
-            to="/detailed-performance" 
-            className="px-2 py-1 rounded hover:bg-accent"
-            onClick={handleNavigation}
+          </Button>
+          <Button
+            variant="ghost"
+            className="justify-start px-2 py-1 h-auto font-normal hover:bg-accent"
+            onClick={() => handleNavigation('/detailed-performance')}
           >
             Analytics
-          </Link>
-          <Link 
-            to="/risk-console" 
-            className="px-2 py-1 rounded hover:bg-accent"
-            onClick={handleNavigation}
+          </Button>
+          <Button
+            variant="ghost"
+            className="justify-start px-2 py-1 h-auto font-normal hover:bg-accent"
+            onClick={() => handleNavigation('/risk-console')}
           >
             Risk Console
-          </Link>
-          <Link 
-            to="/schwab-integration" 
-            className="px-2 py-1 rounded hover:bg-accent"
-            onClick={handleNavigation}
+          </Button>
+          <Button
+            variant="ghost"
+            className="justify-start px-2 py-1 h-auto font-normal hover:bg-accent"
+            onClick={() => handleNavigation('/schwab-integration')}
           >
             Schwab Connect
-          </Link>
-          <Link 
-            to="/ibkr-integration" 
-            className="px-2 py-1 rounded hover:bg-accent"
-            onClick={handleNavigation}
+          </Button>
+          <Button
+            variant="ghost"
+            className="justify-start px-2 py-1 h-auto font-normal hover:bg-accent"
+            onClick={() => handleNavigation('/ibkr-integration')}
           >
             IBKR Connect
-          </Link>
-          <Link 
-            to="/profile" 
-            className="px-2 py-1 rounded hover:bg-accent"
-            onClick={handleNavigation}
+          </Button>
+          <Button
+            variant="ghost"
+            className="justify-start px-2 py-1 h-auto font-normal hover:bg-accent"
+            onClick={() => handleNavigation('/profile')}
           >
             Profile
-          </Link>
+          </Button>
         </nav>
       </SheetContent>
     </Sheet>

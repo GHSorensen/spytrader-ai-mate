@@ -1,14 +1,17 @@
 
 import React, { useState } from 'react';
+import { Button } from "@/components/ui/button"; 
 import { RiskHeader } from '../components/spy/risk-console/RiskHeader';
 import { MainTabs } from '../components/spy/risk-console/MainTabs';
 import { Footer } from '../components/spy/risk-console/Footer';
 import { DemoNotifications } from '../components/spy/risk-console/DemoNotifications';
 import { useRiskMonitoring } from '../hooks/useRiskMonitoring';
 import { AITradingSettings, RiskToleranceType } from '@/lib/types/spy';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeftIcon } from 'lucide-react';
 
 const RiskConsole: React.FC = () => {
-  const [autoMode, setAutoMode] = useState(false);
+  const navigate = useNavigate();
   
   // Updated to match the AITradingSettings type structure
   const defaultSettings: AITradingSettings = {
@@ -75,12 +78,17 @@ const RiskConsole: React.FC = () => {
     learningInsights,
     currentRiskProfile,
     activeTrades,
+    autoMode,
     toggleAutoMode 
   } = useRiskMonitoring(defaultSettings, currentRiskTolerance);
   
   const anomalies = [];
   const lastDetectionTime = new Date();
   const riskSignals = [];
+  
+  const handleReturnToDashboard = () => {
+    navigate('/dashboard');
+  };
   
   return (
     <div className="container mx-auto py-6">
@@ -102,7 +110,20 @@ const RiskConsole: React.FC = () => {
           riskSignals={riskSignals}
         />
         
-        <Footer />
+        <div className="mt-auto">
+          <div className="flex justify-end mb-4">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="gap-1" 
+              onClick={handleReturnToDashboard}
+            >
+              <ArrowLeftIcon className="w-4 h-4 mr-1" /> Return to Dashboard
+            </Button>
+          </div>
+          
+          <Footer />
+        </div>
         
         <DemoNotifications />
       </div>

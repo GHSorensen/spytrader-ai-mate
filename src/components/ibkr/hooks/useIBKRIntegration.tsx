@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
@@ -77,7 +78,7 @@ export const useIBKRIntegration = () => {
         
         // Reset the connecting state after a timeout if no connection established
         setTimeout(() => {
-          if (connectionStatus === 'connecting') { // Fixed comparison here
+          if (connectionStatus === 'connecting') {
             setIsConnecting(false);
           }
         }, 5000);
@@ -114,7 +115,7 @@ export const useIBKRIntegration = () => {
       
       // Reset the connecting state after a timeout if no connection established
       setTimeout(() => {
-        if (connectionStatus === 'connecting') { // This needs to match exactly
+        if (connectionStatus === 'connecting') {
           setConnectionStatus('disconnected');
           setIsConnecting(false);
         }
@@ -122,7 +123,7 @@ export const useIBKRIntegration = () => {
     } catch (error) {
       // Error handling
     }
-  }, [connectionStatus, setIsConnecting, setConnectionStatus]);
+  }, [connectionStatus]);
   
   return {
     // State
