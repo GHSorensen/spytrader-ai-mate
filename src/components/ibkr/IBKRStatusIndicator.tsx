@@ -30,7 +30,7 @@ const IBKRStatusIndicator: React.FC<IBKRStatusIndicatorProps> = ({
       try {
         const provider = getDataProvider();
         
-        if (provider.isConnected()) {
+        if (provider && provider.isConnected()) {
           // If provider has status property, use it for detailed status
           const providerStatus = (provider as any).status || {
             connected: true,

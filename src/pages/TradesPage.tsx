@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAccountBalance } from '@/hooks/useAccountBalance';
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,12 @@ const TradesPage: React.FC = () => {
   const accountData = useAccountBalance();
   const [activeTab, setActiveTab] = useState<string>('active');
   const { trades, isLoading, handleCreateTestTrade, isPending } = useTrades(activeTab);
+
+  // Log component mounting to debug
+  useEffect(() => {
+    console.log("TradesPage mounted");
+    return () => console.log("TradesPage unmounted");
+  }, []);
 
   const onCreateTestTrade = useCallback(() => {
     console.log("Create Test Trade button clicked");
@@ -28,8 +34,13 @@ const TradesPage: React.FC = () => {
   }, [handleCreateTestTrade, isPending]);
 
   const onRefreshBalance = useCallback(() => {
-    accountData.refreshBalance?.();
-    toast.info("Refreshing account balance...");
+    console.log("Refreshing account balance");
+    try {
+      accountData.refreshBalance?.();
+    } catch (error) {
+      console.error("Error refreshing balance:", error);
+      toast.error("Failed to refresh account balance");
+    }
   }, [accountData]);
 
   return (
@@ -51,7 +62,7 @@ const TradesPage: React.FC = () => {
               onClick={onRefreshBalance}
               disabled={accountData.isLoading}
             >
-              <RefreshCw className="h-3 w-3" />
+              <RefreshCw className={`h-3 w-3 ${accountData.isLoading ? 'animate-spin' : ''}`} />
             </Button>
           </div>
           <Button 

@@ -18,6 +18,16 @@ export const useAccountBalance = () => {
         const provider = getDataProvider();
         console.log('Got provider:', provider);
         
+        if (!provider) {
+          console.error('No data provider found');
+          setError('No data provider available. Please check your connection settings.');
+          return {
+            balance: 1600,
+            dailyPnL: 0,
+            allTimePnL: 0
+          };
+        }
+        
         // Ensure provider is connected
         if (!provider.isConnected()) {
           console.log('Provider not connected, attempting to connect...');
@@ -44,6 +54,7 @@ export const useAccountBalance = () => {
           console.log('Account data received:', accountData);
           
           if (accountData) {
+            toast.success('Balance updated');
             return accountData;
           } else {
             console.warn('Received null or undefined account data');
@@ -87,13 +98,20 @@ export const useAccountBalance = () => {
       dailyPnL: 0,
       allTimePnL: 0
     },
+    staleTime: 15000, // Consider data fresh for 15 seconds
   });
   
   // Function to manually refresh data
   const refreshBalance = useCallback(() => {
     console.log('Manually refreshing account balance...');
-    refetch();
+    toast.info('Refreshing account balance...');
+    return refetch();
   }, [refetch]);
+
+  useEffect(() => {
+    // Fetch balance on mount
+    console.log('Account balance hook mounted, fetching initial data');
+  }, []);
 
   return { 
     ...data,
