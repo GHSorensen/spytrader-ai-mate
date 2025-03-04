@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,9 +13,7 @@ const AuthenticationPage: React.FC = () => {
   const [defaultTab, setDefaultTab] = useState('signup');
   const navigate = useNavigate();
   
-  // Check if user is already logged in and handle auth state changes
   useEffect(() => {
-    // Initial session check
     const checkSession = async () => {
       try {
         const { data, error } = await supabase.auth.getSession();
@@ -27,7 +24,6 @@ const AuthenticationPage: React.FC = () => {
         }
         
         if (data.session) {
-          // User is already logged in, redirect to dashboard
           console.log("User already logged in, redirecting to dashboard");
           navigate('/dashboard');
           toast.success('You are already logged in');
@@ -39,15 +35,12 @@ const AuthenticationPage: React.FC = () => {
     
     checkSession();
     
-    // Check if we have a hash fragment (typically from email verification)
     const hash = window.location.hash;
     if (hash && hash.includes('access_token')) {
       console.log("Detected auth callback in URL");
-      // Set to login tab when there's an auth hash in the URL
       setDefaultTab('login');
     }
     
-    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("Auth state changed:", event, session);
       
@@ -68,8 +61,7 @@ const AuthenticationPage: React.FC = () => {
       else if (event === 'TOKEN_REFRESHED') {
         console.log("Token refreshed");
       }
-      // Fix the string comparison - use a type-safe approach
-      else if (event === 'USER_DELETED') {
+      else if (event.toLowerCase() === 'user_deleted') {
         toast.info('Your account has been deleted');
       }
     });
@@ -79,7 +71,6 @@ const AuthenticationPage: React.FC = () => {
     };
   }, [navigate]);
   
-  // Allow switching between signup and login programmatically
   const switchToLogin = () => {
     setDefaultTab('login');
   };
@@ -89,7 +80,6 @@ const AuthenticationPage: React.FC = () => {
   };
 
   const handleSignupSuccess = () => {
-    // Switch to login tab after successful signup
     switchToLogin();
     toast.info('Please log in with your new account');
   };
