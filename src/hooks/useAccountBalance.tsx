@@ -15,10 +15,19 @@ export const useAccountBalance = () => {
       try {
         const provider = getDataProvider();
         if (provider.isConnected()) {
-          // For now we're using mock data until the actual TWS account data
-          // endpoints are implemented
-          const data = await provider.getAccountData();
-          setAccountData(data);
+          // Check if the provider implements getAccountData
+          if (typeof provider.getAccountData === 'function') {
+            const data = await provider.getAccountData();
+            setAccountData(data);
+          } else {
+            console.warn('Data provider does not implement getAccountData method');
+            // Use default values
+            setAccountData({
+              balance: 1600,
+              dailyPnL: 0,
+              allTimePnL: 0
+            });
+          }
         }
       } catch (error) {
         console.error('Error fetching account data:', error);

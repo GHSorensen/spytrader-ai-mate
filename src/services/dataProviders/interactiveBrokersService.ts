@@ -1,4 +1,3 @@
-
 import { BaseDataProvider } from "./base/BaseDataProvider";
 import { DataProviderConfig, DataProviderStatus } from "@/lib/types/spy/dataProvider";
 import { SpyMarketData, SpyOption, SpyTrade } from "@/lib/types/spy";
@@ -177,6 +176,28 @@ export class InteractiveBrokersService extends BaseDataProvider {
       return this.webApiDataService.getTrades();
     } catch (error) {
       console.error("Error fetching trades from Interactive Brokers:", error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Get account data from Interactive Brokers
+   */
+  async getAccountData(): Promise<{balance: number, dailyPnL: number, allTimePnL: number}> {
+    if (!this.isConnected()) {
+      await this.connect();
+    }
+    
+    try {
+      // In a real implementation, this would fetch actual account data from TWS or Web API
+      // For now, return mock data
+      return {
+        balance: 1600, // Mock account balance
+        dailyPnL: this.connectionMethod === 'tws' ? 25.75 : 20.50, // Slightly different values based on connection method
+        allTimePnL: this.connectionMethod === 'tws' ? 342.50 : 340.25
+      };
+    } catch (error) {
+      console.error("Error fetching account data from Interactive Brokers:", error);
       throw error;
     }
   }

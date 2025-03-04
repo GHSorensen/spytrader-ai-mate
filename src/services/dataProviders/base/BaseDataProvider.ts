@@ -81,4 +81,16 @@ export abstract class BaseDataProvider implements DataProviderInterface {
     const trades = await this.getTrades();
     return trades.filter(trade => trade.status === status);
   }
+
+  /**
+   * Get account data (balance, P&L, etc.)
+   */
+  async getAccountData(): Promise<{balance: number, dailyPnL: number, allTimePnL: number}> {
+    // Default implementation that can be overridden by specific providers
+    return {
+      balance: 1600, // Default mock value
+      dailyPnL: 0,
+      allTimePnL: 0
+    };
+  }
 }

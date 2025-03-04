@@ -15,6 +15,13 @@ class MockDataProvider implements DataProviderInterface {
   async getOptionChain() { return import('@/services/spyOptionsService').then(m => m.getSpyOptions()); }
   async getTrades() { return import('@/services/spyOptionsService').then(m => m.getSpyTrades()); }
   async getTradesByStatus(status) { return import('@/services/spyOptionsService').then(m => m.getSpyTradesByStatus(status)); }
+  async getAccountData() { 
+    return {
+      balance: 1600,
+      dailyPnL: 0,
+      allTimePnL: 0
+    };
+  }
   isConnected() { return true; }
   async connect() { return true; }
   async disconnect() { return true; }

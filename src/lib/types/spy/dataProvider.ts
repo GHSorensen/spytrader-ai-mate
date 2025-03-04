@@ -38,6 +38,7 @@ export interface DataProviderInterface {
   getOptionChain(symbol: string): Promise<any>;
   getTrades(): Promise<any>;
   getTradesByStatus?(status: string): Promise<any>;
+  getAccountData?(): Promise<any>; // Added this method
   isConnected(): boolean;
   connect(): Promise<boolean>;
   disconnect(): Promise<boolean>;
