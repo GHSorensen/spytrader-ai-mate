@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Menu } from 'lucide-react';
 import {
   Sheet,
@@ -21,8 +21,13 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
   const navigate = useNavigate();
   
   const handleNavigation = (path: string) => {
+    // Close the menu first, then navigate
     setIsMobileMenuOpen(false);
-    navigate(path);
+    
+    // Add a small delay before navigation to ensure the menu closing animation completes
+    setTimeout(() => {
+      navigate(path);
+    }, 100);
   };
   
   return (

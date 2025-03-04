@@ -52,8 +52,8 @@ export const ActionItem: React.FC<ActionItemProps> = ({ action }) => {
         {getActionBadge()}
       </div>
       <div className="text-xs text-muted-foreground">
-        Trade ID: {action.tradeId.substring(0, 8)} • 
-        <span className="ml-1">{action.reason}</span>
+        Trade IDs: {action.tradeIds?.[0]?.substring(0, 8) || 'N/A'} • 
+        <span className="ml-1">{action.description}</span>
       </div>
     </div>
   );
