@@ -53,6 +53,9 @@ const AuthenticationPage: React.FC = () => {
       else if (event === 'USER_UPDATED') {
         toast.info('Your account has been updated');
       }
+      else if (event === 'PASSWORD_RECOVERY') {
+        toast.info('Password recovery initiated');
+      }
     });
     
     return () => {
@@ -65,9 +68,14 @@ const AuthenticationPage: React.FC = () => {
     setDefaultTab('login');
   };
 
+  const switchToSignup = () => {
+    setDefaultTab('signup');
+  };
+
   const handleSignupSuccess = () => {
-    // This will now be handled by the onAuthStateChange listener
-    console.log("Signup successful, auth state change should redirect");
+    // Switch to login tab after successful signup
+    switchToLogin();
+    toast.info('Please log in with your new account');
   };
   
   return (
@@ -88,7 +96,7 @@ const AuthenticationPage: React.FC = () => {
           </CardHeader>
           
           <CardContent>
-            <Tabs defaultValue={defaultTab} className="w-full">
+            <Tabs value={defaultTab} defaultValue={defaultTab} onValueChange={(value) => setDefaultTab(value)} className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-4">
                 <TabsTrigger value="signup" className="text-base py-2">Sign Up</TabsTrigger>
                 <TabsTrigger value="login" className="text-base py-2">Login</TabsTrigger>
@@ -109,6 +117,7 @@ const AuthenticationPage: React.FC = () => {
                   <LoginForm 
                     isLoading={isLoading} 
                     setIsLoading={setIsLoading}
+                    switchToSignup={switchToSignup}
                   />
                 </div>
               </TabsContent>

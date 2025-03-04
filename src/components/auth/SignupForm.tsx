@@ -18,6 +18,7 @@ const SignupForm: React.FC<SignupFormProps> = ({ isLoading, setIsLoading, onSign
   const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
   const [signupError, setSignupError] = useState<string | null>(null);
+  const [verificationSent, setVerificationSent] = useState(false);
   
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,6 +48,7 @@ const SignupForm: React.FC<SignupFormProps> = ({ isLoading, setIsLoading, onSign
           data: {
             full_name: name,
           },
+          emailRedirectTo: `${window.location.origin}/auth`,
         },
       });
       
@@ -58,12 +60,12 @@ const SignupForm: React.FC<SignupFormProps> = ({ isLoading, setIsLoading, onSign
       console.log("Sign up response:", data);
       
       if (data?.user) {
-        toast.success('Account created successfully! Please check your email for verification.');
-        console.log("User created:", data.user);
+        setVerificationSent(true);
         
         // Check if email confirmation is required
-        if (data.user.identities && data.user.identities.length === 0) {
-          toast.info('Please check your email to confirm your account before logging in');
+        if (!data.session) {
+          toast.success('Account created! Please check your email to verify your account before logging in.');
+          console.log("Email verification required");
         } else {
           // If no email confirmation is needed, we can consider the user signed in
           toast.success('Account created and logged in successfully!');
@@ -87,6 +89,23 @@ const SignupForm: React.FC<SignupFormProps> = ({ isLoading, setIsLoading, onSign
       setIsLoading(false);
     }
   };
+  
+  if (verificationSent) {
+    return (
+      <div className="text-center space-y-4">
+        <h3 className="text-lg font-medium">Verification Email Sent</h3>
+        <p>We've sent a verification email to <strong>{email}</strong></p>
+        <p>Please check your inbox and click the verification link to complete your registration.</p>
+        <Button 
+          onClick={() => setVerificationSent(false)} 
+          variant="outline"
+          className="mt-4"
+        >
+          Use a different email
+        </Button>
+      </div>
+    );
+  }
   
   return (
     <form onSubmit={handleSignup} className="space-y-4">
