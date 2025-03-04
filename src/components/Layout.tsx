@@ -1,6 +1,7 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import MobileMenu from './spy/header/MobileMenu';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -8,6 +9,7 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   const isActive = (path: string) => {
     return location.pathname === path || 
@@ -55,7 +57,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </Link>
           </nav>
           <div className="md:hidden">
-            <button className="p-2 text-gray-600">
+            <button 
+              className="p-2 text-gray-600"
+              onClick={() => setIsMobileMenuOpen(true)}
+            >
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="3" y1="12" x2="21" y2="12"></line>
                 <line x1="3" y1="6" x2="21" y2="6"></line>
@@ -63,6 +68,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               </svg>
             </button>
           </div>
+          <MobileMenu 
+            isMobileMenuOpen={isMobileMenuOpen} 
+            setIsMobileMenuOpen={setIsMobileMenuOpen} 
+          />
         </div>
       </header>
       <main>
