@@ -13,22 +13,15 @@ import ErrorBoundary from './components/ErrorBoundary';
 import SchwabIntegrationPage from './pages/SchwabIntegrationPage';
 import DetailedPerformancePage from './components/performance/DetailedPerformancePage';
 import { Toaster } from './components/ui/toaster';
-import { useToast } from './hooks/use-toast';
+import { toast } from './hooks/use-toast';
 
 function App() {
-  const { add, remove, update } = useToast();
-  
-  // Set window.toast for global access
-  useEffect(() => {
-    window.toast = { add, remove, update };
-    return () => {
-      window.toast = undefined;
-    };
-  }, [add, remove, update]);
-  
   // Set up initial notifications on app load
   useEffect(() => {
     try {
+      // Expose toast for global access
+      window.toast = toast;
+      
       // Demo: Schedule daily portfolio updates
       const currentBalance = 125000; // This would come from your actual portfolio data
       
@@ -47,6 +40,11 @@ function App() {
     } catch (err) {
       console.error('Failed to setup notifications:', err);
     }
+    
+    // Cleanup toast when component unmounts
+    return () => {
+      window.toast = undefined;
+    };
   }, []);
 
   return (
@@ -65,6 +63,13 @@ function App() {
       <Toaster />
     </ErrorBoundary>
   );
+}
+
+// Extend the Window interface to include our toast property
+declare global {
+  interface Window {
+    toast?: typeof toast;
+  }
 }
 
 export default App;
