@@ -7,10 +7,22 @@ const IBKRApiKeyInfo: React.FC = () => {
   return (
     <Alert className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
       <Info className="h-4 w-4 text-blue-700 dark:text-blue-400" />
-      <AlertTitle className="text-blue-700 dark:text-blue-400">Important: Authentication Method</AlertTitle>
-      <AlertDescription className="text-blue-600 dark:text-blue-300">
-        This integration uses OAuth with IBKR's Client Portal API. You do NOT enter your IBKR username and password here.
-        Instead, you'll need to create a Client ID in your IBKR account settings first.
+      <AlertTitle className="text-blue-700 dark:text-blue-400">IBKR Connection Methods</AlertTitle>
+      <AlertDescription className="text-blue-600 dark:text-blue-300 space-y-2">
+        <p>
+          SPY Trading AI offers two ways to connect to your IBKR account:
+        </p>
+        <ul className="list-disc list-inside space-y-1 pl-2">
+          <li>
+            <strong>Client Portal API (Web)</strong>: Uses OAuth for authentication but requires some setup in your IBKR account settings. More suitable for server-based trading.
+          </li>
+          <li>
+            <strong>TWS API (Desktop)</strong>: Simpler setup but requires Trader Workstation to be running on your computer. Best for personal use.
+          </li>
+        </ul>
+        <p className="text-sm italic">
+          Note: The location of API settings in IBKR's account management interface may vary. If you cannot find it, please contact IBKR support for assistance.
+        </p>
       </AlertDescription>
     </Alert>
   );

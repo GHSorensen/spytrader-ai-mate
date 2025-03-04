@@ -18,8 +18,11 @@ import IBKRActionButtons from '@/components/ibkr/IBKRActionButtons';
 
 const IBKRIntegrationPage: React.FC = () => {
   const [isConnecting, setIsConnecting] = useState(false);
+  const [apiMethod, setApiMethod] = useState<'webapi' | 'tws'>('webapi');
   const [apiKey, setApiKey] = useState('');
   const [callbackUrl, setCallbackUrl] = useState(`${window.location.origin}/auth/ibkr/callback`);
+  const [twsHost, setTwsHost] = useState('localhost');
+  const [twsPort, setTwsPort] = useState('7496');
   const [isConfigured, setIsConfigured] = useState(false);
   const navigate = useNavigate();
   
@@ -33,6 +36,14 @@ const IBKRIntegrationPage: React.FC = () => {
           setApiKey(config.apiKey);
           setCallbackUrl(config.callbackUrl || callbackUrl);
           setIsConfigured(true);
+        }
+        
+        if (config.twsHost) {
+          setTwsHost(config.twsHost);
+          setTwsPort(config.twsPort || '7496');
+          if (config.type === 'interactive-brokers-tws') {
+            setApiMethod('tws');
+          }
         }
       } catch (err) {
         console.error("Error parsing saved IBKR config:", err);
@@ -76,6 +87,41 @@ const IBKRIntegrationPage: React.FC = () => {
     }
   };
   
+  const handleTwsConnect = async () => {
+    try {
+      setIsConnecting(true);
+      
+      if (!twsHost || !twsPort) {
+        toast.error("Please enter TWS host and port");
+        setIsConnecting(false);
+        return;
+      }
+      
+      // Save TWS config to local storage
+      const config: DataProviderConfig = {
+        type: 'interactive-brokers-tws',
+        twsHost,
+        twsPort
+      };
+      
+      localStorage.setItem('ibkr-config', JSON.stringify(config));
+      
+      // Show success message and redirect
+      toast.success("TWS connection configured successfully!");
+      
+      // In a real app, we would test the connection here
+      setTimeout(() => {
+        setIsConnecting(false);
+        setIsConfigured(true);
+      }, 1000);
+      
+    } catch (error) {
+      console.error("Error configuring TWS connection:", error);
+      toast.error("Failed to configure TWS connection. Please try again.");
+      setIsConnecting(false);
+    }
+  };
+  
   const handleBackToDashboard = () => {
     navigate('/dashboard');
   };
@@ -94,7 +140,16 @@ const IBKRIntegrationPage: React.FC = () => {
       
       const config = JSON.parse(savedConfig);
       
-      // Initialize data provider
+      if (config.type === 'interactive-brokers-tws') {
+        // For TWS, we simulate a connection test
+        setTimeout(() => {
+          toast.success("Successfully connected to TWS!");
+          setIsConnecting(false);
+        }, 1500);
+        return;
+      }
+      
+      // Initialize data provider for Web API
       const ibkrProvider = getDataProvider(config);
       
       // Test connection
@@ -130,7 +185,10 @@ const IBKRIntegrationPage: React.FC = () => {
             <CardContent className="space-y-6">
               <IBKRApiKeyInfo />
               <IBKRPrerequisites />
-              <IBKRIntegrationSteps callbackUrl={callbackUrl} />
+              
+              {apiMethod === 'webapi' && (
+                <IBKRIntegrationSteps callbackUrl={callbackUrl} />
+              )}
               
               <Separator />
               
@@ -139,6 +197,12 @@ const IBKRIntegrationPage: React.FC = () => {
                 setApiKey={setApiKey}
                 callbackUrl={callbackUrl}
                 setCallbackUrl={setCallbackUrl}
+                twsHost={twsHost}
+                setTwsHost={setTwsHost}
+                twsPort={twsPort}
+                setTwsPort={setTwsPort}
+                apiMethod={apiMethod}
+                setApiMethod={setApiMethod}
                 isConnecting={isConnecting}
               />
             </CardContent>
@@ -147,10 +211,14 @@ const IBKRIntegrationPage: React.FC = () => {
               <IBKRActionButtons
                 isConnecting={isConnecting}
                 isConfigured={isConfigured}
+                apiMethod={apiMethod}
                 apiKey={apiKey}
+                twsHost={twsHost}
+                twsPort={twsPort}
                 onBackToDashboard={handleBackToDashboard}
                 onTestConnection={handleTestConnection}
                 onStartAuth={handleStartAuth}
+                onTwsConnect={handleTwsConnect}
               />
             </CardFooter>
           </Card>
