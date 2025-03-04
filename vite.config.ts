@@ -34,5 +34,8 @@ export default defineConfig(({ mode }) => ({
       // Ensure external dependencies are properly handled
       external: [],
     }
+  },
+  optimizeDeps: {
+    include: ['react', 'react-dom', '@tanstack/react-query']
   }
 }));

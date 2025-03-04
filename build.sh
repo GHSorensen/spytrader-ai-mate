@@ -36,11 +36,18 @@ echo "NPM version:"
 npm --version
 
 # Explicitly make npm available
-export PATH="$PATH:/usr/local/bin:/usr/bin"
+export PATH="$PATH:/usr/local/bin:/usr/bin:/home/render/.npm-global/bin"
 which npm || { echo "npm not found in PATH. Installing..."; curl -L https://www.npmjs.com/install.sh | sh; }
 
-# Install vite globally first to ensure it's available for the build command
+# Create global npm directory and add to PATH
+mkdir -p /home/render/.npm-global
+npm config set prefix '/home/render/.npm-global'
+export PATH="/home/render/.npm-global/bin:$PATH"
+
+# Install vite globally and make sure it's in the PATH
 npm install -g vite
+export PATH="$(npm bin -g):$PATH"
+which vite || echo "vite command not available even after global install"
 
 # First install express to ensure the server can run
 npm install express --no-audit --no-fund
@@ -56,7 +63,14 @@ npm install --force --no-audit --no-fund
 
 # Run the build process - try multiple approaches
 echo "Starting build process..."
-npx vite build || npm run build --force || NODE_ENV=production vite build
+# Try with npx to ensure we're using the locally installed version
+npx vite build || \
+# Try with the npm script
+npm run build --force || \
+# Try with NODE_ENV set and using npx
+NODE_ENV=production npx vite build || \
+# Last resort - use the direct path to vite
+"$(npm bin)/vite" build
 
 # Create a marker file to indicate this is a Node.js project
 touch .node-project
