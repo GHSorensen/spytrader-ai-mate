@@ -18,12 +18,17 @@ export interface DataProviderConfig {
   twsHost?: string;
   twsPort?: string;
   connectionMethod?: 'webapi' | 'tws';
+  
+  // Added for other services
+  paperTrading?: boolean;
+  quotesDelayed?: boolean;
 }
 
 export interface DataProviderStatus {
   connected: boolean;
   errorMessage?: string;
   lastUpdated: Date;
+  quotesDelayed?: boolean;
 }
 
 export interface DataProviderInterface {
