@@ -37,8 +37,10 @@ npm --version
 # First install express to ensure the server can run
 npm install express
 
-# Install ALL dependencies with --force to bypass peer dependency conflicts
-# This is more aggressive than --legacy-peer-deps and should resolve the ERESOLVE errors
+# Install core dependencies first to help resolve conflicts
+npm install react react-dom @tanstack/react-query vite @vitejs/plugin-react-swc --force
+
+# Then install ALL dependencies with --force to bypass peer dependency conflicts
 npm install --force
 
 # Run the build process with --force flag
