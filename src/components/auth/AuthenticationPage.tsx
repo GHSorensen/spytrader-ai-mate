@@ -51,18 +51,20 @@ const AuthenticationPage: React.FC = () => {
       console.log("Detected auth callback in URL");
       setDefaultTab('login');
     }
+  }, [navigate]); // <-- Removed location dependency to avoid re-runs
+  
+  // Set up auth state change listener in a separate useEffect to avoid conflicts
+  useEffect(() => {
+    // Only set up the listener if we're not checking the session
+    if (isCheckingSession) return;
     
-    // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("Auth state changed:", event, session);
       
-      // Only handle state changes after the initial check is complete
-      if (!isCheckingSession) {
-        if (event === 'SIGNED_IN' && session) {
-          const returnPath = location.state?.returnTo || '/dashboard';
-          console.log("User signed in, redirecting to:", returnPath);
-          navigate(returnPath, { replace: true });
-        }
+      if (event === 'SIGNED_IN' && session) {
+        const returnPath = location.state?.returnTo || '/dashboard';
+        console.log("User signed in, redirecting to:", returnPath);
+        navigate(returnPath, { replace: true });
       }
     });
     

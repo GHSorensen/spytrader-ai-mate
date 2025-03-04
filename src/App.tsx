@@ -143,7 +143,7 @@ function App() {
         <Route path="/ibkr-integration" element={<AuthenticatedRoute element={<IBKRIntegrationPage />} />} />
         <Route path="/auth/ibkr/callback" element={<IBKRCallbackPage />} />
         <Route path="/auth" element={<AuthenticationPage />} />
-        <Route path="/profile" element={<AuthenticatedRoute element={<UserProfilePage userProfile={userProfile} />} />} />
+        <Route path="/profile" element={session ? <UserProfilePage userProfile={userProfile} /> : <Navigate to="/auth" replace />} />
         <Route path="/not-found" element={<NotFound />} />
         <Route path="*" element={<Navigate to="/not-found" replace />} />
       </Routes>

@@ -1,83 +1,58 @@
 
 import { useState, useEffect } from 'react';
-import { BrokerSettings, BrokerType } from '@/lib/types/spy/broker';
-import { useDataProvider } from '@/hooks/useDataProvider';
+import { toast } from 'sonner';
+import { useDataProvider } from './useDataProvider';
+import { DataProviderType } from '@/lib/types/spy/dataProvider';
 
-interface UseBrokerSettingsProps {
-  currentSettings: BrokerSettings;
-}
-
-export const useBrokerSettings = ({ currentSettings }: UseBrokerSettingsProps) => {
-  const [settings, setSettings] = useState<BrokerSettings>(currentSettings);
-  const [activeTab, setActiveTab] = useState<'ib' | 'td' | 'schwab' | 'none'>(
-    currentSettings.type === 'interactive-brokers' ? 'ib' : 
-    currentSettings.type === 'td-ameritrade' ? 'td' :
-    currentSettings.type === 'schwab' ? 'schwab' : 'none'
-  );
+export function useBrokerSettings() {
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [activeBroker, setActiveBroker] = useState<DataProviderType | null>(null);
+  const dataProvider = useDataProvider();
   
-  // Get data provider for connection testing
-  const { provider, status, isConnecting, connect } = useDataProvider(settings);
-
-  // Reset local state when dialog opens
   useEffect(() => {
-    setSettings(currentSettings);
-    setActiveTab(
-      currentSettings.type === 'interactive-brokers' ? 'ib' : 
-      currentSettings.type === 'td-ameritrade' ? 'td' :
-      currentSettings.type === 'schwab' ? 'schwab' : 'none'
-    );
-  }, [currentSettings]);
+    if (dataProvider.config?.type) {
+      setActiveBroker(dataProvider.config.type);
+    }
+  }, [dataProvider.config]);
 
-  // Update credentials in the settings state
-  const updateCredential = (key: string, value: string) => {
-    setSettings(prev => ({
-      ...prev,
-      credentials: {
-        ...prev.credentials,
-        [key]: value
-      }
-    }));
+  // Fix: Remove references to non-existent properties
+  const getBrokerStatus = () => {
+    if (dataProvider.isLoading) return 'loading';
+    if (dataProvider.error) return 'error';
+    if (dataProvider.isConnected) return 'connected';
+    return 'disconnected';
   };
 
-  // Toggle paper trading
-  const togglePaperTrading = (enabled: boolean) => {
-    setSettings(prev => ({
-      ...prev,
-      paperTrading: enabled
-    }));
-  };
-  
-  // Test connection to broker
-  const testConnection = async () => {
-    if (provider) {
-      await connect();
+  const handleConnect = async (brokerType: DataProviderType) => {
+    try {
+      await dataProvider.setupProvider(brokerType);
+      await dataProvider.connectToProvider();
+      setActiveBroker(brokerType);
+      toast.success(`Connected to ${brokerType} successfully`);
+    } catch (error) {
+      console.error('Failed to connect:', error);
+      toast.error(`Failed to connect to ${brokerType}`);
     }
   };
 
-  // Prepare final settings with the correct broker type
-  const prepareSettingsForSave = () => {
-    const brokerType: BrokerType = 
-      activeTab === 'ib' ? 'interactive-brokers' : 
-      activeTab === 'td' ? 'td-ameritrade' :
-      activeTab === 'schwab' ? 'schwab' : 'none';
-    
-    return {
-      ...settings,
-      type: brokerType,
-      isConnected: status.connected,
-      lastConnected: status.connected ? new Date() : undefined
-    };
+  const handleDisconnect = async () => {
+    try {
+      await dataProvider.disconnectFromProvider();
+      setActiveBroker(null);
+      toast.success('Disconnected from broker');
+    } catch (error) {
+      console.error('Failed to disconnect:', error);
+      toast.error('Failed to disconnect from broker');
+    }
   };
 
   return {
-    settings,
-    activeTab,
-    setActiveTab,
-    status,
-    isConnecting,
-    updateCredential,
-    togglePaperTrading,
-    testConnection,
-    prepareSettingsForSave
+    isSettingsOpen,
+    setIsSettingsOpen,
+    activeBroker,
+    brokerStatus: getBrokerStatus(),
+    handleConnect,
+    handleDisconnect,
+    dataProvider
   };
-};
+}
