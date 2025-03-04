@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
+import { config } from '@/config/environment';
 
 interface SignupFormProps {
   isLoading: boolean;
@@ -19,6 +21,7 @@ const SignupForm: React.FC<SignupFormProps> = ({ isLoading, setIsLoading, onSign
   const [name, setName] = useState('');
   const [signupError, setSignupError] = useState<string | null>(null);
   const [verificationSent, setVerificationSent] = useState(false);
+  const navigate = useNavigate();
   
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,6 +44,10 @@ const SignupForm: React.FC<SignupFormProps> = ({ isLoading, setIsLoading, onSign
     try {
       console.log("Attempting to sign up with email:", email);
       
+      // Use the configured redirectTo URL from the environment
+      const redirectUrl = `${window.location.origin}/auth`;
+      console.log("Using redirect URL:", redirectUrl);
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -48,7 +55,7 @@ const SignupForm: React.FC<SignupFormProps> = ({ isLoading, setIsLoading, onSign
           data: {
             full_name: name,
           },
-          emailRedirectTo: `${window.location.origin}/auth`,
+          emailRedirectTo: redirectUrl,
         },
       });
       
@@ -72,6 +79,7 @@ const SignupForm: React.FC<SignupFormProps> = ({ isLoading, setIsLoading, onSign
           if (onSignupSuccess) {
             onSignupSuccess();
           }
+          navigate('/dashboard');
         }
       }
     } catch (error: any) {
@@ -90,19 +98,61 @@ const SignupForm: React.FC<SignupFormProps> = ({ isLoading, setIsLoading, onSign
     }
   };
   
+  const handleResendVerification = async () => {
+    if (!email) {
+      toast.error('Please enter your email address');
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth`,
+        },
+      });
+      
+      if (error) throw error;
+      
+      toast.success('Verification email resent. Please check your inbox.');
+    } catch (error: any) {
+      console.error("Error resending verification:", error);
+      toast.error(error.message || 'Failed to resend verification email');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
   if (verificationSent) {
     return (
       <div className="text-center space-y-4">
         <h3 className="text-lg font-medium">Verification Email Sent</h3>
         <p>We've sent a verification email to <strong>{email}</strong></p>
-        <p>Please check your inbox and click the verification link to complete your registration.</p>
-        <Button 
-          onClick={() => setVerificationSent(false)} 
-          variant="outline"
-          className="mt-4"
-        >
-          Use a different email
-        </Button>
+        <p className="text-sm text-muted-foreground">
+          Please check your inbox and click the verification link to complete your registration.
+          If you don't see the email, check your spam folder.
+        </p>
+        <div className="space-y-2 mt-6">
+          <Button 
+            onClick={handleResendVerification} 
+            variant="outline"
+            className="w-full"
+            disabled={isLoading}
+          >
+            {isLoading ? 'Sending...' : 'Resend verification email'}
+          </Button>
+          
+          <Button 
+            onClick={() => setVerificationSent(false)} 
+            variant="ghost"
+            className="w-full mt-2"
+          >
+            Use a different email
+          </Button>
+        </div>
       </div>
     );
   }

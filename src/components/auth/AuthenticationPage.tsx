@@ -14,8 +14,9 @@ const AuthenticationPage: React.FC = () => {
   const [defaultTab, setDefaultTab] = useState('signup');
   const navigate = useNavigate();
   
-  // Check if user is already logged in
+  // Check if user is already logged in and handle auth state changes
   useEffect(() => {
+    // Initial session check
     const checkSession = async () => {
       try {
         const { data, error } = await supabase.auth.getSession();
@@ -38,6 +39,14 @@ const AuthenticationPage: React.FC = () => {
     
     checkSession();
     
+    // Check if we have a hash fragment (typically from email verification)
+    const hash = window.location.hash;
+    if (hash && hash.includes('access_token')) {
+      console.log("Detected auth callback in URL");
+      // Set to login tab when there's an auth hash in the URL
+      setDefaultTab('login');
+    }
+    
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("Auth state changed:", event, session);
@@ -55,6 +64,12 @@ const AuthenticationPage: React.FC = () => {
       }
       else if (event === 'PASSWORD_RECOVERY') {
         toast.info('Password recovery initiated');
+      }
+      else if (event === 'TOKEN_REFRESHED') {
+        console.log("Token refreshed");
+      }
+      else if (event === 'USER_DELETED') {
+        toast.info('Your account has been deleted');
       }
     });
     
