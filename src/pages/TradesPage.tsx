@@ -8,11 +8,12 @@ import TradeCard from '@/components/trades/TradeCard';
 import { useTrades } from '@/hooks/useTrades';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
+import { IBKRStatusIndicator } from '@/components/ibkr/IBKRStatusIndicator';
 
 const TradesPage: React.FC = () => {
   const accountData = useAccountBalance();
   const [activeTab, setActiveTab] = useState<string>('active');
-  const { trades, isLoading, handleCreateTestTrade, isPending, isAuthenticated } = useTrades(activeTab);
+  const { trades, isLoading, handleCreateTestTrade, isPending, isAuthenticated, refetch } = useTrades(activeTab);
 
   // Log component mounting to debug
   useEffect(() => {
@@ -49,6 +50,12 @@ const TradesPage: React.FC = () => {
       toast.error("Failed to refresh account balance");
     }
   }, [accountData]);
+
+  const onRefreshTrades = useCallback(() => {
+    console.log("Manually refreshing trades");
+    refetch();
+    toast.info("Refreshing trades data");
+  }, [refetch]);
 
   // If not authenticated, show sign-in prompt
   if (!isAuthenticated) {
@@ -115,6 +122,7 @@ const TradesPage: React.FC = () => {
               <RefreshCw className={`h-3 w-3 ${accountData.isLoading ? 'animate-spin' : ''}`} />
             </Button>
           </div>
+          <IBKRStatusIndicator showDetails={true} />
           <Button 
             onClick={onCreateTestTrade} 
             disabled={isPending}
@@ -123,6 +131,15 @@ const TradesPage: React.FC = () => {
           >
             <PlusCircle className="h-3 w-3 md:h-4 md:w-4" />
             {isPending ? "Creating..." : "Create Test Trade"}
+          </Button>
+          <Button
+            onClick={onRefreshTrades}
+            size="sm"
+            variant="outline"
+            className="flex items-center gap-1 text-xs md:text-sm"
+          >
+            <RefreshCw className={`h-3 w-3 md:h-4 md:w-4 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh
           </Button>
         </div>
       </div>

@@ -13,7 +13,7 @@ interface IBKRStatusIndicatorProps {
   showDetails?: boolean;
 }
 
-const IBKRStatusIndicator: React.FC<IBKRStatusIndicatorProps> = ({ 
+export const IBKRStatusIndicator: React.FC<IBKRStatusIndicatorProps> = ({ 
   showDetails = false 
 }) => {
   const { isConnected, dataSource, refreshAllData, reconnect, lastUpdated } = useIBKRRealTimeData();
