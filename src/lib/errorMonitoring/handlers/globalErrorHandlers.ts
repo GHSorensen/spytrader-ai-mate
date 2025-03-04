@@ -15,43 +15,40 @@ export function setupGlobalErrorHandling(): void {
     if (typeof window !== 'undefined') {
       // Handle unhandled promise rejections
       window.addEventListener('unhandledrejection', (event) => {
-        const error = event.reason instanceof Error 
-          ? event.reason 
-          : new Error(`Unhandled promise rejection: ${String(event.reason)}`);
-        
-        logError(error, { 
-          type: 'unhandledRejection',
-          severity: 'high',
-          isPromise: true
-        });
+        try {
+          const error = event.reason instanceof Error 
+            ? event.reason 
+            : new Error(`Unhandled promise rejection: ${String(event.reason)}`);
+          
+          logError(error, { 
+            type: 'unhandledRejection',
+            severity: 'high',
+            isPromise: true
+          });
+        } catch (e) {
+          console.error('Error in unhandledrejection handler:', e);
+        }
       });
 
       // Handle uncaught errors
       window.addEventListener('error', (event) => {
-        // Prevent logging the same error twice
-        if (event.error) {
-          event.preventDefault();
-          
-          logError(event.error, { 
-            type: 'uncaughtError',
-            severity: 'high',
-            filename: event.filename,
-            lineno: event.lineno,
-            colno: event.colno,
-          });
+        try {
+          // Prevent logging the same error twice
+          if (event.error) {
+            event.preventDefault();
+            
+            logError(event.error, { 
+              type: 'uncaughtError',
+              severity: 'high',
+              filename: event.filename,
+              lineno: event.lineno,
+              colno: event.colno,
+            });
+          }
+        } catch (e) {
+          console.error('Error in error event handler:', e);
         }
       });
-      
-      // Log navigation errors
-      const originalPushState = history.pushState;
-      history.pushState = function() {
-        try {
-          return originalPushState.apply(this, arguments as any);
-        } catch (e) {
-          logError(e as Error, { type: 'navigationError' });
-          throw e;
-        }
-      };
     }
   } catch (err) {
     // Ensure any error in setup doesn't break the app

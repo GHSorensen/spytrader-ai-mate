@@ -15,20 +15,20 @@ type ToastState = {
   toasts: ToasterToast[]
 }
 
-let state: ToastState = {
+const state: ToastState = {
   toasts: [],
 }
 
-let listeners: ((state: ToastState) => void)[] = []
+const listeners: ((state: ToastState) => void)[] = []
 
 function notify(listeners: ((state: ToastState) => void)[]) {
   listeners.forEach((listener) => {
-    listener(state)
+    listener({ ...state })
   })
 }
 
 function updateState(newState: ToastState) {
-  state = newState
+  state.toasts = newState.toasts
   notify(listeners)
 }
 
@@ -37,24 +37,28 @@ export function useToast() {
     toasts: state.toasts,
     toast,
     dismiss: (toastId?: string) => {
-      if (toastId) {
-        updateState({
-          toasts: state.toasts.map((t) =>
-            t.id === toastId
-              ? {
-                  ...t,
-                  open: false,
-                }
-              : t
-          ),
-        })
-      } else {
-        updateState({
-          toasts: state.toasts.map((t) => ({
-            ...t,
-            open: false,
-          })),
-        })
+      try {
+        if (toastId) {
+          updateState({
+            toasts: state.toasts.map((t) =>
+              t.id === toastId
+                ? {
+                    ...t,
+                    open: false,
+                  }
+                : t
+            ),
+          })
+        } else {
+          updateState({
+            toasts: state.toasts.map((t) => ({
+              ...t,
+              open: false,
+            })),
+          })
+        }
+      } catch (err) {
+        console.error('Error dismissing toast:', err);
       }
     },
   }
@@ -63,46 +67,55 @@ export function useToast() {
 export function toast({
   ...props
 }: Omit<ToasterToast, "id"> & { id?: string }) {
-  const id = props.id || String(Math.random())
+  try {
+    const id = props.id || String(Math.random())
 
-  const update = (props: Omit<ToasterToast, "id">) => {
+    const update = (props: Omit<ToasterToast, "id">) => {
+      updateState({
+        toasts: state.toasts.map((t) =>
+          t.id === id
+            ? { ...t, ...props }
+            : t
+        ),
+      })
+      return id
+    }
+
+    const dismiss = () => {
+      updateState({
+        toasts: state.toasts.map((t) =>
+          t.id === id
+            ? { ...t, open: false }
+            : t
+        ),
+      })
+    }
+
     updateState({
-      toasts: state.toasts.map((t) =>
-        t.id === id
-          ? { ...t, ...props }
-          : t
-      ),
-    })
-    return id
-  }
-
-  const dismiss = () => {
-    updateState({
-      toasts: state.toasts.map((t) =>
-        t.id === id
-          ? { ...t, open: false }
-          : t
-      ),
-    })
-  }
-
-  updateState({
-    toasts: [
-      {
-        ...props,
-        id,
-        open: true,
-        onOpenChange: (open) => {
-          if (!open) dismiss()
+      toasts: [
+        {
+          ...props,
+          id,
+          open: true,
+          onOpenChange: (open) => {
+            if (!open) dismiss()
+          },
         },
-      },
-      ...state.toasts.filter((t) => t.id !== id),
-    ].slice(0, TOAST_LIMIT),
-  })
+        ...state.toasts.filter((t) => t.id !== id),
+      ].slice(0, TOAST_LIMIT),
+    })
 
-  return {
-    id,
-    dismiss,
-    update,
+    return {
+      id,
+      dismiss,
+      update,
+    }
+  } catch (err) {
+    console.error('Error creating toast:', err);
+    return {
+      id: String(Math.random()),
+      dismiss: () => {},
+      update: () => String(Math.random()),
+    }
   }
 }

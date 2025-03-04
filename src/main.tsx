@@ -11,20 +11,11 @@ import ErrorBoundary from './components/ErrorBoundary.tsx'
 import QueryClientProvider from './components/QueryClientProvider.tsx'
 import UserProfilePage from './components/auth/UserProfilePage.tsx'
 import AuthenticationPage from './components/auth/AuthenticationPage.tsx'
-import { initErrorMonitoring } from './lib/errorMonitoring'
-import PerformanceMonitor from './components/PerformanceMonitor.tsx'
 import { Toaster } from '@/components/ui/toaster'
 import { config, environment } from '@/config/environment'
 
-// Initialize error monitoring system but catch any failures
-try {
-  // We wrap this in a try-catch to ensure it won't break the app
-  initErrorMonitoring();
-  console.log('Error monitoring initialized successfully');
-} catch (error) {
-  console.error('Failed to initialize error monitoring:', error);
-  // Don't let error monitoring failure prevent app from loading
-}
+// Initialize error monitoring later in a separate useEffect to avoid startup issues
+// We'll let the app load first, then set up monitoring
 
 // Fix the root route path to use a wildcard (*) to allow nested routes
 const router = createBrowserRouter([
@@ -70,7 +61,6 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <ErrorBoundary>
       <QueryClientProvider>
         <RouterProvider router={router} />
-        <PerformanceMonitor />
         <Toaster />
       </QueryClientProvider>
     </ErrorBoundary>
