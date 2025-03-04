@@ -14,7 +14,9 @@ const IBKRIntegrationContainer: React.FC = () => {
   const [callbackUrl, setCallbackUrl] = useState(`${window.location.origin}/auth/ibkr/callback`);
   const [twsHost, setTwsHost] = useState('localhost');
   const [twsPort, setTwsPort] = useState('7496');
+  const [isPaperTrading, setIsPaperTrading] = useState(false);
   const [isConfigured, setIsConfigured] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected' | 'error'>('disconnected');
   const navigate = useNavigate();
   
   useEffect(() => {
@@ -35,20 +37,34 @@ const IBKRIntegrationContainer: React.FC = () => {
           if (config.connectionMethod === 'tws') {
             setApiMethod('tws');
           }
+          if (config.paperTrading) {
+            setIsPaperTrading(true);
+          }
         }
       } catch (err) {
         console.error("Error parsing saved IBKR config:", err);
       }
     }
   }, []);
+
+  // Set TWS port based on paper trading setting
+  useEffect(() => {
+    if (isPaperTrading && twsPort === '7496') {
+      setTwsPort('7497');
+    } else if (!isPaperTrading && twsPort === '7497') {
+      setTwsPort('7496');
+    }
+  }, [isPaperTrading]);
   
   const handleStartAuth = async () => {
     try {
       setIsConnecting(true);
+      setConnectionStatus('connecting');
       
       if (!apiKey) {
         toast.error("Please enter your API Key");
         setIsConnecting(false);
+        setConnectionStatus('error');
         return;
       }
       
@@ -75,16 +91,19 @@ const IBKRIntegrationContainer: React.FC = () => {
       console.error("Error starting IBKR auth process:", error);
       toast.error("Failed to connect to Interactive Brokers. Please try again.");
       setIsConnecting(false);
+      setConnectionStatus('error');
     }
   };
   
   const handleTwsConnect = async () => {
     try {
       setIsConnecting(true);
+      setConnectionStatus('connecting');
       
       if (!twsHost || !twsPort) {
         toast.error("Please enter TWS host and port");
         setIsConnecting(false);
+        setConnectionStatus('error');
         return;
       }
       
@@ -93,24 +112,34 @@ const IBKRIntegrationContainer: React.FC = () => {
         type: 'interactive-brokers',
         twsHost,
         twsPort,
-        connectionMethod: 'tws'
+        connectionMethod: 'tws',
+        paperTrading: isPaperTrading
       };
       
       localStorage.setItem('ibkr-config', JSON.stringify(config));
       
-      // Show success message and redirect
-      toast.success("TWS connection configured successfully!");
+      // Get data provider instance
+      const ibkrProvider = getDataProvider(config);
       
-      // In a real app, we would test the connection here
-      setTimeout(() => {
-        setIsConnecting(false);
+      // Test connection
+      const connected = await ibkrProvider.connect();
+      
+      if (connected) {
+        toast.success("Successfully connected to TWS!");
+        setConnectionStatus('connected');
         setIsConfigured(true);
-      }, 1000);
+      } else {
+        toast.error("Failed to connect to TWS. Please check if TWS is running and API connections are enabled.");
+        setConnectionStatus('error');
+      }
+      
+      setIsConnecting(false);
       
     } catch (error) {
       console.error("Error configuring TWS connection:", error);
       toast.error("Failed to configure TWS connection. Please try again.");
       setIsConnecting(false);
+      setConnectionStatus('error');
     }
   };
   
@@ -121,40 +150,36 @@ const IBKRIntegrationContainer: React.FC = () => {
   const handleTestConnection = async () => {
     try {
       setIsConnecting(true);
+      setConnectionStatus('connecting');
       
       // Get saved config
       const savedConfig = localStorage.getItem('ibkr-config');
       if (!savedConfig) {
         toast.error("No IBKR configuration found. Please connect first.");
         setIsConnecting(false);
+        setConnectionStatus('error');
         return;
       }
       
       const config = JSON.parse(savedConfig);
       
-      if (config.connectionMethod === 'tws') {
-        // For TWS, we simulate a connection test
-        setTimeout(() => {
-          toast.success("Successfully connected to TWS!");
-          setIsConnecting(false);
-        }, 1500);
-        return;
-      }
-      
-      // Initialize data provider for Web API
+      // Initialize data provider
       const ibkrProvider = getDataProvider(config);
       
       // Test connection
       const connected = await ibkrProvider.connect();
       
       if (connected) {
-        toast.success("Successfully connected to Interactive Brokers!");
+        toast.success("Successfully connected to IBKR!");
+        setConnectionStatus('connected');
       } else {
-        toast.error("Failed to connect to Interactive Brokers. Please check your credentials.");
+        toast.error("Failed to connect to IBKR. Please check your settings and try again.");
+        setConnectionStatus('error');
       }
     } catch (error) {
       console.error("Error testing IBKR connection:", error);
       toast.error("Connection test failed. Please try again.");
+      setConnectionStatus('error');
     } finally {
       setIsConnecting(false);
     }
@@ -174,6 +199,9 @@ const IBKRIntegrationContainer: React.FC = () => {
       setTwsHost={setTwsHost}
       twsPort={twsPort}
       setTwsPort={setTwsPort}
+      isPaperTrading={isPaperTrading}
+      setIsPaperTrading={setIsPaperTrading}
+      connectionStatus={connectionStatus}
       onBackToDashboard={handleBackToDashboard}
       onTestConnection={handleTestConnection}
       onStartAuth={handleStartAuth}

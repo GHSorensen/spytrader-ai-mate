@@ -8,6 +8,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 interface IBKRCredentialsFormProps {
   apiKey: string;
@@ -21,6 +23,8 @@ interface IBKRCredentialsFormProps {
   apiMethod: 'webapi' | 'tws';
   setApiMethod: (value: 'webapi' | 'tws') => void;
   isConnecting: boolean;
+  isPaperTrading: boolean;
+  setIsPaperTrading: (value: boolean) => void;
 }
 
 const IBKRCredentialsForm: React.FC<IBKRCredentialsFormProps> = ({
@@ -34,7 +38,9 @@ const IBKRCredentialsForm: React.FC<IBKRCredentialsFormProps> = ({
   setTwsPort,
   apiMethod,
   setApiMethod,
-  isConnecting
+  isConnecting,
+  isPaperTrading,
+  setIsPaperTrading
 }) => {
   return (
     <div className="space-y-4">
@@ -152,17 +158,37 @@ const IBKRCredentialsForm: React.FC<IBKRCredentialsFormProps> = ({
               type="text"
               value={twsPort}
               onChange={(e) => setTwsPort(e.target.value)}
-              placeholder="7496"
+              placeholder={isPaperTrading ? "7497" : "7496"}
               className="w-full p-2 border rounded-md"
               disabled={isConnecting}
             />
           </div>
           
-          <div className="rounded-md bg-blue-50 dark:bg-blue-900/30 p-3 text-sm text-blue-700 dark:text-blue-300">
-            <p>
-              <strong>Note:</strong> When using the TWS API, you must have Trader Workstation running and logged in 
-              on your computer for SPY Trading AI to connect to your IBKR account.
+          <div className="pt-2">
+            <div className="flex items-center space-x-2">
+              <Switch 
+                id="paper-trading" 
+                checked={isPaperTrading}
+                onCheckedChange={setIsPaperTrading}
+              />
+              <Label htmlFor="paper-trading" className="cursor-pointer">Paper Trading</Label>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Enable for practice trading without risking real money. Uses port 7497 by default.
             </p>
+          </div>
+          
+          <div className="rounded-md bg-amber-50 dark:bg-amber-900/30 p-3 text-sm text-amber-700 dark:text-amber-300 mt-4">
+            <p>
+              <strong>Important:</strong> Before connecting, please ensure:
+            </p>
+            <ul className="list-disc list-inside mt-1 text-xs">
+              <li>Trader Workstation (TWS) is open and running</li>
+              <li>You're logged in to your IBKR account in TWS</li>
+              <li>In TWS, go to Edit → Global Configuration → API → Settings</li>
+              <li>Enable "Allow connections from localhost"</li>
+              <li>Check "Read-Only API" if you only want market data (uncheck for trading)</li>
+            </ul>
           </div>
         </TabsContent>
       </Tabs>

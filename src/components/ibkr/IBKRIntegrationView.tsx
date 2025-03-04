@@ -8,6 +8,7 @@ import IBKRIntegrationSteps from './IBKRIntegrationSteps';
 import IBKRCredentialsForm from './IBKRCredentialsForm';
 import IBKRApiKeyInfo from './IBKRApiKeyInfo';
 import IBKRActionButtons from './IBKRActionButtons';
+import ConnectionStatus from './ConnectionStatus';
 
 interface IBKRIntegrationViewProps {
   isConnecting: boolean;
@@ -22,6 +23,9 @@ interface IBKRIntegrationViewProps {
   setTwsHost: (host: string) => void;
   twsPort: string;
   setTwsPort: (port: string) => void;
+  isPaperTrading: boolean;
+  setIsPaperTrading: (value: boolean) => void;
+  connectionStatus: 'disconnected' | 'connecting' | 'connected' | 'error';
   onBackToDashboard: () => void;
   onTestConnection: () => void;
   onStartAuth: () => void;
@@ -41,6 +45,9 @@ const IBKRIntegrationView: React.FC<IBKRIntegrationViewProps> = ({
   setTwsHost,
   twsPort,
   setTwsPort,
+  isPaperTrading,
+  setIsPaperTrading,
+  connectionStatus,
   onBackToDashboard,
   onTestConnection,
   onStartAuth,
@@ -54,10 +61,15 @@ const IBKRIntegrationView: React.FC<IBKRIntegrationViewProps> = ({
         <div className="flex flex-col items-center max-w-4xl mx-auto">
           <Card className="w-full shadow-md">
             <CardHeader>
-              <CardTitle className="text-2xl font-bold">Connect to Interactive Brokers</CardTitle>
-              <CardDescription>
-                Link your Interactive Brokers account to enable automated trading with SPY Trading AI
-              </CardDescription>
+              <div className="flex justify-between items-center flex-wrap gap-4">
+                <div>
+                  <CardTitle className="text-2xl font-bold">Connect to Interactive Brokers</CardTitle>
+                  <CardDescription>
+                    Link your Interactive Brokers account to enable automated trading with SPY Trading AI
+                  </CardDescription>
+                </div>
+                <ConnectionStatus status={connectionStatus} />
+              </div>
             </CardHeader>
             
             <CardContent className="space-y-6">
@@ -82,6 +94,8 @@ const IBKRIntegrationView: React.FC<IBKRIntegrationViewProps> = ({
                 apiMethod={apiMethod}
                 setApiMethod={setApiMethod}
                 isConnecting={isConnecting}
+                isPaperTrading={isPaperTrading}
+                setIsPaperTrading={setIsPaperTrading}
               />
             </CardContent>
             
