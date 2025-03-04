@@ -26,6 +26,7 @@ export const LogoAndNav: React.FC<LogoAndNavProps> = ({ minimal = false }) => {
           <Link to="/detailed-performance" className="text-muted-foreground hover:text-foreground">Analytics</Link>
           <Link to="/risk-console" className="text-muted-foreground hover:text-foreground">Risk Console</Link>
           <Link to="/schwab-integration" className="text-muted-foreground hover:text-foreground">Schwab Connect</Link>
+          <Link to="/ibkr-integration" className="text-muted-foreground hover:text-foreground">IBKR Connect</Link>
         </nav>
       )}
     </div>

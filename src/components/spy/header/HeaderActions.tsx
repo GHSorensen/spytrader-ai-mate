@@ -5,6 +5,7 @@ import { User, Settings } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { NotificationCenter } from '../notifications';
 import SchwabGuide from './SchwabGuide';
+import IBKRGuide from './IBKRGuide';
 import { RiskToleranceType } from '@/lib/types/spy';
 
 interface HeaderActionsProps {
@@ -17,6 +18,7 @@ export const HeaderActions: React.FC<HeaderActionsProps> = ({
   return (
     <div className="flex items-center gap-2">
       <SchwabGuide />
+      <IBKRGuide />
       
       <Link to="/profile">
         <Button variant="ghost" size="icon">

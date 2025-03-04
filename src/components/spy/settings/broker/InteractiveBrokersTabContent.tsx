@@ -55,6 +55,19 @@ export const InteractiveBrokersTabContent: React.FC<InteractiveBrokersTabContent
           />
         </div>
         
+        <div className="space-y-2">
+          <Label htmlFor="ibkr-callback-url">Callback URL</Label>
+          <Input 
+            id="ibkr-callback-url" 
+            placeholder="Enter your callback URL"
+            value={settings.credentials.callbackUrl || window.location.origin + '/auth/callback'}
+            onChange={(e) => updateCredential('callbackUrl', e.target.value)}
+          />
+          <p className="text-xs text-muted-foreground">
+            You must whitelist this URL in your IBKR API settings.
+          </p>
+        </div>
+        
         <div className="flex items-center justify-between pt-2">
           <div className="space-y-0.5">
             <Label htmlFor="paper-trading">Paper Trading</Label>
@@ -73,7 +86,7 @@ export const InteractiveBrokersTabContent: React.FC<InteractiveBrokersTabContent
           <Button 
             variant="outline" 
             onClick={testConnection} 
-            disabled={isConnecting || !settings.credentials.apiKey}
+            disabled={isConnecting || !settings.credentials.apiKey || !settings.credentials.accountId}
             className="w-full"
           >
             {isConnecting ? (
@@ -90,3 +103,5 @@ export const InteractiveBrokersTabContent: React.FC<InteractiveBrokersTabContent
     </Card>
   );
 };
+
+export default InteractiveBrokersTabContent;

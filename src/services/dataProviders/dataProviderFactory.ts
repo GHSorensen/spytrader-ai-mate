@@ -2,6 +2,7 @@
 import { DataProviderInterface, DataProviderConfig } from "@/lib/types/spy/dataProvider";
 import { TDAmeritradeService } from "./tdAmeritradeService";
 import { SchwabService } from "./schwabService";
+import { InteractiveBrokersService } from "./interactiveBrokersService";
 import { toast } from "@/hooks/use-toast";
 
 // Mock service for development
@@ -49,13 +50,8 @@ export const getDataProvider = (config?: DataProviderConfig): DataProviderInterf
       dataProviderInstance = new SchwabService(config);
       break;
     case 'interactive-brokers':
-      console.log("Interactive Brokers not yet implemented, using mock provider");
-      try {
-        notifyUser("Interactive Brokers integration not yet implemented");
-      } catch (err) {
-        console.error("Failed to show toast:", err);
-      }
-      dataProviderInstance = new MockDataProvider();
+      console.log("Creating Interactive Brokers data provider");
+      dataProviderInstance = new InteractiveBrokersService(config);
       break;
     default:
       console.log("Unknown provider type, using mock provider");
