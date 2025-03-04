@@ -32,6 +32,28 @@ export const HeaderActions: React.FC<HeaderActionsProps> = ({
     }
   };
 
+  // Check if we have a session (authenticated user)
+  const [isAuthenticated, setIsAuthenticated] = React.useState<boolean>(false);
+  
+  React.useEffect(() => {
+    // Check authentication status on mount
+    const checkAuth = async () => {
+      const { data } = await supabase.auth.getSession();
+      setIsAuthenticated(!!data.session);
+    };
+    
+    checkAuth();
+    
+    // Set up auth state change listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsAuthenticated(!!session);
+    });
+    
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
   return (
     <div className="flex items-center gap-2">
       <DropdownMenu>
@@ -49,15 +71,25 @@ export const HeaderActions: React.FC<HeaderActionsProps> = ({
         <DropdownMenuContent align="end" className="bg-background border border-border">
           <DropdownMenuLabel>{userName}</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem asChild>
-            <Link to="/profile" className="w-full cursor-pointer">
-              Profile Settings
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={handleSignOut} className="text-red-500 cursor-pointer">
-            <LogOut className="mr-2 h-4 w-4" />
-            Sign Out
-          </DropdownMenuItem>
+          {isAuthenticated ? (
+            <>
+              <DropdownMenuItem asChild>
+                <Link to="/profile" className="w-full cursor-pointer">
+                  Profile Settings
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleSignOut} className="text-red-500 cursor-pointer">
+                <LogOut className="mr-2 h-4 w-4" />
+                Sign Out
+              </DropdownMenuItem>
+            </>
+          ) : (
+            <DropdownMenuItem asChild>
+              <Link to="/auth" className="w-full cursor-pointer">
+                Sign In
+              </Link>
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
       

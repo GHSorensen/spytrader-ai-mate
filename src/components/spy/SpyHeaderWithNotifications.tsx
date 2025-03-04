@@ -1,8 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { LogoAndNav } from './header/LogoAndNav';
 import { HeaderActions } from './header/HeaderActions';
 import { MobileMenu } from './header/MobileMenu';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface SpyHeaderWithNotificationsProps {
   userProfile?: any; // User profile data
@@ -16,8 +17,33 @@ export const SpyHeaderWithNotifications: React.FC<SpyHeaderWithNotificationsProp
   setIsAISettingsOpen
 }) => {
   // Display actual user name if available, otherwise fallback to defaults
-  const userName = userProfile?.username || userProfile?.name || "User";
+  const [userName, setUserName] = useState<string>(userProfile?.username || userProfile?.name || "User");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  // Check for session on component mount
+  useEffect(() => {
+    const fetchUserSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session?.user?.email && (!userProfile || !userProfile.username)) {
+        setUserName(data.session.user.email.split('@')[0] || "User");
+      }
+    };
+    
+    fetchUserSession();
+    
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user?.email) {
+        setUserName(session.user.email.split('@')[0] || "User");
+      } else {
+        setUserName("User");
+      }
+    });
+    
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [userProfile]);
 
   return (
     <div className="flex justify-between items-center w-full">
