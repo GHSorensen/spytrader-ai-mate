@@ -9,10 +9,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface HeaderActionsProps {
-  setIsAISettingsOpen: (open: boolean) => void;
+  userName?: string;
+  setIsAISettingsOpen?: (open: boolean) => void; 
 }
 
 export const HeaderActions: React.FC<HeaderActionsProps> = ({ 
+  userName = "User",
   setIsAISettingsOpen 
 }) => {
   const navigate = useNavigate();
@@ -32,13 +34,18 @@ export const HeaderActions: React.FC<HeaderActionsProps> = ({
     <div className="flex items-center gap-2">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" className="relative">
             <User className="h-5 w-5" />
             <span className="sr-only">User Profile</span>
+            {userName && (
+              <span className="absolute -bottom-1 -right-1 text-xs font-medium bg-primary text-primary-foreground rounded-full px-1.5 hidden md:block">
+                {userName.substring(0, 1)}
+              </span>
+            )}
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuLabel>Account</DropdownMenuLabel>
+          <DropdownMenuLabel>{userName}</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
             <Link to="/profile" className="w-full cursor-pointer">
@@ -54,10 +61,12 @@ export const HeaderActions: React.FC<HeaderActionsProps> = ({
       
       <NotificationCenter />
       
-      <Button variant="ghost" size="icon" onClick={() => setIsAISettingsOpen(true)}>
-        <span className="sr-only">AI Settings</span>
-        <Settings className="h-5 w-5" />
-      </Button>
+      {setIsAISettingsOpen && (
+        <Button variant="ghost" size="icon" onClick={() => setIsAISettingsOpen(true)}>
+          <span className="sr-only">AI Settings</span>
+          <Settings className="h-5 w-5" />
+        </Button>
+      )}
     </div>
   );
 };

@@ -23,27 +23,23 @@ import { SpyHeaderWithNotifications } from './components/spy/SpyHeaderWithNotifi
 function App() {
   const [session, setSession] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
+  const [isAISettingsOpen, setIsAISettingsOpen] = useState(false);
   const navigate = useNavigate();
 
-  // Set up auth state monitoring
   useEffect(() => {
-    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       console.log("Initial session check:", session ? "Authenticated" : "Not authenticated");
       
-      // If we have a session, fetch the user profile
       if (session?.user) {
         fetchUserProfile(session.user.id);
       }
     });
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       console.log("Auth state changed:", _event, session);
       setSession(session);
       
-      // Fetch user profile when auth state changes
       if (session?.user) {
         fetchUserProfile(session.user.id);
       } else {
@@ -53,8 +49,7 @@ function App() {
 
     return () => subscription.unsubscribe();
   }, []);
-  
-  // Function to fetch user profile
+
   const fetchUserProfile = async (userId) => {
     try {
       const { data, error } = await supabase
@@ -75,20 +70,15 @@ function App() {
     }
   };
 
-  // Set up initial notifications on app load
   useEffect(() => {
     try {
-      // Expose toast for global access
       window.toast = toast;
       
-      // Demo: Schedule daily portfolio updates
-      const currentBalance = 125000; // This would come from your actual portfolio data
+      const currentBalance = 125000;
       
-      // Initialize notification schedule (these would normally be at market open/close)
       notificationService.scheduleMorningUpdate(currentBalance, 0, 0);
       notificationService.scheduleEndOfDayUpdate(currentBalance, 1200, 0.96);
       
-      // Sample initial notification on app startup
       notificationService.createNotification(
         'system_message',
         'Welcome back',
@@ -100,25 +90,25 @@ function App() {
       console.error('Failed to setup notifications:', err);
     }
     
-    // Cleanup toast when component unmounts
     return () => {
       window.toast = undefined;
     };
   }, []);
 
-  // Creating a layout wrapper that includes the header for authenticated routes
   const AuthenticatedLayout = ({ children }) => (
     <>
       <header className="border-b">
         <div className="container py-4">
-          <SpyHeaderWithNotifications userProfile={userProfile} />
+          <SpyHeaderWithNotifications 
+            userProfile={userProfile} 
+            setIsAISettingsOpen={setIsAISettingsOpen}
+          />
         </div>
       </header>
       {children}
     </>
   );
 
-  // A custom Route component for authenticated routes that includes the layout
   const AuthenticatedRoute = ({ element }) => {
     return session ? (
       <AuthenticatedLayout>
@@ -152,7 +142,6 @@ function App() {
   );
 }
 
-// Extend the Window interface to include our toast property
 declare global {
   interface Window {
     toast?: typeof toast;

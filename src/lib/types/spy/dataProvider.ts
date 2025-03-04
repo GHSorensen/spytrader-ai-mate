@@ -2,7 +2,7 @@
 /**
  * Configuration for data providers
  */
-export type DataProviderType = 'td-ameritrade' | 'interactive-brokers' | 'schwab' | 'mock';
+export type DataProviderType = 'td-ameritrade' | 'interactive-brokers' | 'schwab' | 'mock' | 'interactive-brokers-tws';
 
 export interface DataProviderConfig {
   type: DataProviderType;
