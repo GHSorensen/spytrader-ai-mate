@@ -1,41 +1,80 @@
 
 import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import compression from 'compression';
+import helmet from 'helmet';
+import fs from 'fs';
+
+// Import modules
 import { setupMiddleware } from './middleware.js';
 import { setupErrorHandling } from './errorHandling.js';
-import { setupRoutes } from './routes.js';
 import { setupHealthCheck } from './healthCheck.js';
-import { setupGracefulShutdown } from './shutdown.js';
+import { setupRoutes } from './routes.js';
+import { setupShutdown } from './shutdown.js';
 
-// Determine current environment
-const isProduction = process.env.NODE_ENV === 'production';
+// Convert import.meta.url to directory path
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// Create express application
+// Configuration
+const PORT = process.env.PORT || 10000;
+const DIST_DIR = path.resolve(__dirname, '../../dist');
+
+// Verify dist directory exists
+if (!fs.existsSync(DIST_DIR)) {
+  console.error(`Error: Build directory ${DIST_DIR} does not exist. Please run the build command first.`);
+  process.exit(1);
+}
+
+// Create Express app
 const app = express();
 
-// Setup middleware (security, compression, logging, etc.)
-setupMiddleware(app, isProduction);
+// Gzip compression
+app.use(compression());
+
+// Security headers with CSP configuration
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        fontSrc: ["'self'", "https://fonts.gstatic.com"],
+        imgSrc: ["'self'", "data:", "https://sklwsxgxsqtwlqjhegms.supabase.co"],
+        connectSrc: [
+          "'self'",
+          "https://sklwsxgxsqtwlqjhegms.supabase.co",
+          "wss://sklwsxgxsqtwlqjhegms.supabase.co"
+        ],
+        frameSrc: ["'self'"],
+        objectSrc: ["'none'"],
+        upgradeInsecureRequests: [],
+      },
+    },
+  })
+);
+
+// Setup middleware
+setupMiddleware(app);
 
 // Setup health check endpoint
 setupHealthCheck(app);
 
-// Setup routes (including auth routes and SPA fallback)
-setupRoutes(app);
+// Setup routes for serving the SPA
+setupRoutes(app, DIST_DIR);
 
-// Setup error handling middleware
-setupErrorHandling(app, isProduction);
+// Setup error handling
+setupErrorHandling(app);
 
-// Explicitly use the PORT from environment variable or default
-const PORT = process.env.PORT || 10000;
-
-// Create the server instance
-const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode`);
-  console.log(`Server listening on port ${PORT}`);
-  console.log(`Current date: ${new Date().toISOString()}`);
-  console.log(`Process ID: ${process.pid}`);
+// Start server
+const server = app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+  console.log(`ENV: ${process.env.NODE_ENV || 'development'}`);
 });
 
-// Setup graceful shutdown handlers
-setupGracefulShutdown(server);
+// Setup graceful shutdown
+setupShutdown(server);
 
-export default server;
+export default app;

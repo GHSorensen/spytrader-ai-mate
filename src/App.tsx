@@ -1,7 +1,7 @@
 
 import React, { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { Toaster } from "sonner";
+import { Toaster } from "@/components/ui/toaster";
 import Dashboard from './components/Dashboard';
 import TradeAutomation from './components/TradeAutomation';
 import NotFound from './pages/NotFound';
@@ -36,7 +36,7 @@ function App() {
 
   return (
     <>
-      <Toaster richColors position="top-right" />
+      <Toaster />
       <ErrorBoundary>
         <Routes>
           <Route path="/" element={<Index />} />

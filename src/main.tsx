@@ -16,8 +16,9 @@ import PerformanceMonitor from './components/PerformanceMonitor.tsx'
 import { Toaster } from '@/components/ui/toaster'
 import { config, environment } from '@/config/environment'
 
-// Initialize error monitoring system for production
+// Initialize error monitoring system but catch any failures
 try {
+  // We wrap this in a try-catch to ensure it won't break the app
   initErrorMonitoring();
   console.log('Error monitoring initialized successfully');
 } catch (error) {
