@@ -10,6 +10,7 @@ import RiskConsole from './pages/RiskConsole';
 import PerformanceDashboard from './components/spy/PerformanceDashboard';
 import RiskMonitoringTest from './pages/RiskMonitoringTest';
 import notificationService from './services/notification/notificationService';
+import ErrorBoundary from './components/ErrorBoundary';
 
 function App() {
   // Set up initial notifications on app load
@@ -34,15 +35,17 @@ function App() {
   return (
     <>
       <Toaster richColors position="top-right" />
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/trade-automation" element={<TradeAutomation />} />
-        <Route path="/performance" element={<PerformanceDashboard />} />
-        <Route path="/risk-console" element={<RiskConsole />} />
-        <Route path="/risk-monitoring-test" element={<RiskMonitoringTest />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+      <ErrorBoundary>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/trade-automation" element={<TradeAutomation />} />
+          <Route path="/performance" element={<PerformanceDashboard />} />
+          <Route path="/risk-console" element={<RiskConsole />} />
+          <Route path="/risk-monitoring-test" element={<RiskMonitoringTest />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </ErrorBoundary>
     </>
   );
 }
