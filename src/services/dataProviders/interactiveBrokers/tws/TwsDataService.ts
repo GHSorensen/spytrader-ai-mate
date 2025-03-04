@@ -1,5 +1,5 @@
 
-import { DataProviderConfig } from "@/lib/types/spy/dataProvider";
+import { DataProviderConfig, TradeOrder } from "@/lib/types/spy/dataProvider";
 import { SpyMarketData, SpyOption, SpyTrade } from "@/lib/types/spy";
 import * as utils from "../utils";
 
@@ -95,5 +95,35 @@ export class TwsDataService {
     }
     
     return trades;
+  }
+  
+  /**
+   * Get account data from TWS
+   */
+  async getAccountData(): Promise<{balance: number, dailyPnL: number, allTimePnL: number}> {
+    console.log("Fetching account data from Interactive Brokers TWS...");
+    
+    // In a real implementation, this would fetch actual account data from TWS
+    // For demonstration, we're using different mock values than Web API
+    return {
+      balance: this.config.paperTrading ? 10000 : 25000,
+      dailyPnL: this.config.paperTrading ? 125.75 : 250.25,
+      allTimePnL: this.config.paperTrading ? 1250.50 : 2750.75
+    };
+  }
+  
+  /**
+   * Place trade via TWS
+   */
+  async placeTrade(order: TradeOrder): Promise<any> {
+    console.log("Placing trade via Interactive Brokers TWS...", order);
+    
+    // In a real implementation, this would place an actual trade via TWS
+    // For now, return a mock response
+    return {
+      orderId: `tws-${Date.now()}`,
+      status: 'pending',
+      details: order
+    };
   }
 }

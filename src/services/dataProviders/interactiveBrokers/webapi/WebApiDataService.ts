@@ -1,5 +1,5 @@
 
-import { DataProviderConfig } from "@/lib/types/spy/dataProvider";
+import { DataProviderConfig, TradeOrder } from "@/lib/types/spy/dataProvider";
 import { SpyMarketData, SpyOption, SpyTrade } from "@/lib/types/spy";
 import * as utils from "../utils";
 
@@ -58,5 +58,35 @@ export class WebApiDataService {
     
     // Web API trades
     return utils.generateMockTrades();
+  }
+  
+  /**
+   * Get account data from Web API
+   */
+  async getAccountData(): Promise<{balance: number, dailyPnL: number, allTimePnL: number}> {
+    console.log("Fetching account data from Interactive Brokers Web API...");
+    
+    // In a real implementation, this would fetch actual account data from IBKR Web API
+    // For demonstration, we're using different mock values than TWS
+    return {
+      balance: this.config.paperTrading ? 10000 : 15000, 
+      dailyPnL: this.config.paperTrading ? 150.25 : 180.50,
+      allTimePnL: this.config.paperTrading ? 1500.75 : 1850.25
+    };
+  }
+  
+  /**
+   * Place trade via Web API
+   */
+  async placeTrade(order: TradeOrder): Promise<any> {
+    console.log("Placing trade via Interactive Brokers Web API...", order);
+    
+    // In a real implementation, this would place an actual trade via IBKR Web API
+    // For now, return a mock response
+    return {
+      orderId: `webapi-${Date.now()}`,
+      status: 'pending',
+      details: order
+    };
   }
 }
