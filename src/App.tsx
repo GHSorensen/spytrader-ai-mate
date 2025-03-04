@@ -11,6 +11,8 @@ import RiskMonitoringTest from './pages/RiskMonitoringTest';
 import notificationService from './services/notification/notificationService';
 import ErrorBoundary from './components/ErrorBoundary';
 import SchwabIntegrationPage from './pages/SchwabIntegrationPage';
+import IBKRIntegrationPage from './pages/IBKRIntegrationPage';
+import IBKRCallbackPage from './pages/IBKRCallbackPage';
 import DetailedPerformancePage from './components/performance/DetailedPerformancePage';
 import { Toaster } from './components/ui/toaster';
 import { toast } from './hooks/use-toast';
@@ -81,6 +83,8 @@ function App() {
         <Route path="/risk-console" element={<RiskConsole />} />
         <Route path="/risk-monitoring-test" element={<RiskMonitoringTest />} />
         <Route path="/schwab-integration" element={<SchwabIntegrationPage />} />
+        <Route path="/ibkr-integration" element={<IBKRIntegrationPage />} />
+        <Route path="/auth/ibkr/callback" element={<IBKRCallbackPage />} />
         <Route path="/auth" element={<AuthenticationPage />} />
         <Route path="/profile" element={<UserProfilePage />} />
         <Route path="/not-found" element={<NotFound />} />

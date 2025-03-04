@@ -1,277 +1,223 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowRight, Check, ExternalLink, Info } from "lucide-react";
-import SpyHeaderWithNotifications from '@/components/spy/SpyHeaderWithNotifications';
-import { ibkrDocumentation } from '@/services/dataProviders/interactiveBrokers/documentation';
-import { useNavigate } from 'react-router-dom';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { SpyHeaderWithNotifications } from '@/components/spy/SpyHeaderWithNotifications';
+import { Separator } from "@/components/ui/separator";
+import { ExternalLink, ArrowRight, Terminal } from "lucide-react";
+import { toast } from "sonner";
+import { IBKRAuth } from '@/services/dataProviders/interactiveBrokers/auth';
+import { DataProviderConfig } from '@/lib/types/spy/dataProvider';
+import { getDataProvider } from '@/services/dataProviders/dataProviderFactory';
 
-const IBKRIntegrationPage = () => {
+const IBKRIntegrationPage: React.FC = () => {
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [apiKey, setApiKey] = useState('');
+  const [callbackUrl, setCallbackUrl] = useState(`${window.location.origin}/auth/ibkr/callback`);
+  const [isConfigured, setIsConfigured] = useState(false);
   const navigate = useNavigate();
-  const [connecting, setConnecting] = useState(false);
   
-  const handleConnectToIBKR = () => {
-    setConnecting(true);
-    // In a real implementation, we would use the IBKR service to get the authorization URL
-    // For now, we'll simulate the authentication flow with a timeout
-    setTimeout(() => {
-      navigate('/auth/callback?code=mock_auth_code&state=mock_state');
-    }, 1500);
+  useEffect(() => {
+    // Check local storage for existing IBKR config
+    const savedConfig = localStorage.getItem('ibkr-config');
+    if (savedConfig) {
+      try {
+        const config = JSON.parse(savedConfig);
+        if (config.apiKey) {
+          setApiKey(config.apiKey);
+          setCallbackUrl(config.callbackUrl || callbackUrl);
+          setIsConfigured(true);
+        }
+      } catch (err) {
+        console.error("Error parsing saved IBKR config:", err);
+      }
+    }
+  }, []);
+  
+  const handleStartAuth = async () => {
+    try {
+      setIsConnecting(true);
+      
+      if (!apiKey) {
+        toast.error("Please enter your API Key");
+        setIsConnecting(false);
+        return;
+      }
+      
+      // Save config to local storage
+      const config: DataProviderConfig = {
+        type: 'interactive-brokers',
+        apiKey,
+        callbackUrl
+      };
+      
+      localStorage.setItem('ibkr-config', JSON.stringify(config));
+      
+      // Initialize auth handler
+      const ibkrAuth = new IBKRAuth(config);
+      
+      // Get authorization URL
+      const authUrl = ibkrAuth.getAuthorizationUrl();
+      
+      // Redirect to IBKR auth page
+      console.log("Redirecting to IBKR auth URL:", authUrl);
+      window.location.href = authUrl;
+      
+    } catch (error) {
+      console.error("Error starting IBKR auth process:", error);
+      toast.error("Failed to connect to Interactive Brokers. Please try again.");
+      setIsConnecting(false);
+    }
+  };
+  
+  const handleBackToDashboard = () => {
+    navigate('/dashboard');
+  };
+  
+  const handleTestConnection = async () => {
+    try {
+      setIsConnecting(true);
+      
+      // Get saved config
+      const savedConfig = localStorage.getItem('ibkr-config');
+      if (!savedConfig) {
+        toast.error("No IBKR configuration found. Please connect first.");
+        setIsConnecting(false);
+        return;
+      }
+      
+      const config = JSON.parse(savedConfig);
+      
+      // Initialize data provider
+      const ibkrProvider = getDataProvider(config);
+      
+      // Test connection
+      const connected = await ibkrProvider.connect();
+      
+      if (connected) {
+        toast.success("Successfully connected to Interactive Brokers!");
+      } else {
+        toast.error("Failed to connect to Interactive Brokers. Please check your credentials.");
+      }
+    } catch (error) {
+      console.error("Error testing IBKR connection:", error);
+      toast.error("Connection test failed. Please try again.");
+    } finally {
+      setIsConnecting(false);
+    }
   };
   
   return (
-    <div className="container mx-auto py-6 space-y-8 max-w-7xl">
-      <SpyHeaderWithNotifications />
+    <div className="flex flex-col min-h-screen">
+      <header className="border-b">
+        <div className="container py-4">
+          <SpyHeaderWithNotifications />
+        </div>
+      </header>
       
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-6">
-          <Card>
+      <main className="flex-1 container mx-auto py-12 px-4">
+        <div className="flex flex-col items-center max-w-4xl mx-auto">
+          <Card className="w-full shadow-md">
             <CardHeader>
-              <CardTitle className="text-xl flex items-center gap-2">
-                <span className="text-primary">Interactive Brokers Integration</span>
-              </CardTitle>
+              <CardTitle className="text-2xl font-bold">Connect to Interactive Brokers</CardTitle>
               <CardDescription>
-                Connect your Interactive Brokers account to Spy Trading AI
+                Link your Interactive Brokers account to enable automated trading with SPY Trading AI
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <Tabs defaultValue="overview" className="w-full">
-                <TabsList className="grid grid-cols-3 mb-4">
-                  <TabsTrigger value="overview">Overview</TabsTrigger>
-                  <TabsTrigger value="setup">Setup Guide</TabsTrigger>
-                  <TabsTrigger value="advanced">Advanced</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="overview" className="space-y-4">
-                  <p className="text-sm text-muted-foreground">
-                    Spy Trading AI can connect to your Interactive Brokers account to enable 
-                    paper trading and live trading capabilities. We use OAuth2 authentication for
-                    secure connection without storing your credentials.
-                  </p>
-                  
-                  <Alert variant="default" className="bg-primary/10 border-primary/20">
-                    <Info className="h-4 w-4 text-primary" />
-                    <AlertTitle>Secure Client Portal API Integration</AlertTitle>
-                    <AlertDescription>
-                      Your IBKR credentials are never stored or accessed by Spy Trading AI. 
-                      All authentication is handled securely through IBKR's official Client Portal API.
-                    </AlertDescription>
-                  </Alert>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                    <div className="border rounded-lg p-4 space-y-2">
-                      <h3 className="font-semibold">Paper Trading</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Practice without risk using IBKR's Paper Trading environment that mirrors real market conditions.
-                      </p>
-                    </div>
-                    <div className="border rounded-lg p-4 space-y-2">
-                      <h3 className="font-semibold">Live Trading</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Execute real trades with SPY options using AI-enhanced strategies and risk management.
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex flex-col items-center space-y-4 mt-8">
-                    <Button 
-                      size="lg" 
-                      className="w-full md:w-auto px-8"
-                      onClick={handleConnectToIBKR}
-                      disabled={connecting}
-                    >
-                      {connecting ? 'Connecting...' : 'Connect to IBKR'}
-                      {!connecting && <ArrowRight className="ml-2 h-4 w-4" />}
-                    </Button>
-                    <p className="text-xs text-muted-foreground">
-                      You'll be redirected to Interactive Brokers to authorize the connection
-                    </p>
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="setup" className="space-y-4">
-                  <div className="space-y-6">
-                    <div className="space-y-2">
-                      <h3 className="font-semibold flex items-center">
-                        <Check className="h-4 w-4 mr-2 text-green-500" />
-                        Step 1: Prepare Your IBKR Account
-                      </h3>
-                      <p className="text-sm text-muted-foreground ml-6">
-                        Ensure you have an IBKR brokerage account with options trading permissions.
-                        If you don't have options permissions, apply through IBKR's Account Management.
-                      </p>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <h3 className="font-semibold flex items-center">
-                        <Check className="h-4 w-4 mr-2 text-green-500" />
-                        Step 2: Enable Client Portal API
-                      </h3>
-                      <p className="text-sm text-muted-foreground ml-6">
-                        Log in to your IBKR account and enable the Client Portal API in Account Settings.
-                        You'll need to create an API key and whitelist our callback URL.
-                      </p>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <h3 className="font-semibold flex items-center">
-                        <Check className="h-4 w-4 mr-2 text-green-500" />
-                        Step 3: Connect Your Account
-                      </h3>
-                      <p className="text-sm text-muted-foreground ml-6">
-                        Click the "Connect to IBKR" button and log in with your IBKR credentials.
-                        Review and authorize the requested permissions.
-                      </p>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <h3 className="font-semibold flex items-center">
-                        <Check className="h-4 w-4 mr-2 text-green-500" />
-                        Step 4: Select Trading Mode
-                      </h3>
-                      <p className="text-sm text-muted-foreground ml-6">
-                        Choose between paper trading or live trading.
-                        For beginners, we recommend starting with paper trading.
-                      </p>
-                    </div>
-                    
-                    <Button 
-                      variant="outline" 
-                      onClick={() => ibkrDocumentation.openUserGuide()}
-                      className="w-full"
-                    >
-                      View Complete Setup Guide
-                      <ExternalLink className="ml-2 h-4 w-4" />
-                    </Button>
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="advanced" className="space-y-4">
-                  <div className="space-y-4">
-                    <h3 className="font-semibold">Client Portal API</h3>
-                    <p className="text-sm text-muted-foreground">
-                      We use IBKR's Client Portal API for secure, reliable access to your account.
-                      This modern REST API provides all the functionality needed for automated trading.
-                    </p>
-                    
-                    <Button 
-                      variant="outline" 
-                      onClick={() => ibkrDocumentation.openClientPortalDocs()}
-                      className="w-full"
-                    >
-                      View Client Portal API Documentation
-                      <ExternalLink className="ml-2 h-4 w-4" />
-                    </Button>
-                    
-                    <h3 className="font-semibold">Connection Settings</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Your connection to IBKR uses OAuth2, which requires periodic reauthentication for security.
-                      Tokens typically expire after 24 hours of inactivity.
-                    </p>
-                    
-                    <h3 className="font-semibold">Data Privacy</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Spy Trading AI only receives the data necessary for trading, such as account balances,
-                      positions, and order status. We never see your IBKR login credentials.
-                    </p>
-                    
-                    <h3 className="font-semibold">Troubleshooting</h3>
-                    <div className="space-y-2">
-                      <p className="text-sm text-muted-foreground">Common connection issues:</p>
-                      <ul className="list-disc list-inside text-sm text-muted-foreground ml-4 space-y-1">
-                        <li>API access not enabled (enable in Account Management)</li>
-                        <li>Expired session (resolve by reconnecting)</li>
-                        <li>Insufficient account permissions (check with IBKR)</li>
-                        <li>Network connectivity problems (check your internet)</li>
-                      </ul>
-                    </div>
-                    
-                    <Button 
-                      variant="outline" 
-                      onClick={() => ibkrDocumentation.downloadUserGuide()}
-                      className="w-full mt-4"
-                    >
-                      Download Technical Documentation
-                      <ExternalLink className="ml-2 h-4 w-4" />
-                    </Button>
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
-        </div>
-        
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Connection Status</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="h-3 w-3 rounded-full bg-red-500"></div>
-                <span className="text-sm font-medium">Not Connected</span>
+            
+            <CardContent className="space-y-6">
+              <div className="bg-muted/50 p-4 rounded-lg">
+                <h3 className="font-medium mb-2 flex items-center">
+                  <Terminal className="h-4 w-4 mr-2" />
+                  Prerequisites
+                </h3>
+                <ul className="list-disc list-inside space-y-1 text-sm">
+                  <li>You need an active Interactive Brokers account</li>
+                  <li>Trader Workstation (TWS) or IB Gateway must be running</li>
+                  <li>Client Portal API must be enabled in your account settings</li>
+                  <li>You need to have created API credentials in the IBKR dashboard</li>
+                </ul>
+                <div className="mt-4 text-sm">
+                  <a 
+                    href="https://www.interactivebrokers.com/en/software/am/am/manageaccount/enterapikey.htm" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center text-primary hover:underline"
+                  >
+                    <span>View IBKR API Key documentation</span>
+                    <ExternalLink className="h-3 w-3 ml-1" />
+                  </a>
+                </div>
               </div>
-              <p className="text-sm text-muted-foreground">
-                Connect your Interactive Brokers account to enable trading capabilities and view your portfolio.
-              </p>
+              
+              <Separator />
+              
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label htmlFor="apiKey" className="text-sm font-medium">
+                    IBKR API Key
+                  </label>
+                  <input
+                    id="apiKey"
+                    type="text"
+                    value={apiKey}
+                    onChange={(e) => setApiKey(e.target.value)}
+                    placeholder="Enter your IBKR API Key"
+                    className="w-full p-2 border rounded-md"
+                    disabled={isConnecting}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label htmlFor="callbackUrl" className="text-sm font-medium">
+                    Callback URL (must match URL configured in IBKR)
+                  </label>
+                  <input
+                    id="callbackUrl"
+                    type="text"
+                    value={callbackUrl}
+                    onChange={(e) => setCallbackUrl(e.target.value)}
+                    className="w-full p-2 border rounded-md"
+                    disabled={isConnecting}
+                  />
+                </div>
+              </div>
             </CardContent>
-            <CardFooter>
-              <Button 
-                className="w-full" 
+            
+            <CardFooter className="flex justify-between flex-wrap gap-4">
+              <Button
                 variant="outline"
-                onClick={handleConnectToIBKR}
-                disabled={connecting}
+                onClick={handleBackToDashboard}
+                disabled={isConnecting}
               >
-                {connecting ? 'Connecting...' : 'Connect Account'}
+                Back to Dashboard
               </Button>
-            </CardFooter>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">FAQ</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium">Is my data secure?</h3>
-                <p className="text-xs text-muted-foreground">
-                  Yes. We use OAuth2 for authentication and never store your IBKR credentials.
-                </p>
+              
+              <div className="space-x-4">
+                {isConfigured && (
+                  <Button 
+                    variant="secondary" 
+                    onClick={handleTestConnection}
+                    disabled={isConnecting}
+                  >
+                    Test Connection
+                  </Button>
+                )}
+                
+                <Button 
+                  onClick={handleStartAuth} 
+                  disabled={isConnecting || !apiKey}
+                  className="flex items-center"
+                >
+                  {isConnecting ? "Connecting..." : (isConfigured ? "Reconnect" : "Connect to IBKR")}
+                  {!isConnecting && <ArrowRight className="ml-2 h-4 w-4" />}
+                </Button>
               </div>
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium">Can I use paper trading?</h3>
-                <p className="text-xs text-muted-foreground">
-                  Yes, you can connect to either your live IBKR account or paper trading account.
-                </p>
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium">Can I disconnect at any time?</h3>
-                <p className="text-xs text-muted-foreground">
-                  Yes. You can disconnect your IBKR account from the settings page or your IBKR account.
-                </p>
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium">What API permissions are required?</h3>
-                <p className="text-xs text-muted-foreground">
-                  We need read access to your account data and trade execution permissions.
-                </p>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button 
-                variant="ghost" 
-                className="w-full text-xs"
-                onClick={() => ibkrDocumentation.openUserGuide()}
-              >
-                View All FAQs
-              </Button>
             </CardFooter>
           </Card>
         </div>
-      </div>
+      </main>
     </div>
   );
 };

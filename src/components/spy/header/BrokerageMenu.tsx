@@ -23,13 +23,13 @@ export const BrokerageMenu: React.FC = () => {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56 bg-white dark:bg-gray-800 shadow-md">
         <DropdownMenuItem asChild>
-          <Link to="/schwab-integration" className="w-full cursor-pointer">
-            Schwab Connect
+          <Link to="/ibkr-integration" className="w-full cursor-pointer">
+            IBKR Connect
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link to="/ibkr-integration" className="w-full cursor-pointer">
-            IBKR Connect
+          <Link to="/schwab-integration" className="w-full cursor-pointer">
+            Schwab Connect
           </Link>
         </DropdownMenuItem>
       </DropdownMenuContent>
