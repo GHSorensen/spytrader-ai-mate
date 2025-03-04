@@ -32,6 +32,8 @@ export class IBKRDataService {
    */
   async getMarketData(): Promise<SpyMarketData> {
     try {
+      console.log(`Getting market data from IBKR via ${this.connectionMethod}`);
+      
       if (this.connectionMethod === 'tws') {
         return this.twsDataService.getMarketData();
       }
@@ -98,22 +100,11 @@ export class IBKRDataService {
     try {
       console.log(`Getting account data from Interactive Brokers via ${this.connectionMethod}`);
       
-      // For TWS and WebAPI connections, use real implementations once available
       if (this.connectionMethod === 'tws') {
-        // For now using mock data with small differences for demo purposes
-        return {
-          balance: this.config.paperTrading ? 10000 : 25000, // Example account balance
-          dailyPnL: this.config.paperTrading ? 125.75 : 250.25, // Example daily P&L
-          allTimePnL: this.config.paperTrading ? 1250.50 : 2750.75 // Example all-time P&L
-        };
+        return this.twsDataService.getAccountData();
       }
       
-      // WebAPI implementation
-      return {
-        balance: this.config.paperTrading ? 10000 : 15000, // Example account balance
-        dailyPnL: this.config.paperTrading ? 150.25 : 180.50, // Example daily P&L
-        allTimePnL: this.config.paperTrading ? 1500.75 : 1850.25 // Example all-time P&L
-      };
+      return this.webApiDataService.getAccountData();
     } catch (error) {
       console.error("Error fetching account data from Interactive Brokers:", error);
       throw error;
@@ -125,30 +116,13 @@ export class IBKRDataService {
    */
   async placeTrade(order: TradeOrder): Promise<any> {
     try {
-      // In a real implementation, this would place a trade with TWS or Web API
-      // For now, return mock response
-      return {
-        orderId: `ibkr-order-${Date.now()}`,
-        status: 'pending',
-        message: 'Order placed successfully',
-        trade: {
-          id: `ibkr-trade-${Date.now()}`,
-          type: order.symbol.includes('C') ? 'CALL' : 'PUT',
-          strikePrice: parseFloat(order.symbol.split('_')[1] || '500'),
-          expirationDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-          entryPrice: order.limitPrice || 3.45,
-          currentPrice: order.limitPrice || 3.45,
-          targetPrice: (order.limitPrice || 3.45) * 1.3,
-          stopLoss: (order.limitPrice || 3.45) * 0.7,
-          quantity: order.quantity,
-          status: "pending",
-          openedAt: new Date(),
-          profit: 0,
-          profitPercentage: 0,
-          confidenceScore: 0.75,
-          paperTrading: this.config.paperTrading || false
-        }
-      };
+      console.log(`Placing trade with Interactive Brokers via ${this.connectionMethod}`);
+      
+      if (this.connectionMethod === 'tws') {
+        return this.twsDataService.placeTrade(order);
+      }
+      
+      return this.webApiDataService.placeTrade(order);
     } catch (error) {
       console.error("Error placing trade with Interactive Brokers:", error);
       throw error;

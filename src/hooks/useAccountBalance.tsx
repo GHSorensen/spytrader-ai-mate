@@ -10,6 +10,7 @@ export const useAccountBalance = () => {
     allTimePnL: 0
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   useEffect(() => {
     const fetchAccountData = async () => {
@@ -19,7 +20,13 @@ export const useAccountBalance = () => {
         
         // Ensure provider is connected
         if (!provider.isConnected()) {
-          await provider.connect();
+          console.log('Provider not connected, attempting to connect...');
+          const connected = await provider.connect();
+          if (!connected) {
+            console.warn('Could not connect to data provider');
+            setIsLoading(false);
+            return;
+          }
         }
         
         // Check if the provider implements getAccountData
@@ -27,7 +34,13 @@ export const useAccountBalance = () => {
           console.log('Fetching account balance from provider...');
           const data = await provider.getAccountData();
           console.log('Account data received:', data);
-          setAccountData(data);
+          
+          if (data) {
+            setAccountData(data);
+            setLastUpdated(new Date());
+          } else {
+            console.warn('Received null or undefined account data');
+          }
         } else {
           console.warn('Data provider does not implement getAccountData method');
           // Use default values
@@ -53,5 +66,9 @@ export const useAccountBalance = () => {
     return () => clearInterval(intervalId);
   }, []);
 
-  return { ...accountData, isLoading };
+  return { 
+    ...accountData, 
+    isLoading,
+    lastUpdated
+  };
 };
