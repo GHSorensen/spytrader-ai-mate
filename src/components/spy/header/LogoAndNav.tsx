@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { Search } from 'lucide-react';
 
 interface LogoAndNavProps {
   minimal?: boolean;
@@ -9,8 +10,12 @@ interface LogoAndNavProps {
 export const LogoAndNav: React.FC<LogoAndNavProps> = ({ minimal = false }) => {
   return (
     <div className="flex items-center gap-6">
-      <Link to="/" className="flex items-center space-x-2">
-        <span className="font-bold text-xl text-primary">SPY Trading AI</span>
+      <Link to="/" className="flex flex-col items-start">
+        <div className="flex items-center gap-1">
+          <span className="font-bold text-xl text-primary">Spy</span>
+          <Search className="h-5 w-5 text-primary" />
+        </div>
+        <span className="text-xs text-muted-foreground leading-tight">Advanced Trading AI</span>
       </Link>
       
       {!minimal && (
