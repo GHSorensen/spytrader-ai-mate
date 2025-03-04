@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { SpyOverview } from './spy/SpyOverview';
 import { AccountBalance } from './spy/AccountBalance';
@@ -9,9 +10,10 @@ import { ArrowRight, ArrowDownSquare, BarChart2, LineChart, Shield } from 'lucid
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { useAccountBalance } from '@/hooks/useAccountBalance';
+import { format } from 'date-fns';
 
 const Dashboard: React.FC = () => {
-  const accountData = useAccountBalance();
+  const { balance, dailyPnL, allTimePnL, isLoading, lastUpdated, error } = useAccountBalance();
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -22,9 +24,12 @@ const Dashboard: React.FC = () => {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <div className="lg:col-span-1">
           <AccountBalance 
-            balance={accountData.balance} 
-            dailyPnL={accountData.dailyPnL} 
-            allTimePnL={accountData.allTimePnL}
+            balance={balance} 
+            dailyPnL={dailyPnL} 
+            allTimePnL={allTimePnL}
+            isLoading={isLoading}
+            lastUpdated={lastUpdated ? format(lastUpdated, 'h:mm:ss a') : undefined}
+            error={error}
           />
         </div>
         
