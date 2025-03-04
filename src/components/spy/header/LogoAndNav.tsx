@@ -2,6 +2,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Search } from 'lucide-react';
+import { BrokerageMenu } from './BrokerageMenu';
+import { GuidesMenu } from './GuidesMenu';
 
 interface LogoAndNavProps {
   minimal?: boolean;
@@ -19,14 +21,16 @@ export const LogoAndNav: React.FC<LogoAndNavProps> = ({ minimal = false }) => {
       </Link>
       
       {!minimal && (
-        <nav className="hidden md:flex gap-4">
+        <nav className="hidden md:flex items-center gap-4">
           <Link to="/" className="text-muted-foreground hover:text-foreground">Dashboard</Link>
           <Link to="/trades" className="text-muted-foreground hover:text-foreground">Trades</Link>
           <Link to="/performance" className="text-muted-foreground hover:text-foreground">Performance</Link>
           <Link to="/detailed-performance" className="text-muted-foreground hover:text-foreground">Analytics</Link>
           <Link to="/risk-console" className="text-muted-foreground hover:text-foreground">Risk Console</Link>
-          <Link to="/schwab-integration" className="text-muted-foreground hover:text-foreground">Schwab Connect</Link>
-          <Link to="/ibkr-integration" className="text-muted-foreground hover:text-foreground">IBKR Connect</Link>
+          <div className="flex items-center gap-2">
+            <BrokerageMenu />
+            <GuidesMenu />
+          </div>
         </nav>
       )}
     </div>
