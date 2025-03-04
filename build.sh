@@ -39,65 +39,40 @@ npm --version
 export PATH="$PATH:/usr/local/bin:/usr/bin"
 which npm || { echo "npm not found in PATH"; exit 1; }
 
-# Clear npm cache to avoid any cache-related issues
+# Clear npm cache and remove node_modules to start fresh
+echo "Cleaning existing dependencies..."
 npm cache clean --force || true
+rm -rf node_modules || true
 
-# Install dependencies - do not use global installs due to read-only filesystem
-echo "Installing express..."
-npm install express --no-audit --no-fund --no-optional
+# Install core dependencies first
+echo "Installing core dependencies..."
+npm install --no-audit --no-fund --no-optional
 
-echo "Installing Vite and React dependencies..."
+# Explicitly install vite and related packages
+echo "Installing Vite and related packages..."
 npm install vite@latest --no-audit --no-fund --no-optional --force
 npm install @vitejs/plugin-react-swc@latest --no-audit --no-fund --no-optional --force
 npm install react react-dom @tanstack/react-query --no-audit --no-fund --no-optional --force
 
-echo "Installing all dependencies..."
-npm install --no-audit --no-fund --no-optional --force
+# Verify vite is installed in node_modules
+echo "Verifying vite installation..."
+ls -la node_modules/vite || echo "Vite not found in node_modules"
 
-# Run the build process with multiple fallbacks
+# Add a local bin folder and symlink vite
+echo "Creating local vite binary..."
+mkdir -p ./node_bin
+NODE_BIN_PATH=$(pwd)/node_bin
+ln -sf $(pwd)/node_modules/.bin/vite $NODE_BIN_PATH/vite
+chmod +x $NODE_BIN_PATH/vite
+export PATH="$NODE_BIN_PATH:$PATH"
+
+# Run the build process
 echo "Starting build process..."
-
-# Simplify vite.config.ts temporarily to a minimal version if build fails
-if ! npx vite build; then
-  echo "Initial build failed, trying with simplified config..."
-  # Create a backup of the original config
-  cp vite.config.ts vite.config.ts.bak
-  
-  # Write a simplified config
-  cat > vite.config.ts <<EOF
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react-swc'
-import path from 'path'
-
-export default defineConfig({
-  plugins: [react()],
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
-  },
-  build: {
-    outDir: 'dist',
-  }
-})
-EOF
-  
-  # Try build with simplified config
-  if npx vite build; then
-    echo "Build succeeded with simplified config."
-  else
-    # Restore original config if simplified also fails
-    mv vite.config.ts.bak vite.config.ts
-    
-    # Try with npm run build
-    npm run build || \
-    # Try with NODE_ENV explicitly set
-    NODE_ENV=production npx vite build || \
-    # Last resort - use direct npx command with debug flags
-    npx --no-install vite build --debug
-  fi
+if $NODE_BIN_PATH/vite build; then
+  echo "Build succeeded with direct vite binary."
 else
-  echo "Build succeeded with original config."
+  echo "Build failed, trying with npx..."
+  npx vite build || NODE_ENV=production npx vite build --debug
 fi
 
 # Create a marker file to indicate this is a Node.js project
