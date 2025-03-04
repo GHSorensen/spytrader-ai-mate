@@ -30,5 +30,9 @@ export default defineConfig(({ mode }) => ({
     outDir: 'dist',
     sourcemap: true,
     chunkSizeWarningLimit: 1600,
+    rollupOptions: {
+      // Ensure external dependencies are properly handled
+      external: [],
+    }
   }
 }));

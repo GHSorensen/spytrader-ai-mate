@@ -39,20 +39,24 @@ npm --version
 export PATH="$PATH:/usr/local/bin:/usr/bin"
 which npm || { echo "npm not found in PATH. Installing..."; curl -L https://www.npmjs.com/install.sh | sh; }
 
+# Install vite globally first to ensure it's available for the build command
+npm install -g vite
+
 # First install express to ensure the server can run
 npm install express --no-audit --no-fund
 
-# Install core dependencies first to help resolve conflicts
-npm install react react-dom @tanstack/react-query vite @vitejs/plugin-react-swc --force --no-audit --no-fund
+# Install core dependencies first (especially vite and its plugin)
+npm install vite @vitejs/plugin-react-swc --force --no-audit --no-fund
+
+# Then install React and other core dependencies
+npm install react react-dom @tanstack/react-query --force --no-audit --no-fund
 
 # Then install ALL dependencies with --force to bypass peer dependency conflicts
 npm install --force --no-audit --no-fund
 
-# Ensure Vite is available for the build
-npx vite --version || npm install vite @vitejs/plugin-react-swc --force --no-audit --no-fund
-
-# Run the build process with --force flag
-npm run build --force || npx vite build
+# Run the build process - try multiple approaches
+echo "Starting build process..."
+npx vite build || npm run build --force || NODE_ENV=production vite build
 
 # Create a marker file to indicate this is a Node.js project
 touch .node-project
