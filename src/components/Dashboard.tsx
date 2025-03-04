@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { SpyOverview } from './spy/SpyOverview';
 import { AccountBalance } from './spy/AccountBalance';
@@ -9,14 +8,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowRight, ArrowDownSquare, BarChart2, LineChart, Shield } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
+import { useAccountBalance } from '@/hooks/useAccountBalance';
 
 const Dashboard: React.FC = () => {
-  // Using the account balance of $1600 as specified
-  const accountData = {
-    balance: 1600, 
-    dailyPnL: 0,
-    allTimePnL: 0,
-  };
+  const accountData = useAccountBalance();
 
   return (
     <div className="container mx-auto py-6 space-y-6">

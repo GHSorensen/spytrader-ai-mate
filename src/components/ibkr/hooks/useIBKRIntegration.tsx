@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
@@ -71,9 +70,9 @@ export function useIBKRIntegration() {
       const reconnectInterval = setInterval(() => {
         console.log("Attempting to reconnect to TWS...");
         setIsConnecting(true);
+        setConnectionStatus('connecting');
         
         // This would trigger a reconnection attempt
-        // In a real implementation, you would call your connection service
         toast.info("Attempting to reconnect to TWS...");
         
         // Reset the connecting state after a timeout if no connection established
