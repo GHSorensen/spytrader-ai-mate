@@ -10,12 +10,14 @@ import { toast } from 'sonner';
 
 export interface HeaderActionsProps {
   userName?: string;
-  setIsAISettingsOpen?: (open: boolean) => void; 
+  setIsAISettingsOpen?: (open: boolean) => void;
+  isAuthenticated?: boolean;
 }
 
 export const HeaderActions: React.FC<HeaderActionsProps> = ({ 
   userName = "User",
-  setIsAISettingsOpen 
+  setIsAISettingsOpen,
+  isAuthenticated = false
 }) => {
   const navigate = useNavigate();
   // Extract first letter of username for the badge
@@ -31,28 +33,6 @@ export const HeaderActions: React.FC<HeaderActionsProps> = ({
       toast.error('Failed to sign out');
     }
   };
-
-  // Check if we have a session (authenticated user)
-  const [isAuthenticated, setIsAuthenticated] = React.useState<boolean>(false);
-  
-  React.useEffect(() => {
-    // Check authentication status on mount
-    const checkAuth = async () => {
-      const { data } = await supabase.auth.getSession();
-      setIsAuthenticated(!!data.session);
-    };
-    
-    checkAuth();
-    
-    // Set up auth state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setIsAuthenticated(!!session);
-    });
-    
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
 
   return (
     <div className="flex items-center gap-2">

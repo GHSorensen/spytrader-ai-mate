@@ -19,11 +19,14 @@ export const SpyHeaderWithNotifications: React.FC<SpyHeaderWithNotificationsProp
   // Display actual user name if available, otherwise fallback to defaults
   const [userName, setUserName] = useState<string>(userProfile?.username || userProfile?.name || "User");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   
   // Check for session on component mount
   useEffect(() => {
     const fetchUserSession = async () => {
       const { data } = await supabase.auth.getSession();
+      setIsAuthenticated(!!data.session);
+      
       if (data.session?.user?.email && (!userProfile || !userProfile.username)) {
         setUserName(data.session.user.email.split('@')[0] || "User");
       }
@@ -33,6 +36,8 @@ export const SpyHeaderWithNotifications: React.FC<SpyHeaderWithNotificationsProp
     
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsAuthenticated(!!session);
+      
       if (session?.user?.email) {
         setUserName(session.user.email.split('@')[0] || "User");
       } else {
@@ -51,6 +56,7 @@ export const SpyHeaderWithNotifications: React.FC<SpyHeaderWithNotificationsProp
       <HeaderActions 
         userName={userName} 
         setIsAISettingsOpen={setIsAISettingsOpen}
+        isAuthenticated={isAuthenticated}
       />
       <MobileMenu 
         isMobileMenuOpen={isMobileMenuOpen}

@@ -2,122 +2,89 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button"; 
 import { RiskHeader } from '../components/spy/risk-console/RiskHeader';
-import { MainTabs } from '../components/spy/risk-console/MainTabs';
 import { Footer } from '../components/spy/risk-console/Footer';
 import { DemoNotifications } from '../components/spy/risk-console/DemoNotifications';
-import { useRiskMonitoring } from '../hooks/useRiskMonitoring';
 import { AITradingSettings, RiskToleranceType } from '@/lib/types/spy';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeftIcon } from 'lucide-react';
-import { RiskSignal, StatisticalAnomaly } from '@/lib/types/spy/riskMonitoring';
+import { RiskSignal, RiskAction, LearningInsight, StatisticalAnomaly } from '@/lib/types/spy/riskMonitoring';
+import { RiskInsights } from '@/components/spy/settings/risk/RiskInsights';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const RiskConsole: React.FC = () => {
   const navigate = useNavigate();
   
-  // Updated to match the AITradingSettings type structure
-  const defaultSettings: AITradingSettings = {
-    enabledStrategies: ['moderate'],
-    maxSimultaneousTrades: 3,
-    maxDailyTrades: 5,
-    autoAdjustVolatility: true,
-    useMarketSentiment: true,
-    considerEarningsEvents: true,
-    considerFedMeetings: true,
-    enableHedging: false,
-    minimumConfidenceScore: 0.65,
-    preferredTimeOfDay: 'any',
-    adaptivePositionSizing: false,
-    advancedTechnicalAnalysis: true,
-    technicalFundamentalBalance: 60,
-    shortLongTimeframeBalance: 50,
-    maxCapitalDeployment: 70,
-    autoPositionScaling: false,
-    smartProfitTaking: true,
-    considerEconomicData: true,
-    considerGeopoliticalEvents: false,
-    dailyLossLimitPct: 2,
-    volatilityThreshold: 25,
-    positionSizing: {
-      type: 'percentage',
-      value: 5,
-    },
-    stopLossSettings: {
-      enabled: true,
-      type: 'percentage',
-      value: 25,
-    },
-    takeProfitSettings: {
-      enabled: true,
-      type: 'risk-reward',
-      value: 2,
-    },
-    marketConditionOverrides: {
-      volatile: {
-        enabled: true,
-        adjustedRisk: 0.5,
-      }
-    },
-    backtestingSettings: {
-      startDate: new Date(new Date().getFullYear() - 10, 0, 1),
-      endDate: new Date(),
-      initialCapital: 100000,
-      dataSource: 'alpha-vantage',
-      includeCommissions: true,
-      commissionPerTrade: 0.65,
-      includeTaxes: false,
-      taxRate: 0.25,
-    }
-  };
-  
-  const currentRiskTolerance: RiskToleranceType = 'moderate';
-  
-  const { 
-    performRiskMonitoring, 
-    isLoading,
-    latestSignals,
-    latestActions,
-    learningInsights,
-    currentRiskProfile,
-    activeTrades,
-    autoMode,
-    toggleAutoMode 
-  } = useRiskMonitoring(defaultSettings, currentRiskTolerance);
-  
-  // Generate some mock signals for demonstration
+  // State for risk data
+  const [isLoading, setIsLoading] = useState(false);
   const [riskSignals, setRiskSignals] = useState<RiskSignal[]>([]);
+  const [riskActions, setRiskActions] = useState<RiskAction[]>([]);
+  const [learningInsights, setLearningInsights] = useState<LearningInsight[]>([]);
   const [anomalies, setAnomalies] = useState<StatisticalAnomaly[]>([]);
   const [lastDetectionTime, setLastDetectionTime] = useState<Date>(new Date());
+  const [autoMode, setAutoMode] = useState(false);
   
   // Initialize with sample data
   useEffect(() => {
-    if (!latestSignals?.length) {
-      // This will ensure we at least have some data to display
-      const mockSignals: RiskSignal[] = [
-        {
-          id: 'signal-1',
-          timestamp: new Date(),
-          source: 'volatility',
-          condition: 'volatile',
-          strength: 'strong',
-          direction: 'bearish',
-          description: 'VIX spike detected above normal thresholds',
-          confidence: 0.85
+    // This will ensure we have some data to display
+    const mockSignals: RiskSignal[] = [
+      {
+        id: 'signal-1',
+        timestamp: new Date(),
+        source: 'volatility',
+        condition: 'volatile',
+        strength: 'strong',
+        direction: 'bearish',
+        description: 'VIX spike detected above normal thresholds',
+        confidence: 0.85
+      },
+      {
+        id: 'signal-2',
+        timestamp: new Date(Date.now() - 15 * 60 * 1000),
+        source: 'price',
+        condition: 'trending',
+        strength: 'moderate',
+        direction: 'bearish',
+        description: 'SPY price falling below 50-day moving average',
+        confidence: 0.72
+      }
+    ];
+    
+    // Mock actions
+    const mockActions: RiskAction[] = [
+      {
+        id: 'action-1',
+        signalId: 'signal-1',
+        timestamp: new Date(),
+        type: 'reduce_position_size',
+        tradeIds: ['trade-123', 'trade-456'],
+        description: 'Reduce position size for 2 CALL trades based on bearish volatility signal',
+        parameters: {
+          signalStrength: 'strong',
+          signalDescription: 'VIX spike detected above normal thresholds'
         },
-        {
-          id: 'signal-2',
-          timestamp: new Date(Date.now() - 15 * 60 * 1000),
-          source: 'price',
-          condition: 'trending',
-          strength: 'moderate',
-          direction: 'bearish',
-          description: 'SPY price falling below 50-day moving average',
-          confidence: 0.72
-        }
-      ];
-      setRiskSignals(mockSignals);
-    } else {
-      setRiskSignals(latestSignals);
-    }
+        expectedImpact: {
+          profitPotential: 0,
+          riskReduction: 50
+        },
+        previousRisk: 1.0,
+        newRisk: 0.5,
+        userRiskTolerance: 'moderate'
+      }
+    ];
+    
+    // Mock insights
+    const mockInsights: LearningInsight[] = [
+      {
+        id: 'insight-1',
+        timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+        signalSource: 'volatility',
+        actionType: 'reduce_position_size',
+        effectiveness: 0.8,
+        description: 'Reducing position size during volatility spikes has been 80% effective',
+        confidence: 0.75
+      }
+    ];
     
     // Mock anomalies
     const mockAnomalies: StatisticalAnomaly[] = [
@@ -136,8 +103,27 @@ const RiskConsole: React.FC = () => {
         description: 'Abnormal volatility expansion detected'
       }
     ];
+    
+    setRiskSignals(mockSignals);
+    setRiskActions(mockActions);
+    setLearningInsights(mockInsights);
     setAnomalies(mockAnomalies);
-  }, [latestSignals]);
+  }, []);
+  
+  const performRiskMonitoring = () => {
+    setIsLoading(true);
+    
+    // Simulate a loading delay
+    setTimeout(() => {
+      setIsLoading(false);
+      setLastDetectionTime(new Date());
+      // In a real implementation, this would fetch new data
+    }, 1500);
+  };
+  
+  const toggleAutoMode = () => {
+    setAutoMode(!autoMode);
+  };
   
   const handleReturnToDashboard = () => {
     navigate('/dashboard');
@@ -153,15 +139,48 @@ const RiskConsole: React.FC = () => {
           performRiskMonitoring={performRiskMonitoring}
         />
         
-        <MainTabs 
-          isLoading={isLoading}
-          latestSignals={latestSignals || []}
-          latestActions={latestActions || []}
-          learningInsights={learningInsights || []}
-          anomalies={anomalies}
-          lastDetectionTime={lastDetectionTime}
-          riskSignals={riskSignals}
-        />
+        <Tabs defaultValue="insights" className="mb-6">
+          <TabsList>
+            <TabsTrigger value="insights">Risk Insights</TabsTrigger>
+            <TabsTrigger value="positions">Active Positions</TabsTrigger>
+            <TabsTrigger value="history">Analysis History</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="insights" className="mt-4">
+            <RiskInsights 
+              signals={riskSignals}
+              actions={riskActions}
+              insights={learningInsights}
+              anomalies={anomalies}
+              lastAnomalyDetectionTime={lastDetectionTime}
+              isLoading={isLoading}
+            />
+          </TabsContent>
+          
+          <TabsContent value="positions" className="mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Active Positions</CardTitle>
+                <CardDescription>Monitor your current risk exposure</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">Position risk monitoring coming soon</p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="history" className="mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Analysis History</CardTitle>
+                <CardDescription>Past analysis results and performance</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">Risk analysis history coming soon</p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
         
         <div className="mt-auto">
           <div className="flex justify-end mb-4">

@@ -31,7 +31,7 @@ export const ActionsSection: React.FC<ActionsSectionProps> = ({
     );
   }
   
-  if (displayActions.length === 0) {
+  if (!displayActions || displayActions.length === 0) {
     return (
       <div className="space-y-2">
         <h3 className="text-lg font-medium">Recommended Actions</h3>
