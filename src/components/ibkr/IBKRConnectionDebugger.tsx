@@ -45,16 +45,13 @@ const IBKRConnectionDebugger: React.FC = () => {
         toast.error('Connection test failed');
       }
     } catch (error) {
+      console.error('Connection test error:', error);
       setConnectionStatus('error');
       setDiagnosticResults({ error: error instanceof Error ? error.message : String(error) });
       toast.error('Connection test error: ' + (error instanceof Error ? error.message : 'Unknown error'));
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleTestConnection = () => {
-    runConnectionTest();
   };
 
   return (
@@ -105,7 +102,7 @@ const IBKRConnectionDebugger: React.FC = () => {
         </div>
         
         <Button 
-          onClick={handleTestConnection}
+          onClick={runConnectionTest}
           disabled={isLoading} 
           className="w-full mb-6"
         >

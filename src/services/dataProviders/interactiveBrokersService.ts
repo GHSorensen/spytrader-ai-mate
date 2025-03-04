@@ -35,6 +35,11 @@ export class InteractiveBrokersService {
       connected: this.connected,
       config: {
         ...this.config,
+        // Ensure we're not exposing sensitive data
+        apiKey: this.config.apiKey ? '***********' : undefined,
+        secretKey: this.config.secretKey ? '***********' : undefined,
+        accessToken: this.config.accessToken ? '***********' : undefined,
+        refreshToken: this.config.refreshToken ? '***********' : undefined
       },
       lastError: this.lastError,
       timestamp: new Date().toISOString()
