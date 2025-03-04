@@ -31,3 +31,31 @@ services:
         value: "false"
     healthCheckPath: /health
     autoDeploy: true
+    # Added resource allocation to ensure adequate resources for Node.js
+    plan: starter
+    # Adjusted build settings
+    buildFilter:
+      paths:
+        - src/**
+        - public/**
+        - server.js
+        - build.sh
+        - vite.config.ts
+        - package.json
+        - tsconfig*.json
+    # Added scaling configuration
+    scaling:
+      minInstances: 1
+      maxInstances: 1
+      targetMemoryPercent: 80
+    # Added headers for CORS and caching
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: max-age=86400
+      - path: /assets/*
+        name: Cache-Control
+        value: max-age=31536000
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
