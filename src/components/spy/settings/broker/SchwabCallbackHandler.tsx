@@ -71,6 +71,7 @@ export const SchwabCallbackHandler: React.FC = () => {
               toast({
                 title: 'Connection Successful',
                 description: 'Your Schwab account has been successfully connected.',
+                variant: 'success'
               });
               trackEvent('broker_connection_success', { broker: 'schwab' });
             } else {
@@ -129,7 +130,7 @@ export const SchwabCallbackHandler: React.FC = () => {
   };
   
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-50">
+    <div className="flex justify-center items-center min-h-screen bg-gray-50 p-4">
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

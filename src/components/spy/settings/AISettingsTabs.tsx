@@ -16,23 +16,23 @@ export const AISettingsTabs: React.FC<AISettingsTabsProps> = ({
     <>
       {/* Mobile tabs (vertical stack) */}
       <TabsList className="flex flex-col space-y-1 w-full md:hidden">
-        <TabsTrigger value="strategy" className="justify-start">
+        <TabsTrigger value="strategy" className="w-full justify-start p-3">
           <Shield className={`h-4 w-4 mr-2 ${activeTab === 'strategy' ? 'text-primary' : ''}`} />
           Strategy
         </TabsTrigger>
-        <TabsTrigger value="risk" className="justify-start">
+        <TabsTrigger value="risk" className="w-full justify-start p-3">
           <Settings className={`h-4 w-4 mr-2 ${activeTab === 'risk' ? 'text-primary' : ''}`} />
           Risk Management
         </TabsTrigger>
-        <TabsTrigger value="market" className="justify-start">
+        <TabsTrigger value="market" className="w-full justify-start p-3">
           <BarChart4 className={`h-4 w-4 mr-2 ${activeTab === 'market' ? 'text-primary' : ''}`} />
           Market Conditions
         </TabsTrigger>
-        <TabsTrigger value="backtest" className="justify-start">
+        <TabsTrigger value="backtest" className="w-full justify-start p-3">
           <LineChart className={`h-4 w-4 mr-2 ${activeTab === 'backtest' ? 'text-primary' : ''}`} />
           Backtesting
         </TabsTrigger>
-        <TabsTrigger value="advanced" className="justify-start">
+        <TabsTrigger value="advanced" className="w-full justify-start p-3">
           <Sliders className={`h-4 w-4 mr-2 ${activeTab === 'advanced' ? 'text-primary' : ''}`} />
           Advanced
         </TabsTrigger>

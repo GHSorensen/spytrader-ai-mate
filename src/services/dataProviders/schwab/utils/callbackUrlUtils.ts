@@ -32,7 +32,7 @@ export function ensureSecureCallbackUrl(config: DataProviderConfig): string {
   // Show a toast to notify the user about the callback URL
   try {
     if (window.toast) {
-      toast({
+      window.toast.add({
         title: "Callback URL Notice",
         description: `Using ${secureCallbackUrl} for Schwab authentication.`,
       });

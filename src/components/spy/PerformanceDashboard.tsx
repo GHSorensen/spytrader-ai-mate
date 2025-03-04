@@ -39,17 +39,17 @@ const PerformanceDashboard = () => {
   };
 
   return (
-    <div className="w-full space-y-4">
+    <div className="w-full space-y-4 px-2 sm:px-4">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Performance Dashboard</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Performance Dashboard</h2>
+          <p className="text-muted-foreground text-sm md:text-base">
             Analyze your trading performance and strategy effectiveness
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full md:w-auto">
           <Select value={timeFrame} onValueChange={handleTimeFrameChange}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-full md:w-[180px]">
               <SelectValue placeholder="Select time frame" />
             </SelectTrigger>
             <SelectContent>
@@ -67,7 +67,7 @@ const PerformanceDashboard = () => {
       </div>
       
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid grid-cols-4 md:w-[600px] mb-4">
+        <TabsList className="grid grid-cols-2 md:grid-cols-4 mb-4 w-full">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="trades">Trade Analysis</TabsTrigger>
           <TabsTrigger value="drawdowns">Drawdowns</TabsTrigger>
