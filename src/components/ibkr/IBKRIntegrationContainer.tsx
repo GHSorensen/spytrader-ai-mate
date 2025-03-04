@@ -3,8 +3,11 @@ import React from 'react';
 import IBKRIntegrationView from './IBKRIntegrationView';
 import { useIBKRIntegration } from './hooks/useIBKRIntegration';
 import { useIBKRHandlers } from './hooks/useIBKRHandlers';
+import { useNavigate } from 'react-router-dom';
 
 const IBKRIntegrationContainer: React.FC = () => {
+  const navigate = useNavigate(); // Use the actual navigate function from react-router-dom
+  
   const {
     isConnecting,
     setIsConnecting,
@@ -23,8 +26,7 @@ const IBKRIntegrationContainer: React.FC = () => {
     isConfigured,
     setIsConfigured,
     connectionStatus,
-    setConnectionStatus,
-    navigate
+    setConnectionStatus
   } = useIBKRIntegration();
   
   const {
@@ -41,7 +43,7 @@ const IBKRIntegrationContainer: React.FC = () => {
     setIsConnecting,
     setConnectionStatus,
     setIsConfigured,
-    navigate
+    navigate // Pass the navigate function from react-router-dom directly
   });
 
   return (
