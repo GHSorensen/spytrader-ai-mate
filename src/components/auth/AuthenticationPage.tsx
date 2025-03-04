@@ -40,9 +40,10 @@ const AuthenticationPage: React.FC = () => {
     
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state changed:", event);
+      console.log("Auth state changed:", event, session);
       
       if (event === 'SIGNED_IN' && session) {
+        console.log("User signed in, redirecting to dashboard");
         navigate('/dashboard');
         toast.success('Successfully logged in');
       }
@@ -62,6 +63,11 @@ const AuthenticationPage: React.FC = () => {
   // Allow switching between signup and login programmatically
   const switchToLogin = () => {
     setDefaultTab('login');
+  };
+
+  const handleSignupSuccess = () => {
+    // This will now be handled by the onAuthStateChange listener
+    console.log("Signup successful, auth state change should redirect");
   };
   
   return (
@@ -92,7 +98,8 @@ const AuthenticationPage: React.FC = () => {
                 <div className="space-y-4">
                   <SignupForm 
                     isLoading={isLoading} 
-                    setIsLoading={setIsLoading} 
+                    setIsLoading={setIsLoading}
+                    onSignupSuccess={handleSignupSuccess}
                   />
                 </div>
               </TabsContent>

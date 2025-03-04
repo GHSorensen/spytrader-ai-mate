@@ -9,9 +9,10 @@ import { supabase } from '@/integrations/supabase/client';
 interface SignupFormProps {
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
+  onSignupSuccess?: () => void;
 }
 
-const SignupForm: React.FC<SignupFormProps> = ({ isLoading, setIsLoading }) => {
+const SignupForm: React.FC<SignupFormProps> = ({ isLoading, setIsLoading, onSignupSuccess }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -37,9 +38,11 @@ const SignupForm: React.FC<SignupFormProps> = ({ isLoading, setIsLoading }) => {
     setIsLoading(true);
     
     try {
+      console.log("Attempting to sign up with email:", email);
+      
       const { data, error } = await supabase.auth.signUp({
-        email: email,
-        password: password,
+        email,
+        password,
         options: {
           data: {
             full_name: name,
@@ -52,6 +55,8 @@ const SignupForm: React.FC<SignupFormProps> = ({ isLoading, setIsLoading }) => {
         throw error;
       }
       
+      console.log("Sign up response:", data);
+      
       if (data?.user) {
         toast.success('Account created successfully! Please check your email for verification.');
         console.log("User created:", data.user);
@@ -62,6 +67,9 @@ const SignupForm: React.FC<SignupFormProps> = ({ isLoading, setIsLoading }) => {
         } else {
           // If no email confirmation is needed, we can consider the user signed in
           toast.success('Account created and logged in successfully!');
+          if (onSignupSuccess) {
+            onSignupSuccess();
+          }
         }
       }
     } catch (error: any) {

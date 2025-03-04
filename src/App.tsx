@@ -1,6 +1,6 @@
 
-import React, { useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import Dashboard from './components/Dashboard';
 import TradeAutomation from './components/TradeAutomation';
 import NotFound from './pages/NotFound';
@@ -16,8 +16,29 @@ import { Toaster } from './components/ui/toaster';
 import { toast } from './hooks/use-toast';
 import AuthenticationPage from './components/auth/AuthenticationPage';
 import UserProfilePage from './components/auth/UserProfilePage';
+import { supabase } from './integrations/supabase/client';
 
 function App() {
+  const [session, setSession] = useState(null);
+  const navigate = useNavigate();
+
+  // Set up auth state monitoring
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      console.log("Initial session check:", session ? "Authenticated" : "Not authenticated");
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log("Auth state changed:", _event, session);
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   // Set up initial notifications on app load
   useEffect(() => {
     try {
@@ -62,6 +83,7 @@ function App() {
         <Route path="/schwab-integration" element={<SchwabIntegrationPage />} />
         <Route path="/auth" element={<AuthenticationPage />} />
         <Route path="/profile" element={<UserProfilePage />} />
+        <Route path="/not-found" element={<NotFound />} />
         <Route path="*" element={<Navigate to="/not-found" replace />} />
       </Routes>
       <Toaster />
