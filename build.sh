@@ -1,8 +1,9 @@
 
 #!/bin/bash
 
-# Exit on error
+# Exit on error and print commands being executed
 set -e
+set -x
 
 # AGGRESSIVELY prevent Python-related build steps
 export POETRY_VIRTUALENVS_CREATE=false
@@ -34,17 +35,24 @@ node --version
 echo "NPM version:"
 npm --version
 
+# Explicitly make npm available
+export PATH="$PATH:/usr/local/bin:/usr/bin"
+which npm || { echo "npm not found in PATH. Installing..."; curl -L https://www.npmjs.com/install.sh | sh; }
+
 # First install express to ensure the server can run
-npm install express
+npm install express --no-audit --no-fund
 
 # Install core dependencies first to help resolve conflicts
-npm install react react-dom @tanstack/react-query vite @vitejs/plugin-react-swc --force
+npm install react react-dom @tanstack/react-query vite @vitejs/plugin-react-swc --force --no-audit --no-fund
 
 # Then install ALL dependencies with --force to bypass peer dependency conflicts
-npm install --force
+npm install --force --no-audit --no-fund
+
+# Ensure Vite is available for the build
+npx vite --version || npm install vite @vitejs/plugin-react-swc --force --no-audit --no-fund
 
 # Run the build process with --force flag
-npm run build --force
+npm run build --force || npx vite build
 
 # Create a marker file to indicate this is a Node.js project
 touch .node-project
