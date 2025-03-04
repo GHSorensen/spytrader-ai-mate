@@ -1,4 +1,3 @@
-
 import { DataProviderConfig, DataProviderStatus, TradeOrder } from "@/lib/types/spy/dataProvider";
 import { SpyMarketData, SpyOption, SpyTrade } from "@/lib/types/spy";
 import { IBKRConnectionManager } from "../IBKRConnectionManager";
@@ -80,6 +79,27 @@ export class IBKRCoreService extends BaseDataProvider {
     this.status.connected = false;
     this.status.lastUpdated = new Date();
     this.status.errorMessage = error instanceof Error ? error.message : "Unknown error";
+  }
+  
+  /**
+   * Get current status
+   */
+  getStatus(): DataProviderStatus {
+    return this.status;
+  }
+  
+  /**
+   * Get current access token
+   */
+  getAccessToken(): string | null {
+    return this.accessToken;
+  }
+  
+  /**
+   * Get token expiry
+   */
+  getTokenExpiry(): Date | null {
+    return this.tokenExpiry;
   }
   
   /**
