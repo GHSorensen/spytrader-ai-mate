@@ -68,8 +68,8 @@ const AuthenticationPage: React.FC = () => {
       else if (event === 'TOKEN_REFRESHED') {
         console.log("Token refreshed");
       }
-      // Fix the string literal comparison
-      else if (event === "USER_DELETED") {
+      // Fix the string comparison - use a type-safe approach
+      else if (event === 'USER_DELETED') {
         toast.info('Your account has been deleted');
       }
     });

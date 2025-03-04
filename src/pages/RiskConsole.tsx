@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { RiskHeader } from '../components/spy/risk-console/RiskHeader';
 import { MainTabs } from '../components/spy/risk-console/MainTabs';
@@ -9,12 +10,59 @@ import { AITradingSettings, RiskToleranceType } from '@/lib/types/spy';
 const RiskConsole: React.FC = () => {
   const [autoMode, setAutoMode] = useState(false);
   
+  // Updated to match the AITradingSettings type structure 
+  // from src/components/spy/settings/AISettingsTypes.ts
   const defaultSettings: AITradingSettings = {
-    riskManagement: {
-      stopLossPercentage: 15,
-      takeProfitPercentage: 30,
-      maxPositionSize: 10,
-      maxDrawdown: 25
+    enabledStrategies: ['moderate'],
+    maxSimultaneousTrades: 3,
+    maxDailyTrades: 5,
+    autoAdjustVolatility: true,
+    useMarketSentiment: true,
+    considerEarningsEvents: true,
+    considerFedMeetings: true,
+    enableHedging: false,
+    minimumConfidenceScore: 0.65,
+    preferredTimeOfDay: 'any',
+    adaptivePositionSizing: false,
+    advancedTechnicalAnalysis: true,
+    technicalFundamentalBalance: 60,
+    shortLongTimeframeBalance: 50,
+    maxCapitalDeployment: 70,
+    autoPositionScaling: false,
+    smartProfitTaking: true,
+    considerEconomicData: true,
+    considerGeopoliticalEvents: false,
+    dailyLossLimitPct: 2,
+    volatilityThreshold: 25,
+    positionSizing: {
+      type: 'percentage',
+      value: 5,
+    },
+    stopLossSettings: {
+      enabled: true,
+      type: 'percentage',
+      value: 25,
+    },
+    takeProfitSettings: {
+      enabled: true,
+      type: 'risk-reward',
+      value: 2,
+    },
+    marketConditionOverrides: {
+      volatile: {
+        enabled: true,
+        adjustedRisk: 0.5,
+      }
+    },
+    backtestingSettings: {
+      startDate: new Date(new Date().getFullYear() - 10, 0, 1),
+      endDate: new Date(),
+      initialCapital: 100000,
+      dataSource: 'alpha-vantage',
+      includeCommissions: true,
+      commissionPerTrade: 0.65,
+      includeTaxes: false,
+      taxRate: 0.25,
     }
   };
   
