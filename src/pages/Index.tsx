@@ -30,8 +30,8 @@ export const Index = () => {
       <main className="flex-1 container mx-auto px-4 py-6 space-y-6">
         {/* Account Management Card with prominent Sign Up button */}
         <Card className="w-full shadow-sm">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-xl">
+          <CardHeader className="pb-3 text-center">
+            <CardTitle className="flex items-center justify-center gap-2 text-xl">
               <User className="h-5 w-5 text-primary" />
               <span>Account Management</span>
             </CardTitle>
@@ -39,11 +39,11 @@ export const Index = () => {
               Manage your account and preferences
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground mb-4">
+          <CardContent className="flex flex-col items-center">
+            <p className="text-sm text-muted-foreground mb-4 text-center max-w-md">
               Create an account to start trading with AI-powered strategies
             </p>
-            <div className="grid grid-cols-1 gap-3">
+            <div className="grid grid-cols-1 gap-3 max-w-md w-full">
               <Link to="/auth">
                 <Button className="w-full bg-primary" size="lg">
                   <UserPlus className="mr-2 h-5 w-5" />
@@ -62,51 +62,54 @@ export const Index = () => {
           </CardContent>
         </Card>
         
-        {/* Account Balance */}
-        <Card className="w-full bg-blue-50 shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-xl">
-              <LineChart className="h-5 w-5 text-primary" />
-              <span>Account Balance</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pb-6">
-            <div className="text-4xl font-bold mb-2">
-              ${accountData.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <div className="text-sm text-muted-foreground">Daily:</div>
-                <div className="text-positive text-lg font-semibold flex items-center">
-                  ↑ ${accountData.dailyPnL.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  <span className="text-sm ml-1">(+{(accountData.dailyPnL / (accountData.balance - accountData.dailyPnL) * 100).toFixed(2)}%)</span>
+        {/* Today's Trades and Account Balance side by side */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Today's Trades */}
+          <Card className="w-full shadow-sm">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-xl">Today's Trades</CardTitle>
+                <Link to="/trades" className="text-sm text-primary flex items-center">
+                  View All <ArrowRight className="h-4 w-4 ml-1" />
+                </Link>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <TodaysTrades />
+            </CardContent>
+          </Card>
+          
+          {/* Account Balance */}
+          <Card className="w-full bg-blue-50 shadow-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <LineChart className="h-5 w-5 text-primary" />
+                <span>Account Balance</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pb-6">
+              <div className="text-4xl font-bold mb-2">
+                ${accountData.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <div className="text-sm text-muted-foreground">Daily:</div>
+                  <div className="text-positive text-lg font-semibold flex items-center">
+                    ↑ ${accountData.dailyPnL.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    <span className="text-sm ml-1">(+{(accountData.dailyPnL / (accountData.balance - accountData.dailyPnL) * 100).toFixed(2)}%)</span>
+                  </div>
+                </div>
+                <div>
+                  <div className="text-sm text-muted-foreground">All Time:</div>
+                  <div className="text-positive text-lg font-semibold flex items-center">
+                    ↑ ${accountData.allTimePnL.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    <span className="text-sm ml-1">(+{(accountData.allTimePnL / (accountData.balance - accountData.allTimePnL) * 100).toFixed(2)}%)</span>
+                  </div>
                 </div>
               </div>
-              <div>
-                <div className="text-sm text-muted-foreground">All Time:</div>
-                <div className="text-positive text-lg font-semibold flex items-center">
-                  ↑ ${accountData.allTimePnL.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  <span className="text-sm ml-1">(+{(accountData.allTimePnL / (accountData.balance - accountData.allTimePnL) * 100).toFixed(2)}%)</span>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        {/* Today's Trades - moved up here, shown on all screen sizes but optimized for mobile */}
-        <Card className="w-full shadow-sm">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-xl">Today's Trades</CardTitle>
-              <Link to="/trades" className="text-sm text-primary flex items-center">
-                View All <ArrowRight className="h-4 w-4 ml-1" />
-              </Link>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <TodaysTrades />
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
         
         <SpyOverview />
         
