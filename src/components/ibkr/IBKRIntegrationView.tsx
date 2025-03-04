@@ -9,6 +9,7 @@ import IBKRCredentialsForm from './IBKRCredentialsForm';
 import IBKRApiKeyInfo from './IBKRApiKeyInfo';
 import IBKRActionButtons from './IBKRActionButtons';
 import ConnectionStatus from './ConnectionStatus';
+import IBKRStatusIndicator from './IBKRStatusIndicator';
 
 interface IBKRIntegrationViewProps {
   isConnecting: boolean;
@@ -26,6 +27,11 @@ interface IBKRIntegrationViewProps {
   isPaperTrading: boolean;
   setIsPaperTrading: (value: boolean) => void;
   connectionStatus: 'disconnected' | 'connecting' | 'connected' | 'error';
+  dataStatus?: {
+    isConnected: boolean;
+    dataSource: 'live' | 'delayed' | 'mock';
+    refreshData: () => void;
+  };
   onBackToDashboard: () => void;
   onTestConnection: () => void;
   onStartAuth: () => void;
@@ -48,6 +54,7 @@ const IBKRIntegrationView: React.FC<IBKRIntegrationViewProps> = ({
   isPaperTrading,
   setIsPaperTrading,
   connectionStatus,
+  dataStatus,
   onBackToDashboard,
   onTestConnection,
   onStartAuth,
@@ -68,7 +75,12 @@ const IBKRIntegrationView: React.FC<IBKRIntegrationViewProps> = ({
                     Link your Interactive Brokers account to enable automated trading with SPY Trading AI
                   </CardDescription>
                 </div>
-                <ConnectionStatus status={connectionStatus} />
+                <div className="flex items-center gap-3">
+                  <ConnectionStatus status={connectionStatus} />
+                  {isConfigured && dataStatus && (
+                    <IBKRStatusIndicator showDetails={true} />
+                  )}
+                </div>
               </div>
             </CardHeader>
             

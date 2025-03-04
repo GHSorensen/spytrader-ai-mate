@@ -4,6 +4,7 @@ import IBKRIntegrationView from './IBKRIntegrationView';
 import { useIBKRIntegration } from './hooks/useIBKRIntegration';
 import { useIBKRHandlers } from './hooks/useIBKRHandlers';
 import { useNavigate } from 'react-router-dom';
+import { useIBKRRealTimeData } from '@/hooks/useIBKRRealTimeData';
 
 const IBKRIntegrationContainer: React.FC = () => {
   const navigate = useNavigate();
@@ -28,6 +29,9 @@ const IBKRIntegrationContainer: React.FC = () => {
     connectionStatus,
     setConnectionStatus
   } = useIBKRIntegration();
+  
+  // Real-time data integration
+  const { isConnected, dataSource, refreshAllData } = useIBKRRealTimeData();
   
   const {
     handleStartAuth,
@@ -63,6 +67,7 @@ const IBKRIntegrationContainer: React.FC = () => {
       isPaperTrading={isPaperTrading}
       setIsPaperTrading={setIsPaperTrading}
       connectionStatus={connectionStatus}
+      dataStatus={{ isConnected, dataSource, refreshData: refreshAllData }}
       onBackToDashboard={handleBackToDashboard}
       onTestConnection={handleTestConnection}
       onStartAuth={handleStartAuth}

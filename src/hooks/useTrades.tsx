@@ -8,6 +8,7 @@ import { toast } from "sonner";
 
 export const useTrades = (activeTab: string) => {
   const queryClient = useQueryClient();
+  const [isCreatingTrade, setIsCreatingTrade] = useState(false);
 
   // Fetch trades based on active tab
   const { data: trades = [], isLoading } = useQuery({
@@ -33,6 +34,9 @@ export const useTrades = (activeTab: string) => {
   const createPaperTrade = useMutation({
     mutationFn: async () => {
       try {
+        setIsCreatingTrade(true);
+        console.log("Creating paper trade for testing...");
+        
         // Create a mock SPY option trade
         const provider = getDataProvider();
         
@@ -45,10 +49,15 @@ export const useTrades = (activeTab: string) => {
           duration: 'DAY'
         };
         
+        console.log("Got data provider, placing trade with order:", order);
+        
         // Check if provider has placeTrade method
         if (provider.placeTrade) {
-          return await provider.placeTrade(order);
+          const result = await provider.placeTrade(order);
+          console.log("Trade placed, result:", result);
+          return result;
         } else {
+          console.log("Provider doesn't have placeTrade method, creating mock trade");
           // Fallback to create a mock trade directly
           const mockTrade: SpyTrade = {
             id: `test-${Date.now()}`,
@@ -68,27 +77,31 @@ export const useTrades = (activeTab: string) => {
             paperTrading: true
           };
           
-          // In a real app, you'd save this to your backend
-          // For now, we'll just return it and manually add it to the cache
+          console.log("Created mock trade:", mockTrade);
           return { trade: mockTrade };
         }
       } catch (error) {
         console.error("Error creating paper trade:", error);
         throw error;
+      } finally {
+        setIsCreatingTrade(false);
       }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Paper trade created successfully:", data);
       toast.success("Paper trade created for testing");
       // Refresh the trades data
       queryClient.invalidateQueries({ queryKey: ['trades'] });
       queryClient.invalidateQueries({ queryKey: ['todaysTrades'] });
     },
     onError: (error) => {
+      console.error("Error in createPaperTrade mutation:", error);
       toast.error(`Failed to create paper trade: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
   });
 
   const handleCreateTestTrade = () => {
+    console.log("handleCreateTestTrade called");
     createPaperTrade.mutate();
   };
 
@@ -96,6 +109,6 @@ export const useTrades = (activeTab: string) => {
     trades,
     isLoading,
     handleCreateTestTrade,
-    isPending: createPaperTrade.isPending
+    isPending: createPaperTrade.isPending || isCreatingTrade
   };
 };
