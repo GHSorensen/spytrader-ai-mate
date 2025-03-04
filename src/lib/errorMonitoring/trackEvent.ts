@@ -1,55 +1,32 @@
 
 /**
- * Event tracking implementation
+ * Event tracking functionality for performance and user actions
  */
-
-import { environment, isProduction } from '@/config/environment';
-import { supabase } from '@/integrations/supabase/client';
+import { isProduction } from '@/config/environment';
 import { EventProperties } from './types';
 
 /**
- * Track a user action or event with enhanced context
+ * Track events for analytics and monitoring purposes
  */
-export function trackEvent(eventName: string, properties?: Record<string, any>): void {
+export function trackEvent(eventName: string, properties?: EventProperties): void {
   try {
-    const enhancedProps: EventProperties = {
+    // Add timestamp if not present
+    const enhancedProperties = {
       ...properties,
-      timestamp: new Date().toISOString(),
-      environment,
-      sessionId: properties?.sessionId || `session_${Math.random().toString(36).substring(2, 9)}`,
+      timestamp: properties?.timestamp || new Date().toISOString(),
     };
     
-    // Get current user if available
-    if (typeof window !== 'undefined') {
-      supabase.auth.getSession().then(({ data }) => {
-        if (data?.session?.user) {
-          enhancedProps.userId = data.session.user.id;
-        }
-        
-        if (isProduction) {
-          // In a real app, send to analytics service
-          // Example: mixpanel.track(eventName, enhancedProps);
-          console.info(
-            '%c[EVENT]%c',
-            'background: #2196f3; color: white; padding: 2px 4px; border-radius: 4px; font-weight: bold;',
-            '',
-            eventName,
-            enhancedProps
-          );
-        } else {
-          // Development logging
-          console.info('[DEV EVENT]', eventName, enhancedProps);
-        }
-      }).catch(err => {
-        // Still log the event even if we can't get the user
-        console.info('[EVENT WITHOUT USER]', eventName, enhancedProps);
-      });
+    // Log event in development mode
+    if (!isProduction) {
+      console.log(`[EVENT] ${eventName}`, enhancedProperties);
     } else {
-      // Server-side event logging
-      console.info('[SERVER EVENT]', eventName, enhancedProps);
+      // In production we would send to a monitoring service
+      // Example: Analytics.track(eventName, enhancedProperties);
+      
+      // Still log for debugging if needed
+      console.log(`[PROD EVENT] ${eventName}`, enhancedProperties);
     }
   } catch (error) {
-    // Failsafe for errors in event tracking
-    console.error('Error in event tracking:', error);
+    console.error('Error tracking event:', error);
   }
 }

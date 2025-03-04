@@ -1,24 +1,33 @@
 
 /**
- * Type definitions for error monitoring system
+ * Type definitions for error monitoring functionality
  */
 
-// Interface for error metadata
+// Context information for errors
 export interface ErrorContext {
-  [key: string]: any;
-  userId?: string;
-  sessionId?: string;
-  component?: string;
-  route?: string;
-  tags?: string[];
+  type?: string;
   severity?: 'low' | 'medium' | 'high' | 'critical';
+  userId?: string;
+  timestamp?: string;
+  environment?: string;
+  userAgent?: string;
+  url?: string;
+  isPromise?: boolean;
+  filename?: string;
+  lineno?: number;
+  colno?: number;
+  memory?: {
+    used: number;
+    total: number;
+    percentage: string;
+  };
+  [key: string]: any;
 }
 
-// Track event interface
+// Properties for event tracking
 export interface EventProperties {
-  timestamp: string;
-  environment: string;
-  sessionId?: string;
-  userId?: string;
+  timestamp?: string;
+  path?: string;
+  duration?: number;
   [key: string]: any;
 }
