@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button"; 
 import { RiskHeader } from '../components/spy/risk-console/RiskHeader';
 import { MainTabs } from '../components/spy/risk-console/MainTabs';
@@ -9,6 +9,7 @@ import { useRiskMonitoring } from '../hooks/useRiskMonitoring';
 import { AITradingSettings, RiskToleranceType } from '@/lib/types/spy';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeftIcon } from 'lucide-react';
+import { RiskSignal, StatisticalAnomaly } from '@/lib/types/spy/riskMonitoring';
 
 const RiskConsole: React.FC = () => {
   const navigate = useNavigate();
@@ -82,9 +83,61 @@ const RiskConsole: React.FC = () => {
     toggleAutoMode 
   } = useRiskMonitoring(defaultSettings, currentRiskTolerance);
   
-  const anomalies = [];
-  const lastDetectionTime = new Date();
-  const riskSignals = [];
+  // Generate some mock signals for demonstration
+  const [riskSignals, setRiskSignals] = useState<RiskSignal[]>([]);
+  const [anomalies, setAnomalies] = useState<StatisticalAnomaly[]>([]);
+  const [lastDetectionTime, setLastDetectionTime] = useState<Date>(new Date());
+  
+  // Initialize with sample data
+  useEffect(() => {
+    if (!latestSignals?.length) {
+      // This will ensure we at least have some data to display
+      const mockSignals: RiskSignal[] = [
+        {
+          id: 'signal-1',
+          timestamp: new Date(),
+          source: 'volatility',
+          condition: 'volatile',
+          strength: 'strong',
+          direction: 'bearish',
+          description: 'VIX spike detected above normal thresholds',
+          confidence: 0.85
+        },
+        {
+          id: 'signal-2',
+          timestamp: new Date(Date.now() - 15 * 60 * 1000),
+          source: 'price',
+          condition: 'trending',
+          strength: 'moderate',
+          direction: 'bearish',
+          description: 'SPY price falling below 50-day moving average',
+          confidence: 0.72
+        }
+      ];
+      setRiskSignals(mockSignals);
+    } else {
+      setRiskSignals(latestSignals);
+    }
+    
+    // Mock anomalies
+    const mockAnomalies: StatisticalAnomaly[] = [
+      {
+        id: 'anomaly-1',
+        timestamp: new Date(),
+        type: 'volatility_explosion',
+        detectionMethod: 'zscore',
+        timeWindow: '1d',
+        metric: 'VIX',
+        value: 35.2,
+        expectedValue: 18.5,
+        deviation: 2.8,
+        zScore: 3.2,
+        confidence: 0.92,
+        description: 'Abnormal volatility expansion detected'
+      }
+    ];
+    setAnomalies(mockAnomalies);
+  }, [latestSignals]);
   
   const handleReturnToDashboard = () => {
     navigate('/dashboard');

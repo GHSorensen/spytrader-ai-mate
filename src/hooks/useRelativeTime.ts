@@ -1,19 +1,25 @@
 
-import { useMemo } from 'react';
+import { format, formatDistanceToNow } from 'date-fns';
 
 export const useRelativeTime = () => {
-  const getRelativeTime = useMemo(() => (timestamp: Date): string => {
+  const getRelativeTime = (date: Date): string => {
     const now = new Date();
-    const diffMs = now.getTime() - timestamp.getTime();
-    const diffSec = Math.round(diffMs / 1000);
-    const diffMin = Math.round(diffSec / 60);
-    const diffHour = Math.round(diffMin / 60);
+    if (date > now) {
+      return 'in the future';
+    }
     
-    if (diffSec < 60) return `${diffSec} seconds ago`;
-    if (diffMin < 60) return `${diffMin} minutes ago`;
-    if (diffHour < 24) return `${diffHour} hours ago`;
-    return timestamp.toLocaleDateString();
-  }, []);
-
+    const minutesAgo = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+    
+    if (minutesAgo < 60) {
+      return formatDistanceToNow(date, { addSuffix: true });
+    } else if (minutesAgo < 24 * 60) {
+      return format(date, "'Today at' h:mm a");
+    } else if (minutesAgo < 48 * 60) {
+      return format(date, "'Yesterday at' h:mm a");
+    } else {
+      return format(date, 'MMM d, yyyy - h:mm a');
+    }
+  };
+  
   return getRelativeTime;
 };

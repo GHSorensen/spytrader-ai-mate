@@ -1,55 +1,55 @@
 
 import React from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { RiskAction } from '@/lib/types/spy/riskMonitoring';
 import { ActionItem } from './ActionItem';
-import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircleIcon } from 'lucide-react';
 
 interface ActionsSectionProps {
   actions: RiskAction[];
-  isLoading: boolean;
   latestActions?: RiskAction[];
-  getRelativeTime?: (timestamp: Date) => string;
+  isLoading?: boolean;
+  getRelativeTime?: (date: Date) => string;
 }
 
-export const ActionsSection: React.FC<ActionsSectionProps> = ({ 
-  actions, 
-  isLoading,
+export const ActionsSection: React.FC<ActionsSectionProps> = ({
+  actions,
   latestActions,
+  isLoading = false,
   getRelativeTime
 }) => {
-  // Use latestActions if provided, otherwise use actions
-  const actionsToRender = latestActions || actions;
+  const displayActions = latestActions || actions;
   
   if (isLoading) {
     return (
-      <div>
-        <h3 className="text-sm font-medium mb-2">Recommended Actions</h3>
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="mb-2">
-            <Skeleton className="h-20 w-full" />
-          </div>
-        ))}
+      <div className="space-y-2">
+        <h3 className="text-lg font-medium">Recommended Actions</h3>
+        <div className="space-y-2">
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-20 w-full" />
+        </div>
       </div>
     );
   }
-
-  return (
-    <div>
-      <h3 className="text-sm font-medium mb-2">Recommended Actions</h3>
-      
-      {actionsToRender.length === 0 ? (
-        <div className="flex items-center p-4 border rounded-md bg-muted/20">
-          <AlertCircleIcon className="h-4 w-4 text-muted-foreground mr-2" />
-          <p className="text-xs text-muted-foreground">
-            No actions recommended at this time
-          </p>
+  
+  if (displayActions.length === 0) {
+    return (
+      <div className="space-y-2">
+        <h3 className="text-lg font-medium">Recommended Actions</h3>
+        <div className="text-sm text-muted-foreground">
+          No recommended actions at this time.
         </div>
-      ) : (
-        actionsToRender.map((action) => (
+      </div>
+    );
+  }
+  
+  return (
+    <div className="space-y-2">
+      <h3 className="text-lg font-medium">Recommended Actions</h3>
+      <div className="max-h-[300px] overflow-y-auto pr-1">
+        {displayActions.map(action => (
           <ActionItem key={action.id} action={action} />
-        ))
-      )}
+        ))}
+      </div>
     </div>
   );
 };
