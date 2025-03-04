@@ -8,8 +8,6 @@ import { toast } from "sonner";
 import { supabase } from '@/integrations/supabase/client';
 import LoginForm from './LoginForm';
 import SignupForm from './SignupForm';
-import SocialLogin from './SocialLogin';
-import OrDivider from './OrDivider';
 
 const AuthenticationPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -65,28 +63,12 @@ const AuthenticationPage: React.FC = () => {
               
               <TabsContent value="login">
                 <div className="space-y-4 mt-4">
-                  <SocialLogin 
-                    isLoading={isLoading} 
-                    setIsLoading={setIsLoading} 
-                    buttonText="Continue with Google"
-                  />
-                  
-                  <OrDivider text="Or continue with email" />
-                  
                   <LoginForm isLoading={isLoading} setIsLoading={setIsLoading} />
                 </div>
               </TabsContent>
               
               <TabsContent value="signup">
                 <div className="space-y-4 mt-4">
-                  <SocialLogin 
-                    isLoading={isLoading} 
-                    setIsLoading={setIsLoading} 
-                    buttonText="Sign up with Google"
-                  />
-                  
-                  <OrDivider text="Or sign up with email" />
-                  
                   <SignupForm isLoading={isLoading} setIsLoading={setIsLoading} />
                 </div>
               </TabsContent>
