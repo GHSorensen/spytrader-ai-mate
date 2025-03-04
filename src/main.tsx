@@ -11,6 +11,28 @@ const router = createBrowserRouter([
   {
     path: '/',
     element: <App />,
+    children: [
+      {
+        path: 'dashboard',
+        element: <></> // These are already handled inside App.tsx
+      },
+      {
+        path: 'trade-automation',
+        element: <></> // These are already handled inside App.tsx
+      },
+      {
+        path: 'performance',
+        element: <></> // These are already handled inside App.tsx
+      },
+      {
+        path: 'risk-console',
+        element: <></> // These are already handled inside App.tsx
+      },
+      {
+        path: 'risk-monitoring-test',
+        element: <></> // These are already handled inside App.tsx
+      },
+    ]
   },
   {
     path: '/auth/callback',
