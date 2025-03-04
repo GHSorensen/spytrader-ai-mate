@@ -19,6 +19,34 @@ export const Index = () => {
       </header>
       
       <main className="flex-1 container mx-auto px-4 py-6 space-y-6">
+        {/* Account Management Card moved above SpyOverview */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2">
+                <User className="h-5 w-5 text-primary" />
+                <span>Account Management</span>
+              </CardTitle>
+              <CardDescription>
+                Manage your account and preferences
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-4">
+                Update your profile, security settings, and notification preferences.
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                <Link to="/auth">
+                  <Button variant="outline" className="w-full">Sign In</Button>
+                </Link>
+                <Link to="/profile">
+                  <Button variant="outline" className="w-full">Profile</Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        
         <SpyOverview />
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 my-6">
@@ -59,31 +87,6 @@ export const Index = () => {
               <Link to="/detailed-performance">
                 <Button variant="outline" className="w-full">Analytics Dashboard</Button>
               </Link>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5 text-primary" />
-                <span>Account Management</span>
-              </CardTitle>
-              <CardDescription>
-                Manage your account and preferences
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground mb-4">
-                Update your profile, security settings, and notification preferences.
-              </p>
-              <div className="grid grid-cols-2 gap-2">
-                <Link to="/auth">
-                  <Button variant="outline" className="w-full">Sign In</Button>
-                </Link>
-                <Link to="/profile">
-                  <Button variant="outline" className="w-full">Profile</Button>
-                </Link>
-              </div>
             </CardContent>
           </Card>
         </div>
