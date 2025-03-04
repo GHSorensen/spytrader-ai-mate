@@ -1,14 +1,29 @@
 
-import { createRoot } from 'react-dom/client'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import App from './App.tsx'
 import './index.css'
+import { SchwabCallbackHandler } from './components/spy/settings/broker/SchwabCallbackHandler.tsx'
+import NotFound from './pages/NotFound.tsx'
 
-// Create a client
-const queryClient = new QueryClient()
+const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <App />,
+  },
+  {
+    path: '/auth/callback',
+    element: <SchwabCallbackHandler />,
+  },
+  {
+    path: '*',
+    element: <NotFound />,
+  },
+])
 
-createRoot(document.getElementById("root")!).render(
-  <QueryClientProvider client={queryClient}>
-    <App />
-  </QueryClientProvider>
-);
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <RouterProvider router={router} />
+  </React.StrictMode>,
+)

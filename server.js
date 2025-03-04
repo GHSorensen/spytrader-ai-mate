@@ -17,6 +17,20 @@ app.get('/health', (req, res) => {
   res.status(200).send('OK');
 });
 
+// Handle OAuth callback for Schwab - log the query parameters and redirect to the frontend
+app.get('/auth/callback', (req, res) => {
+  console.log('Received OAuth callback with query params:', req.query);
+  
+  // Extract code and state parameters
+  const { code, state } = req.query;
+  
+  // Redirect to the frontend with the parameters
+  const redirectUrl = `/auth/callback?code=${code}&state=${state}`;
+  console.log(`Redirecting to frontend: ${redirectUrl}`);
+  
+  res.redirect(redirectUrl);
+});
+
 // For any request that doesn't match a static file, send the index.html
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));

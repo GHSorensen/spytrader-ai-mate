@@ -19,22 +19,20 @@ export function ensureSecureCallbackUrl(config: DataProviderConfig): string {
   
   let secureCallbackUrl: string;
   
-  if (process.env.NODE_ENV === 'production' && origin.startsWith('https://')) {
-    // In production, use the actual window origin
+  if (origin && (origin.startsWith('https://') || origin.includes('render.com'))) {
+    // In production or Render deployment, use the actual window origin
     secureCallbackUrl = origin + callbackPath;
     console.log(`[callbackUrlUtils] Using production domain for callback URL: ${secureCallbackUrl}`);
   } else {
-    // In development, use a placeholder
-    secureCallbackUrl = 'https://dev-placeholder.com/auth/callback';
-    console.log('[callbackUrlUtils] Using development placeholder for callback URL. Will use actual domain in production.');
+    // In development, use a placeholder or localhost with forced HTTPS
+    secureCallbackUrl = 'https://spy-v2.onrender.com/auth/callback';
+    console.log('[callbackUrlUtils] Using production placeholder for callback URL.');
   }
   
   // Show a toast to notify the user about the callback URL
   toast({
     title: "Callback URL Notice",
-    description: process.env.NODE_ENV === 'production' 
-      ? `Using ${secureCallbackUrl} for Schwab authentication.`
-      : "Using development placeholder. Will use actual domain in production.",
+    description: `Using ${secureCallbackUrl} for Schwab authentication.`,
   });
   
   return secureCallbackUrl;
