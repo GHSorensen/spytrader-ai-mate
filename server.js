@@ -22,7 +22,7 @@ app.use(helmet({
                    "https://sklwsxgxsqtwlqjhegms.supabase.co", 
                    "wss://*.supabase.co",
                    isProduction ? "https://spy-trader.onrender.com" : "http://localhost:10000"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "https://sklwsxgxsqtwlqjhegms.supabase.co", "https://*.supabase.co"],
       fontSrc: ["'self'", "data:"],
@@ -233,8 +233,8 @@ app.get('*', (req, res) => {
 // Explicitly use the PORT from environment variable or default to 10000 as Render expects
 const PORT = process.env.PORT || 10000;
 
-// Listen on all interfaces (0.0.0.0) which is required for Render
-app.listen(PORT, '0.0.0.0', () => {
+// Create the server instance explicitly to be able to close it properly later
+const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode`);
   console.log(`Server listening on port ${PORT}`);
   console.log(`Current date: ${new Date().toISOString()}`);

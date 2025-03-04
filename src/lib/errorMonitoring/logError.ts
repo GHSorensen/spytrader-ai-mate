@@ -4,7 +4,7 @@
  */
 
 import { config, environment, isProduction } from '@/config/environment';
-import { toast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { ErrorContext } from './types';
 import { 

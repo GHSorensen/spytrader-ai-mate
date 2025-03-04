@@ -7,5 +7,5 @@
 
 export { logError } from './logError';
 export { trackEvent } from './trackEvent';
-export { setupGlobalErrorHandling, initErrorMonitoring } from './globalErrorHandling';
+export { initErrorMonitoring } from './globalErrorHandling';
 export type { ErrorContext, EventProperties } from './types';

@@ -17,7 +17,13 @@ import { Toaster } from '@/components/ui/toaster'
 import { config, environment } from '@/config/environment'
 
 // Initialize error monitoring system for production
-initErrorMonitoring();
+try {
+  initErrorMonitoring();
+  console.log('Error monitoring initialized successfully');
+} catch (error) {
+  console.error('Failed to initialize error monitoring:', error);
+  // Don't let error monitoring failure prevent app from loading
+}
 
 // Fix the root route path to use a wildcard (*) to allow nested routes
 const router = createBrowserRouter([
