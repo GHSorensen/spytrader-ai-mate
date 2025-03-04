@@ -19,7 +19,7 @@ export const HeaderActions: React.FC<HeaderActionsProps> = ({
 }) => {
   const navigate = useNavigate();
   // Extract first letter of username for the badge
-  const userInitial = userName && userName.length > 0 ? userName.substring(0, 1) : "U";
+  const userInitial = userName && userName.length > 0 ? userName.charAt(0).toUpperCase() : "U";
 
   const handleSignOut = async () => {
     try {

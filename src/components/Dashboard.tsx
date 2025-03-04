@@ -6,11 +6,12 @@ import { TodaysTrades } from './spy/TodaysTrades';
 import { ActiveTrades } from './spy/ActiveTrades';
 import { TradeJournal } from './spy/TradeJournal';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowRight, ArrowDownSquare } from 'lucide-react';
+import { ArrowRight, ArrowDownSquare, BarChart2, LineChart, Shield } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Button } from "@/components/ui/button";
 
 const Dashboard: React.FC = () => {
-  // Using the account balance of $1600 as you mentioned you're changing it to
+  // Using the account balance of $1600 as specified
   const accountData = {
     balance: 1600, 
     dailyPnL: 0,
@@ -72,6 +73,42 @@ const Dashboard: React.FC = () => {
             </CardContent>
           </Card>
         </div>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-6">
+        <Card className="shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Shield className="h-5 w-5 text-primary" />
+              <span>Risk Management</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              Get real-time risk insights and automate risk management.
+            </p>
+            <Link to="/risk-console">
+              <Button variant="outline" className="w-full">Risk Console</Button>
+            </Link>
+          </CardContent>
+        </Card>
+        
+        <Card className="shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <BarChart2 className="h-5 w-5 text-primary" />
+              <span>Performance Analytics</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              View detailed metrics, equity curves, and statistics.
+            </p>
+            <Link to="/detailed-performance">
+              <Button variant="outline" className="w-full">Analytics Dashboard</Button>
+            </Link>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
