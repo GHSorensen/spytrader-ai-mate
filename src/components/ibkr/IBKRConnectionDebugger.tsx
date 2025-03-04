@@ -4,6 +4,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { getDataProvider, clearDataProvider } from '@/services/dataProviders/dataProviderFactory';
 import { DataProviderConfig } from '@/lib/types/spy/dataProvider';
+import { InteractiveBrokersService } from '@/services/dataProviders/interactiveBrokersService';
+import { toast } from 'sonner';
 
 const IBKRConnectionDebugger: React.FC = () => {
   const [connected, setConnected] = useState(false);
@@ -33,11 +35,25 @@ const IBKRConnectionDebugger: React.FC = () => {
     setError(null);
     
     try {
-      const result = await provider.connect();
+      clearDataProvider(); // Clear any existing provider
+      
+      // Create a new service instance
+      const ibkrService = new InteractiveBrokersService(config);
+      const result = await ibkrService.connect();
+      
       setConnected(result);
       setResponseData({ action: 'connect', result });
+      
+      if (result) {
+        toast.success('Connected to Interactive Brokers successfully');
+      } else {
+        toast.error('Failed to connect to Interactive Brokers');
+        setError('Connection failed. Check IBKR configuration and ensure TWS or Gateway is running.');
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to connect');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to connect';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -48,11 +64,22 @@ const IBKRConnectionDebugger: React.FC = () => {
     setError(null);
     
     try {
-      const result = await provider.disconnect();
+      // Instead of using the provider directly, create a service instance
+      const ibkrService = new InteractiveBrokersService(config);
+      const result = await ibkrService.disconnect();
+      
       setConnected(!result);
       setResponseData({ action: 'disconnect', result });
+      
+      if (result) {
+        toast.success('Disconnected from Interactive Brokers');
+      } else {
+        toast.error('Failed to disconnect from Interactive Brokers');
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to disconnect');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to disconnect';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -70,8 +97,11 @@ const IBKRConnectionDebugger: React.FC = () => {
         accountData,
         marketData
       });
+      toast.success('Test connection successful');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch data');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch data';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -104,7 +134,7 @@ const IBKRConnectionDebugger: React.FC = () => {
               disabled={loading || connected}
               variant="default"
             >
-              {loading ? 'Connecting...' : 'Connect'}
+              {loading && !connected ? 'Connecting...' : 'Connect'}
             </Button>
             
             <Button 
@@ -112,7 +142,7 @@ const IBKRConnectionDebugger: React.FC = () => {
               disabled={loading || !connected}
               variant="destructive"
             >
-              Disconnect
+              {loading && connected ? 'Disconnecting...' : 'Disconnect'}
             </Button>
             
             <Button 

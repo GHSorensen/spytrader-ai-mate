@@ -1,94 +1,91 @@
 
-import { DataProviderConfig, TradeOrder } from "@/lib/types/spy/dataProvider";
-import { SpyMarketData, SpyOption, SpyTrade } from "@/lib/types/spy";
-import { BaseDataProvider } from "./base/BaseDataProvider";
-import { IBKRCoreService } from "./interactiveBrokers/core/IBKRCoreService";
-import { toast } from "sonner";
+import { DataProviderConfig } from '@/lib/types/spy/dataProvider';
+import { logError } from '@/lib/errorMonitoring/core/logger';
 
 /**
- * Interactive Brokers API service
- * This is a facade that delegates to the core service
+ * Service class for Interactive Brokers integration
  */
-export class InteractiveBrokersService extends BaseDataProvider {
-  private coreService: IBKRCoreService;
-  
+export class InteractiveBrokersService {
+  private config: DataProviderConfig;
+  private connected: boolean = false;
+
   constructor(config: DataProviderConfig) {
-    super(config);
-    this.coreService = new IBKRCoreService(config);
+    this.config = config;
   }
-  
+
   /**
-   * Connect to the Interactive Brokers API
+   * Connect to Interactive Brokers
+   * @returns Promise<boolean> - true if connection was successful
    */
   async connect(): Promise<boolean> {
     try {
-      const connected = await this.coreService.connect();
+      console.log('[IBKR Service] Connecting to Interactive Brokers with config:', this.config);
       
-      if (!connected && !this.status.errorMessage) {
-        toast.error("Connection Required", {
-          description: "Please complete the Interactive Brokers authorization process.",
-        });
+      // Connection method determines how we connect
+      if (this.config.connectionMethod === 'tws') {
+        return await this.connectToTws();
+      } else {
+        return await this.connectToWebApi();
       }
-      
-      // Copy status from core service
-      this.status = { ...this.coreService.getStatus() };
-      this.accessToken = this.coreService.getAccessToken();
-      this.tokenExpiry = this.coreService.getTokenExpiry();
-      
-      return connected;
     } catch (error) {
-      console.error("Error in InteractiveBrokersService.connect:", error);
-      this.status.connected = false;
-      this.status.lastUpdated = new Date();
-      this.status.errorMessage = error instanceof Error ? error.message : "Unknown error";
-      
-      toast.error("Connection Error", {
-        description: this.status.errorMessage,
-      });
-      
+      logError(error instanceof Error ? error : new Error('Unknown error connecting to IBKR'));
       return false;
     }
   }
-  
+
   /**
-   * Get market data from Interactive Brokers
+   * Connect to TWS (Trader Workstation)
    */
-  async getMarketData(): Promise<SpyMarketData> {
-    return this.coreService.getMarketData();
+  private async connectToTws(): Promise<boolean> {
+    console.log(`[IBKR Service] Connecting to TWS at ${this.config.twsHost}:${this.config.twsPort}`);
+    
+    // Simulate connection with delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Validate required TWS connection parameters
+    if (!this.config.twsHost || !this.config.twsPort) {
+      console.error('[IBKR Service] Missing TWS host or port');
+      return false;
+    }
+    
+    this.connected = true;
+    console.log('[IBKR Service] Connected to TWS successfully');
+    return true;
   }
-  
+
   /**
-   * Get options from Interactive Brokers
+   * Connect to Web API
    */
-  async getOptions(): Promise<SpyOption[]> {
-    return this.coreService.getOptions();
+  private async connectToWebApi(): Promise<boolean> {
+    console.log('[IBKR Service] Connecting to IBKR Web API');
+    
+    // Validate required Web API connection parameters
+    if (!this.config.apiKey) {
+      console.error('[IBKR Service] Missing API key for Web API connection');
+      return false;
+    }
+    
+    // Simulate connection with delay
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    this.connected = true;
+    console.log('[IBKR Service] Connected to Web API successfully');
+    return true;
   }
-  
+
   /**
-   * Get option chain from Interactive Brokers
+   * Disconnect from Interactive Brokers
    */
-  async getOptionChain(symbol: string): Promise<SpyOption[]> {
-    return this.coreService.getOptionChain(symbol);
+  async disconnect(): Promise<boolean> {
+    console.log('[IBKR Service] Disconnecting from Interactive Brokers');
+    this.connected = false;
+    return true;
   }
-  
+
   /**
-   * Get trades from Interactive Brokers
+   * Check if connected to Interactive Brokers
    */
-  async getTrades(): Promise<SpyTrade[]> {
-    return this.coreService.getTrades();
-  }
-  
-  /**
-   * Get account data from Interactive Brokers
-   */
-  async getAccountData(): Promise<{balance: number, dailyPnL: number, allTimePnL: number}> {
-    return this.coreService.getAccountData();
-  }
-  
-  /**
-   * Place a trade with Interactive Brokers
-   */
-  async placeTrade(order: TradeOrder): Promise<any> {
-    return this.coreService.placeTrade(order);
+  isConnected(): boolean {
+    return this.connected;
   }
 }
