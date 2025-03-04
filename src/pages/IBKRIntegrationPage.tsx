@@ -54,7 +54,7 @@ const IBKRIntegrationPage: React.FC = () => {
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">IBKR Integration</h1>
       
-      <Alert variant="info" className="mb-6">
+      <Alert className="mb-6">
         <Info className="h-4 w-4" />
         <AlertTitle>Configuration Required</AlertTitle>
         <AlertDescription>
