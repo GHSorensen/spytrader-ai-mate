@@ -17,9 +17,9 @@ interface IBKRIntegrationHook {
   isLoading: boolean;
   error: string | null;
   
-  // API method
-  apiMethod: 'api' | 'tws';
-  setApiMethod: (value: 'api' | 'tws') => void;
+  // API method - updated to match IBKRCredentialsForm
+  apiMethod: 'webapi' | 'tws';
+  setApiMethod: (value: 'webapi' | 'tws') => void;
   
   // API credentials
   apiKey: string;
@@ -60,8 +60,8 @@ export const useIBKRIntegration = (): IBKRIntegrationHook => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  // API method
-  const [apiMethod, setApiMethod] = useState<'api' | 'tws'>('api');
+  // API method - updated from 'api' to 'webapi' to match IBKRCredentialsForm
+  const [apiMethod, setApiMethod] = useState<'webapi' | 'tws'>('webapi');
   
   // API credentials
   const [apiKey, setApiKey] = useState('');
@@ -193,7 +193,8 @@ export const useIBKRIntegration = (): IBKRIntegrationHook => {
           if (config.twsPort) setTwsPort(config.twsPort);
           if (config.hasOwnProperty('paperTrading')) setIsPaperTrading(config.paperTrading);
         } else {
-          setApiMethod('api');
+          // Update from 'api' to 'webapi' to match IBKRCredentialsForm
+          setApiMethod('webapi');
           if (config.apiKey) setApiKey(config.apiKey);
           if (config.callbackUrl) setCallbackUrl(config.callbackUrl);
         }
@@ -217,7 +218,7 @@ export const useIBKRIntegration = (): IBKRIntegrationHook => {
     isLoading,
     error,
     
-    // API method
+    // API method - note the change to match IBKRCredentialsForm
     apiMethod,
     setApiMethod,
     
