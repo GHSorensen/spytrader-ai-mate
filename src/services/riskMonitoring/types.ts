@@ -14,10 +14,10 @@ export interface StrategyLearningInsight {
   timestamp: Date;
 }
 
-// Import necessary types
+// Import necessary types from common to ensure type compatibility
 import { MarketCondition, RiskToleranceType } from '@/lib/types/spy/common';
 
-// Risk signal source
+// Risk signal source - making sure it's compatible with the imported type
 export type RiskSignalSource = 'market_volatility' | 'price_action' | 'volume' | 'technical_indicator' | 'fundamental' | 'news' | 'correlation';
 
 // Risk signal strength
