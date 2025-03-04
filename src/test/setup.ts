@@ -1,36 +1,32 @@
 
-// Set up test environment
 import '@testing-library/jest-dom';
-import { cleanup } from '@testing-library/react';
 
 // Mock localStorage
-const localStorageMock = (() => {
+const localStorageMock = (function() {
   let store: Record<string, string> = {};
+  
   return {
     getItem: jest.fn((key: string) => {
       return store[key] || null;
     }),
     setItem: jest.fn((key: string, value: string) => {
-      store[key] = value;
+      store[key] = value.toString();
     }),
     removeItem: jest.fn((key: string) => {
       delete store[key];
     }),
     clear: jest.fn(() => {
       store = {};
-    }),
+    })
   };
 })();
 
-Object.defineProperty(window, 'localStorage', { value: localStorageMock });
-
-// Reset mocks after each test
-afterEach(() => {
-  cleanup();
-  jest.clearAllMocks();
-  localStorageMock.clear();
+Object.defineProperty(window, 'localStorage', {
+  value: localStorageMock
 });
 
-// Note: We've removed the duplicate Mock interface definition
-// since it's now defined in jest.d.ts
-
+// Clean up after each test
+afterEach(() => {
+  localStorageMock.clear();
+  jest.clearAllMocks();
+});

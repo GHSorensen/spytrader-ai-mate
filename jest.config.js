@@ -32,6 +32,8 @@ module.exports = {
       isolatedModules: true,
     }
   },
-  // Add types to list to fix type issues with Jest
-  types: ["jest", "node"]
+  // Make sure types include jest
+  types: ["jest", "node"],
+  // Make TypeScript aware of Jest
+  setupFiles: ['<rootDir>/src/test/jest.d.ts'],
 };

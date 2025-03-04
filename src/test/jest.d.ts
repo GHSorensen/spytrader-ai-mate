@@ -54,6 +54,7 @@ declare global {
       stringContaining(str: string): any;
       arrayContaining(arr: any[]): any;
       stringMatching(str: string | RegExp): any;
+      any(constructor: any): any; // Add the missing 'any' property
     }
 
     interface DoneCallback {
@@ -62,4 +63,3 @@ declare global {
     }
   }
 }
-

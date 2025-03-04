@@ -4,6 +4,7 @@ import { useIBKRTwsHandlers } from '../useIBKRTwsHandlers';
 import { toast } from 'sonner';
 import { InteractiveBrokersService } from '@/services/dataProviders/interactiveBrokersService';
 import { clearDataProvider, getDataProvider } from '@/services/dataProviders/dataProviderFactory';
+import { IBKRConnectionStatus } from '@/lib/types/ibkr';
 
 // Mock dependencies
 jest.mock('sonner', () => ({
@@ -13,6 +14,7 @@ jest.mock('sonner', () => ({
   },
 }));
 
+// Mock the InteractiveBrokersService
 jest.mock('@/services/dataProviders/interactiveBrokersService', () => ({
   InteractiveBrokersService: jest.fn().mockImplementation(() => {
     return {
@@ -74,6 +76,16 @@ describe('useIBKRTwsHandlers', () => {
   });
 
   test('should connect to TWS successfully when all data is valid', async () => {
+    // Get the mocked constructor
+    const mockedInteractiveBrokersService = InteractiveBrokersService as jest.Mock;
+    
+    // Configure the mock to return a successful connection
+    mockedInteractiveBrokersService.mockImplementation(() => {
+      return {
+        connect: jest.fn().mockResolvedValue(true),
+      };
+    });
+    
     const { result } = renderHook(() => useIBKRTwsHandlers({
       twsHost: '127.0.0.1',
       twsPort: '7496',
@@ -97,11 +109,11 @@ describe('useIBKRTwsHandlers', () => {
       type: 'interactive-brokers',
       twsHost: '127.0.0.1',
       twsPort: '7496',
-      connectionMethod: 'tws',
+      connectionMethod: 'tws' as 'webapi' | 'tws',
       paperTrading: false
     });
     
-    expect(InteractiveBrokersService).toHaveBeenCalledWith(configArg);
+    expect(mockedInteractiveBrokersService).toHaveBeenCalledWith(configArg);
     expect(clearDataProvider).toHaveBeenCalled();
     expect(getDataProvider).toHaveBeenCalled();
     expect(mockSetConnectionStatus).toHaveBeenCalledWith('connected');
@@ -112,8 +124,11 @@ describe('useIBKRTwsHandlers', () => {
   });
 
   test('should handle connection failure', async () => {
-    // Override the mock to simulate connection failure
-    (InteractiveBrokersService as jest.Mock).mockImplementation(() => {
+    // Get the mocked constructor
+    const mockedInteractiveBrokersService = InteractiveBrokersService as jest.Mock;
+    
+    // Configure the mock to return a failed connection
+    mockedInteractiveBrokersService.mockImplementation(() => {
       return {
         connect: jest.fn().mockResolvedValue(false),
       };
@@ -139,8 +154,11 @@ describe('useIBKRTwsHandlers', () => {
   });
 
   test('should handle connection errors', async () => {
-    // Override the mock to simulate error
-    (InteractiveBrokersService as jest.Mock).mockImplementation(() => {
+    // Get the mocked constructor
+    const mockedInteractiveBrokersService = InteractiveBrokersService as jest.Mock;
+    
+    // Configure the mock to throw an error
+    mockedInteractiveBrokersService.mockImplementation(() => {
       return {
         connect: jest.fn().mockRejectedValue(new Error('Connection error')),
       };
