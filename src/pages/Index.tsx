@@ -35,11 +35,11 @@ export const Index = () => {
               <User className="h-5 w-5 text-primary" />
               <span>Account Management</span>
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-center">
               Manage your account and preferences
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex flex-col items-center">
+          <CardContent className="flex flex-col items-center text-center">
             <p className="text-sm text-muted-foreground mb-4 text-center max-w-md">
               Create an account to start trading with AI-powered strategies
             </p>
@@ -88,22 +88,22 @@ export const Index = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="pb-6">
-              <div className="text-4xl font-bold mb-2">
+              <div className="text-4xl font-bold mb-2 md:text-4xl text-3xl">
                 ${accountData.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-2 text-sm md:text-base">
                 <div>
-                  <div className="text-sm text-muted-foreground">Daily:</div>
-                  <div className="text-positive text-lg font-semibold flex items-center">
+                  <div className="text-xs md:text-sm text-muted-foreground">Daily:</div>
+                  <div className="text-positive font-semibold flex items-center text-sm md:text-lg">
                     ↑ ${accountData.dailyPnL.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    <span className="text-sm ml-1">(+{(accountData.dailyPnL / (accountData.balance - accountData.dailyPnL) * 100).toFixed(2)}%)</span>
+                    <span className="text-xs md:text-sm ml-1">(+{(accountData.dailyPnL / (accountData.balance - accountData.dailyPnL) * 100).toFixed(2)}%)</span>
                   </div>
                 </div>
                 <div>
-                  <div className="text-sm text-muted-foreground">All Time:</div>
-                  <div className="text-positive text-lg font-semibold flex items-center">
+                  <div className="text-xs md:text-sm text-muted-foreground">All Time:</div>
+                  <div className="text-positive font-semibold flex items-center text-sm md:text-lg">
                     ↑ ${accountData.allTimePnL.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    <span className="text-sm ml-1">(+{(accountData.allTimePnL / (accountData.balance - accountData.allTimePnL) * 100).toFixed(2)}%)</span>
+                    <span className="text-xs md:text-sm ml-1">(+{(accountData.allTimePnL / (accountData.balance - accountData.allTimePnL) * 100).toFixed(2)}%)</span>
                   </div>
                 </div>
               </div>

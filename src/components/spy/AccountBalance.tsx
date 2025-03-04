@@ -23,15 +23,15 @@ export const AccountBalance: React.FC<AccountBalanceProps> = ({
       <CardContent className="p-4">
         <div className="flex flex-col items-center justify-center space-y-2">
           <div className="flex items-center justify-center gap-2">
-            <DollarSign className="h-6 w-6 text-primary" />
-            <h2 className="text-2xl font-bold tracking-tight">Account Balance</h2>
+            <DollarSign className="h-5 w-5 text-primary" />
+            <h2 className="text-xl md:text-2xl font-bold tracking-tight">Account Balance</h2>
           </div>
           
-          <div className="text-3xl md:text-4xl font-bold">
+          <div className="text-2xl md:text-3xl lg:text-4xl font-bold">
             ${balance.toLocaleString()}
           </div>
           
-          <div className="flex flex-col sm:flex-row items-center justify-between w-full mt-2 text-sm gap-2">
+          <div className="flex flex-col sm:flex-row items-center justify-between w-full mt-2 text-xs md:text-sm gap-2">
             <div className="flex items-center gap-1">
               <span className="text-muted-foreground">Daily:</span>
               <div className={cn("flex items-center", 
@@ -39,7 +39,9 @@ export const AccountBalance: React.FC<AccountBalanceProps> = ({
                 {isDailyPositive ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
                 <span className="font-medium">
                   ${Math.abs(dailyPnL).toLocaleString()}
-                  ({isDailyPositive ? "+" : "-"}{Math.abs(dailyPnL / (balance - dailyPnL) * 100).toFixed(2)}%)
+                  <span className="text-xs md:text-sm">
+                    ({isDailyPositive ? "+" : "-"}{Math.abs(dailyPnL / (balance - dailyPnL) * 100).toFixed(2)}%)
+                  </span>
                 </span>
               </div>
             </div>
@@ -51,7 +53,9 @@ export const AccountBalance: React.FC<AccountBalanceProps> = ({
                 {isAllTimePositive ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
                 <span className="font-medium">
                   ${Math.abs(allTimePnL).toLocaleString()}
-                  ({isAllTimePositive ? "+" : "-"}{Math.abs(allTimePnL / (balance - allTimePnL) * 100).toFixed(2)}%)
+                  <span className="text-xs md:text-sm">
+                    ({isAllTimePositive ? "+" : "-"}{Math.abs(allTimePnL / (balance - allTimePnL) * 100).toFixed(2)}%)
+                  </span>
                 </span>
               </div>
             </div>
