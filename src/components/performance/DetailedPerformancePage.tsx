@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SpyHeaderWithNotifications } from '@/components/spy/SpyHeaderWithNotifications';
-import { BarChart, LineChart, ResponsiveContainer, Line, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Bar } from 'recharts';
+import { BarChart, LineChart, ResponsiveContainer, Line, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Bar, Cell } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { Download, Calendar } from 'lucide-react';
 
@@ -215,11 +215,11 @@ const DetailedPerformancePage: React.FC = () => {
                         <Tooltip 
                           formatter={(value) => [`${value}%`, 'Return']}
                         />
-                        <Bar 
-                          dataKey="return" 
-                          fill={(entry) => (entry.return >= 0 ? '#4ade80' : '#f43f5e')}
-                          name="Monthly Return" 
-                        />
+                        <Bar dataKey="return" name="Monthly Return" fill="#8884d8">
+                          {monthlyReturnsData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.return >= 0 ? '#4ade80' : '#f43f5e'} />
+                          ))}
+                        </Bar>
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
