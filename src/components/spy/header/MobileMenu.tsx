@@ -71,6 +71,13 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
             Schwab Connect
           </Link>
           <Link 
+            to="/ibkr-integration" 
+            className="px-2 py-1 rounded hover:bg-accent"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            IBKR Connect
+          </Link>
+          <Link 
             to="/profile" 
             className="px-2 py-1 rounded hover:bg-accent"
             onClick={() => setIsMobileMenuOpen(false)}

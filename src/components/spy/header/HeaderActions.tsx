@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { NotificationCenter } from '../notifications';
 import SchwabGuide from './SchwabGuide';
 import IBKRGuide from './IBKRGuide';
-import { RiskToleranceType } from '@/lib/types/spy';
 
 interface HeaderActionsProps {
   setIsAISettingsOpen: (open: boolean) => void;
@@ -17,8 +16,10 @@ export const HeaderActions: React.FC<HeaderActionsProps> = ({
 }) => {
   return (
     <div className="flex items-center gap-2">
-      <SchwabGuide />
-      <IBKRGuide />
+      <div className="hidden md:flex items-center gap-2">
+        <SchwabGuide />
+        <IBKRGuide />
+      </div>
       
       <Link to="/profile">
         <Button variant="ghost" size="icon">
