@@ -35,6 +35,7 @@ export class IBKRPaperTradeService {
     };
     
     console.log("[IBKRPaperTradeService] Created paper trade:", JSON.stringify(mockTrade, null, 2));
+    console.log("[IBKRPaperTradeService] Is market currently open?", this.isMarketHours());
     
     return { 
       trade: mockTrade, 
@@ -55,13 +56,19 @@ export class IBKRPaperTradeService {
     const isWeekend = day === 0 || day === 6;
     const isMarketOpen = !isWeekend && ((hour > 9 || (hour === 9 && minute >= 30)) && hour < 16);
     
+    // Enhanced debugging for market hours
     console.log(`[IBKRPaperTradeService] Market hours check:`, {
       now: now.toLocaleString(),
       day,
       hour,
       minute,
       isWeekend,
-      isMarketOpen
+      isMarketOpen,
+      marketStatus: isMarketOpen ? "OPEN" : "CLOSED",
+      timeToOpen: !isMarketOpen && day > 0 && day < 6 && hour < 9 ? 
+        `${9 - hour} hours and ${30 - minute} minutes until market open` : 
+        (isMarketOpen ? "Market is currently open" : "Market is closed for the day"),
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
     });
     
     return isMarketOpen;
