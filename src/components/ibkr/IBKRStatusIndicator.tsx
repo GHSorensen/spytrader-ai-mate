@@ -92,7 +92,7 @@ const IBKRStatusIndicator: React.FC<IBKRStatusIndicatorProps> = ({
     
     if (dataSource === 'delayed') {
       return {
-        variant: "warning" as const,
+        variant: "secondary" as const,
         icon: <Clock className="h-3 w-3 mr-1" />,
         text: "Delayed Data"
       };

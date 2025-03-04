@@ -12,6 +12,11 @@ const TradesPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('active');
   const { trades, isLoading, handleCreateTestTrade, isPending } = useTrades(activeTab);
 
+  const onCreateTestTrade = () => {
+    console.log("Create Test Trade button clicked");
+    handleCreateTestTrade();
+  };
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -26,13 +31,13 @@ const TradesPage: React.FC = () => {
             Balance: ${accountData.balance.toLocaleString()}
           </div>
           <Button 
-            onClick={handleCreateTestTrade} 
+            onClick={onCreateTestTrade} 
             disabled={isPending}
             size="sm"
             className="flex items-center gap-1"
           >
             <PlusCircle className="h-4 w-4" />
-            Create Test Trade
+            {isPending ? "Creating..." : "Create Test Trade"}
           </Button>
         </div>
       </div>

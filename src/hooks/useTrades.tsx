@@ -33,10 +33,10 @@ export const useTrades = (activeTab: string) => {
   // Create a paper trade for testing
   const createPaperTrade = useMutation({
     mutationFn: async () => {
+      setIsCreatingTrade(true);
+      console.log("Creating paper trade for testing...");
+      
       try {
-        setIsCreatingTrade(true);
-        console.log("Creating paper trade for testing...");
-        
         // Create a mock SPY option trade
         const provider = getDataProvider();
         
@@ -52,12 +52,12 @@ export const useTrades = (activeTab: string) => {
         console.log("Got data provider, placing trade with order:", order);
         
         // Check if provider has placeTrade method
-        if (provider.placeTrade) {
+        if (typeof provider.placeTrade === 'function') {
           const result = await provider.placeTrade(order);
           console.log("Trade placed, result:", result);
           return result;
         } else {
-          console.log("Provider doesn't have placeTrade method, creating mock trade");
+          console.log("Provider doesn't have placeTrade method or it's not a function, creating mock trade");
           // Fallback to create a mock trade directly
           const mockTrade: SpyTrade = {
             id: `test-${Date.now()}`,
@@ -92,7 +92,6 @@ export const useTrades = (activeTab: string) => {
       toast.success("Paper trade created for testing");
       // Refresh the trades data
       queryClient.invalidateQueries({ queryKey: ['trades'] });
-      queryClient.invalidateQueries({ queryKey: ['todaysTrades'] });
     },
     onError: (error) => {
       console.error("Error in createPaperTrade mutation:", error);
