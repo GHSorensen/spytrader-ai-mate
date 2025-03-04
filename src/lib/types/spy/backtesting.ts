@@ -1,4 +1,7 @@
 
+/**
+ * Types related to backtesting functionality
+ */
 import { SpyTrade } from './trades';
 import { PerformanceMetrics } from './performance';
 

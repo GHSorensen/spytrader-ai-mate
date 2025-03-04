@@ -1,9 +1,11 @@
+
 /**
  * Enhanced error logging implementation
  */
 
 import { config, environment, isProduction } from '@/config/environment';
 import { ErrorContext } from '../types';
+import { toast } from "@/hooks/use-toast";
 
 /**
  * Log errors to console in development and to monitoring service in production
@@ -57,8 +59,8 @@ export function logError(error: Error, context?: ErrorContext): void {
 
 export const showErrorToast = (message: string, details?: string) => {
   try {
-    if (typeof window !== 'undefined' && window.toast) {
-      window.toast({
+    if (typeof window !== 'undefined') {
+      toast({
         title: 'An error occurred',
         description: details ? `${message}: ${details}` : message,
         variant: 'destructive',

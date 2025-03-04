@@ -1,6 +1,8 @@
+
 import { DataProviderInterface, DataProviderConfig } from "@/lib/types/spy/dataProvider";
 import { TDAmeritradeService } from "./tdAmeritradeService";
 import { SchwabService } from "./schwabService";
+import { toast } from "@/hooks/use-toast";
 
 // Mock service for development
 class MockDataProvider implements DataProviderInterface {
@@ -71,8 +73,8 @@ export const clearDataProvider = (): void => {
 };
 
 const notifyUser = (message: string, isError: boolean = false) => {
-  if (typeof window !== 'undefined' && window.toast) {
-    window.toast({
+  if (typeof window !== 'undefined') {
+    toast({
       title: isError ? 'Connection Error' : 'Connection Status',
       description: message,
       variant: isError ? 'destructive' : 'default',
