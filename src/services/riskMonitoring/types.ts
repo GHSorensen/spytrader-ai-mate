@@ -1,3 +1,4 @@
+
 // Re-export all types from the main types file to maintain consistent imports
 export * from '@/lib/types/spy/riskMonitoring';
 
@@ -15,6 +16,12 @@ export interface StrategyLearningInsight {
 
 // Import necessary types from common to ensure type compatibility
 import { MarketCondition, RiskToleranceType } from '@/lib/types/spy/common';
+import { 
+  RiskSignalSource, 
+  RiskSignalStrength, 
+  RiskSignalDirection, 
+  RiskActionType 
+} from '@/lib/types/spy/riskMonitoring';
 
 // These type definitions are no longer needed as they're imported from the library types
 // We're removing the duplicated definitions to prevent conflicts

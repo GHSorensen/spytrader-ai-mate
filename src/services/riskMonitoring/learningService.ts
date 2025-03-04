@@ -13,7 +13,8 @@ import {
 } from '@/lib/types/spy/riskMonitoring';
 import { 
   SpyTrade,
-  MarketCondition 
+  MarketCondition,
+  RiskToleranceType
 } from '@/lib/types/spy';
 
 /**
@@ -44,7 +45,7 @@ export function learnFromOutcomes(
   for (const [patternKey, actions] of Object.entries(actionsByPattern)) {
     const [source, condition, strength, direction] = patternKey.split('|') as [
       RiskSignalSource, 
-      RiskSignalCondition, // Updated to use RiskSignalCondition instead of MarketCondition
+      RiskSignalCondition,
       RiskSignalStrength, 
       RiskSignalDirection
     ];
