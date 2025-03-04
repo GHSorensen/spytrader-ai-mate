@@ -33,10 +33,9 @@ export const useTrades = (activeTab: string) => {
   // Create a paper trade for testing
   const createPaperTrade = useMutation({
     mutationFn: async () => {
-      console.log("Create paper trade mutation starting...");
-      
       // Create a mock SPY option trade
       const provider = getDataProvider();
+      console.log("Got data provider:", provider);
       
       // Create a sample trade order
       const order: TradeOrder = {
@@ -47,13 +46,20 @@ export const useTrades = (activeTab: string) => {
         duration: 'DAY'
       };
       
-      console.log("Got data provider, placing trade with order:", order);
+      console.log("Placing trade with order:", order);
       
       // Check if provider has placeTrade method
-      if (typeof provider.placeTrade === 'function') {
-        const result = await provider.placeTrade(order);
-        console.log("Trade placed, result:", result);
-        return result;
+      if (provider && typeof provider.placeTrade === 'function') {
+        try {
+          console.log("Provider has placeTrade method, calling it");
+          const result = await provider.placeTrade(order);
+          console.log("Trade placed, result:", result);
+          return result;
+        } catch (error) {
+          console.error("Error in provider.placeTrade:", error);
+          toast.error("Error placing trade with provider");
+          throw error;
+        }
       } else {
         console.log("Provider doesn't have placeTrade method, creating mock trade");
         // Fallback to create a mock trade directly
@@ -84,28 +90,26 @@ export const useTrades = (activeTab: string) => {
       toast.success("Paper trade created for testing");
       // Refresh the trades data
       queryClient.invalidateQueries({ queryKey: ['trades'] });
+      setIsCreatingTrade(false);
     },
     onError: (error) => {
       console.error("Error in createPaperTrade mutation:", error);
       toast.error(`Failed to create paper trade: ${error instanceof Error ? error.message : "Unknown error"}`);
+      setIsCreatingTrade(false);
     }
   });
 
   const handleCreateTestTrade = () => {
     console.log("handleCreateTestTrade called");
-    setIsCreatingTrade(true);
     
-    try {
-      createPaperTrade.mutate(undefined, {
-        onSettled: () => {
-          setIsCreatingTrade(false);
-        }
-      });
-    } catch (error) {
-      console.error("Error triggering paper trade creation:", error);
-      setIsCreatingTrade(false);
-      toast.error("Failed to start paper trade creation");
+    if (isCreatingTrade || createPaperTrade.isPending) {
+      console.log("Already creating a trade, ignoring request");
+      return;
     }
+    
+    setIsCreatingTrade(true);
+    console.log("Starting paper trade creation");
+    createPaperTrade.mutate();
   };
 
   return {

@@ -1,21 +1,36 @@
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAccountBalance } from '@/hooks/useAccountBalance';
 import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, RefreshCw } from "lucide-react";
 import TradeCard from '@/components/trades/TradeCard';
 import { useTrades } from '@/hooks/useTrades';
+import { toast } from 'sonner';
 
 const TradesPage: React.FC = () => {
   const accountData = useAccountBalance();
   const [activeTab, setActiveTab] = useState<string>('active');
   const { trades, isLoading, handleCreateTestTrade, isPending } = useTrades(activeTab);
 
-  const onCreateTestTrade = () => {
+  const onCreateTestTrade = useCallback(() => {
     console.log("Create Test Trade button clicked");
-    handleCreateTestTrade();
-  };
+    if (isPending) {
+      toast.info("Trade creation already in progress");
+      return;
+    }
+    try {
+      handleCreateTestTrade();
+    } catch (error) {
+      console.error("Error in onCreateTestTrade:", error);
+      toast.error("Failed to create test trade");
+    }
+  }, [handleCreateTestTrade, isPending]);
+
+  const onRefreshBalance = useCallback(() => {
+    accountData.refreshBalance?.();
+    toast.info("Refreshing account balance...");
+  }, [accountData]);
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -27,8 +42,17 @@ const TradesPage: React.FC = () => {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <div className="px-3 py-1 rounded-md bg-muted text-sm">
-            Balance: ${accountData.balance.toLocaleString()}
+          <div className="px-3 py-1 rounded-md bg-muted text-sm flex items-center">
+            <span>Balance: ${accountData.balance?.toLocaleString() || "0"}</span>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-6 w-6 ml-1"
+              onClick={onRefreshBalance}
+              disabled={accountData.isLoading}
+            >
+              <RefreshCw className="h-3 w-3" />
+            </Button>
           </div>
           <Button 
             onClick={onCreateTestTrade} 

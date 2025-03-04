@@ -1,82 +1,105 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { getDataProvider } from '@/services/dataProviders/dataProviderFactory';
 import { toast } from 'sonner';
 
 export const useAccountBalance = () => {
-  const [accountData, setAccountData] = useState({
-    balance: 0,
-    dailyPnL: 0,
-    allTimePnL: 0
-  });
-  const [isLoading, setIsLoading] = useState(true);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchAccountData = async () => {
+  
+  // Use React Query for improved caching and automatic refetching
+  const { data, isLoading, refetch, dataUpdatedAt } = useQuery({
+    queryKey: ['accountBalance'],
+    queryFn: async () => {
       try {
-        setIsLoading(true);
+        console.log('Fetching account balance...');
         setError(null);
+        
         const provider = getDataProvider();
+        console.log('Got provider:', provider);
         
         // Ensure provider is connected
         if (!provider.isConnected()) {
           console.log('Provider not connected, attempting to connect...');
-          const connected = await provider.connect();
-          if (!connected) {
-            console.warn('Could not connect to data provider');
-            setError('Unable to connect to your brokerage. Please check your connection settings.');
-            setIsLoading(false);
-            return;
+          try {
+            const connected = await provider.connect();
+            if (!connected) {
+              console.warn('Could not connect to data provider');
+              setError('Unable to connect to your brokerage. Please check your connection settings.');
+              return {
+                balance: 1600,
+                dailyPnL: 0,
+                allTimePnL: 0
+              };
+            }
+          } catch (connectionError) {
+            console.error('Error connecting to provider:', connectionError);
           }
         }
         
         // Check if the provider implements getAccountData
-        if (typeof provider.getAccountData === 'function') {
+        if (provider && typeof provider.getAccountData === 'function') {
           console.log('Fetching account balance from provider...');
-          const data = await provider.getAccountData();
-          console.log('Account data received:', data);
+          const accountData = await provider.getAccountData();
+          console.log('Account data received:', accountData);
           
-          if (data) {
-            setAccountData(data);
-            setLastUpdated(new Date());
+          if (accountData) {
+            return accountData;
           } else {
             console.warn('Received null or undefined account data');
             setError('No account data received from your brokerage.');
+            // Return default values
+            return {
+              balance: 1600,
+              dailyPnL: 0,
+              allTimePnL: 0
+            };
           }
         } else {
           console.warn('Data provider does not implement getAccountData method');
           // Use default values
-          setAccountData({
+          return {
             balance: 1600,
             dailyPnL: 0,
             allTimePnL: 0
-          });
-          
-          setError('Your current data provider does not support retrieving account data.');
+          };
         }
       } catch (error) {
         console.error('Error fetching account data:', error);
         setError('Failed to fetch account balance: ' + (error instanceof Error ? error.message : 'Unknown error'));
         toast.error('Failed to fetch account balance');
-      } finally {
-        setIsLoading(false);
+        
+        // Return default values on error
+        return {
+          balance: 1600,
+          dailyPnL: 0,
+          allTimePnL: 0
+        };
       }
-    };
-
-    fetchAccountData();
-    
-    // Refresh account data every 30 seconds for more real-time updates
-    const intervalId = setInterval(fetchAccountData, 30000);
-    
-    return () => clearInterval(intervalId);
-  }, []);
+    },
+    // Refresh every 30 seconds
+    refetchInterval: 30000,
+    // Refresh when window regains focus
+    refetchOnWindowFocus: true,
+    // Start with something while loading
+    placeholderData: {
+      balance: 1600,
+      dailyPnL: 0,
+      allTimePnL: 0
+    },
+  });
+  
+  // Function to manually refresh data
+  const refreshBalance = useCallback(() => {
+    console.log('Manually refreshing account balance...');
+    refetch();
+  }, [refetch]);
 
   return { 
-    ...accountData, 
+    ...data,
     isLoading,
-    lastUpdated,
-    error
+    lastUpdated: dataUpdatedAt ? new Date(dataUpdatedAt) : null,
+    error,
+    refreshBalance
   };
 };
