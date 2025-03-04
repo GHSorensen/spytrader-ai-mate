@@ -5,11 +5,19 @@ import { SpyHeaderWithNotifications } from '@/components/spy/SpyHeaderWithNotifi
 import { SpyOverview } from '@/components/spy/SpyOverview';
 import { OptionChain } from '@/components/spy/OptionChain';
 import { TradeJournal } from '@/components/spy/TradeJournal';
+import { AccountBalance } from '@/components/spy/AccountBalance';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Shield, BarChart2, Settings, User, History, LineChart } from 'lucide-react';
 
 export const Index = () => {
+  // Mock data for account balance - in a real app, this would come from a data source
+  const accountData = {
+    balance: 124750.25,
+    dailyPnL: 1250.75,
+    allTimePnL: 24750.25,
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <header className="border-b">
@@ -19,7 +27,7 @@ export const Index = () => {
       </header>
       
       <main className="flex-1 container mx-auto px-4 py-6 space-y-6">
-        {/* Account Management Card moved above SpyOverview */}
+        {/* Account Management Card */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <Card>
             <CardHeader className="pb-3">
@@ -45,6 +53,15 @@ export const Index = () => {
               </div>
             </CardContent>
           </Card>
+        </div>
+        
+        {/* Account Balance - New component added between Account Management and SPY Overview */}
+        <div className="my-6">
+          <AccountBalance 
+            balance={accountData.balance} 
+            dailyPnL={accountData.dailyPnL} 
+            allTimePnL={accountData.allTimePnL} 
+          />
         </div>
         
         <SpyOverview />
