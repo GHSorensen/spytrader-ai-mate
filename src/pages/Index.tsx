@@ -65,12 +65,12 @@ export const Index = () => {
           />
         </div>
         
-        <SpyOverview />
-        
-        {/* Today's Trades - shown on all screen sizes but optimized for mobile */}
+        {/* Today's Trades - moved up here, shown on all screen sizes but optimized for mobile */}
         <div className="my-6">
           <TodaysTrades />
         </div>
+        
+        <SpyOverview />
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 my-6">
           <Card>
