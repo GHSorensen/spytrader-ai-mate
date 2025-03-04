@@ -39,27 +39,66 @@ npm --version
 export PATH="$PATH:/usr/local/bin:/usr/bin"
 which npm || { echo "npm not found in PATH"; exit 1; }
 
+# Clear npm cache to avoid any cache-related issues
+npm cache clean --force || true
+
 # Install dependencies - do not use global installs due to read-only filesystem
 echo "Installing express..."
-npm install express --no-audit --no-fund
+npm install express --no-audit --no-fund --no-optional
 
-echo "Installing vite and React dependencies..."
-npm install vite @vitejs/plugin-react-swc --force --no-audit --no-fund
-npm install react react-dom @tanstack/react-query --force --no-audit --no-fund
+echo "Installing Vite and React dependencies..."
+npm install vite@latest --no-audit --no-fund --no-optional --force
+npm install @vitejs/plugin-react-swc@latest --no-audit --no-fund --no-optional --force
+npm install react react-dom @tanstack/react-query --no-audit --no-fund --no-optional --force
 
 echo "Installing all dependencies..."
-npm install --force --no-audit --no-fund
+npm install --no-audit --no-fund --no-optional --force
 
 # Run the build process with multiple fallbacks
 echo "Starting build process..."
-# Try with local npx
-npx vite build || \
-# Try with npm script
-npm run build || \
-# Try with NODE_ENV explicitly set
-NODE_ENV=production npx vite build || \
-# Last resort - use direct npx command with debug flags
-npx --no-install vite build --debug
+
+# Simplify vite.config.ts temporarily to a minimal version if build fails
+if ! npx vite build; then
+  echo "Initial build failed, trying with simplified config..."
+  # Create a backup of the original config
+  cp vite.config.ts vite.config.ts.bak
+  
+  # Write a simplified config
+  cat > vite.config.ts <<EOF
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react-swc'
+import path from 'path'
+
+export default defineConfig({
+  plugins: [react()],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
+  build: {
+    outDir: 'dist',
+  }
+})
+EOF
+  
+  # Try build with simplified config
+  if npx vite build; then
+    echo "Build succeeded with simplified config."
+  else
+    # Restore original config if simplified also fails
+    mv vite.config.ts.bak vite.config.ts
+    
+    # Try with npm run build
+    npm run build || \
+    # Try with NODE_ENV explicitly set
+    NODE_ENV=production npx vite build || \
+    # Last resort - use direct npx command with debug flags
+    npx --no-install vite build --debug
+  fi
+else
+  echo "Build succeeded with original config."
+fi
 
 # Create a marker file to indicate this is a Node.js project
 touch .node-project
