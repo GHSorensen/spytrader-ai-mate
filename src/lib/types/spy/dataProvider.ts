@@ -31,6 +31,15 @@ export interface DataProviderStatus {
   quotesDelayed?: boolean;
 }
 
+export interface TradeOrder {
+  symbol: string;
+  quantity: number;
+  action: 'BUY' | 'SELL';
+  orderType: 'MARKET' | 'LIMIT';
+  limitPrice?: number;
+  duration: 'DAY' | 'GTC';
+}
+
 export interface DataProviderInterface {
   getMarketData(): Promise<any>;
   getOptions(): Promise<any>;
@@ -38,7 +47,8 @@ export interface DataProviderInterface {
   getOptionChain(symbol: string): Promise<any>;
   getTrades(): Promise<any>;
   getTradesByStatus?(status: string): Promise<any>;
-  getAccountData?(): Promise<any>; // Added this method
+  getAccountData?(): Promise<any>;
+  placeTrade?(order: TradeOrder): Promise<any>; // Add the placeTrade method to the interface
   isConnected(): boolean;
   connect(): Promise<boolean>;
   disconnect(): Promise<boolean>;

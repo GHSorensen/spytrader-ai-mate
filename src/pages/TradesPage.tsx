@@ -13,6 +13,7 @@ import { format } from 'date-fns';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getDataProvider } from '@/services/dataProviders/dataProviderFactory';
 import { SpyTrade } from '@/lib/types/spy';
+import { TradeOrder } from '@/lib/types/spy/dataProvider';
 
 const TradesPage: React.FC = () => {
   const accountData = useAccountBalance();
@@ -46,15 +47,18 @@ const TradesPage: React.FC = () => {
         // Create a mock SPY option trade
         const provider = getDataProvider();
         
+        // Create a sample trade order
+        const order: TradeOrder = {
+          symbol: 'SPY',
+          quantity: 1,
+          action: 'BUY',
+          orderType: 'MARKET',
+          duration: 'DAY'
+        };
+        
         // Check if provider has placeTrade method
-        if (typeof provider.placeTrade === 'function') {
-          return await provider.placeTrade({
-            symbol: 'SPY',
-            quantity: 1,
-            action: 'BUY',
-            orderType: 'MARKET',
-            duration: 'DAY'
-          });
+        if (provider.placeTrade) {
+          return await provider.placeTrade(order);
         } else {
           // Fallback to create a mock trade directly
           const mockTrade: SpyTrade = {

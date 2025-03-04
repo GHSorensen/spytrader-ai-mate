@@ -1,5 +1,5 @@
 
-import { DataProviderInterface, DataProviderConfig, DataProviderStatus } from "@/lib/types/spy/dataProvider";
+import { DataProviderInterface, DataProviderConfig, DataProviderStatus, TradeOrder } from "@/lib/types/spy/dataProvider";
 import { SpyMarketData, SpyOption, SpyTrade } from "@/lib/types/spy";
 import { toast } from "@/components/ui/use-toast";
 
@@ -92,5 +92,34 @@ export abstract class BaseDataProvider implements DataProviderInterface {
       dailyPnL: 0,
       allTimePnL: 0
     };
+  }
+  
+  /**
+   * Place a trade order
+   */
+  async placeTrade(order: TradeOrder): Promise<any> {
+    // Default implementation that can be overridden by specific providers
+    console.log("Base placeTrade method called with order:", order);
+    
+    // Create a mock response for paper trading
+    const mockTrade: SpyTrade = {
+      id: `paper-${Date.now()}`,
+      type: Math.random() > 0.5 ? "CALL" : "PUT",
+      strikePrice: 500,
+      expirationDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      entryPrice: 3.45,
+      currentPrice: 3.45,
+      targetPrice: 5.0,
+      stopLoss: 2.0,
+      quantity: order.quantity,
+      status: "active",
+      openedAt: new Date(),
+      profit: 0,
+      profitPercentage: 0,
+      confidenceScore: 0.75,
+      paperTrading: true
+    };
+    
+    return { trade: mockTrade, orderId: `PAPER-${Date.now()}` };
   }
 }
