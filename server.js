@@ -32,6 +32,7 @@ app.get('/auth/callback', (req, res) => {
 });
 
 // For any request that doesn't match a static file, send the index.html
+// This is crucial for client-side routing to work properly
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });

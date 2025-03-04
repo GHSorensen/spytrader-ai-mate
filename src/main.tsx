@@ -9,34 +9,25 @@ import NotFound from './pages/NotFound.tsx'
 import RouterErrorBoundary from './components/RouterErrorBoundary.tsx'
 import ErrorBoundary from './components/ErrorBoundary.tsx'
 import QueryClientProvider from './components/QueryClientProvider.tsx'
+import UserProfilePage from './components/auth/UserProfilePage.tsx'
+import AuthenticationPage from './components/auth/AuthenticationPage.tsx'
 
+// Fix the root route path to use a wildcard (*) to allow nested routes
 const router = createBrowserRouter([
   {
     path: '/',
     element: <App />,
     errorElement: <RouterErrorBoundary />,
-    children: [
-      {
-        path: 'dashboard',
-        element: <></> // These are already handled inside App.tsx
-      },
-      {
-        path: 'trade-automation',
-        element: <></> // These are already handled inside App.tsx
-      },
-      {
-        path: 'performance',
-        element: <></> // These are already handled inside App.tsx
-      },
-      {
-        path: 'risk-console',
-        element: <></> // These are already handled inside App.tsx
-      },
-      {
-        path: 'risk-monitoring-test',
-        element: <></> // These are already handled inside App.tsx
-      },
-    ]
+  },
+  {
+    path: '/auth',
+    element: <AuthenticationPage />,
+    errorElement: <RouterErrorBoundary />,
+  },
+  {
+    path: '/profile',
+    element: <UserProfilePage />,
+    errorElement: <RouterErrorBoundary />,
   },
   {
     path: '/auth/callback',

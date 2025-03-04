@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from "sonner";
 import Dashboard from './components/Dashboard';
 import TradeAutomation from './components/TradeAutomation';
@@ -12,8 +12,6 @@ import RiskMonitoringTest from './pages/RiskMonitoringTest';
 import notificationService from './services/notification/notificationService';
 import ErrorBoundary from './components/ErrorBoundary';
 import SchwabIntegrationPage from './pages/SchwabIntegrationPage';
-import AuthenticationPage from './components/auth/AuthenticationPage';
-import UserProfilePage from './components/auth/UserProfilePage';
 import DetailedPerformancePage from './components/performance/DetailedPerformancePage';
 
 function App() {
@@ -49,9 +47,7 @@ function App() {
           <Route path="/risk-console" element={<RiskConsole />} />
           <Route path="/risk-monitoring-test" element={<RiskMonitoringTest />} />
           <Route path="/schwab-integration" element={<SchwabIntegrationPage />} />
-          <Route path="/auth" element={<AuthenticationPage />} />
-          <Route path="/profile" element={<UserProfilePage />} />
-          <Route path="*" element={<NotFound />} />
+          <Route path="*" element={<Navigate to="/not-found" replace />} />
         </Routes>
       </ErrorBoundary>
     </>
