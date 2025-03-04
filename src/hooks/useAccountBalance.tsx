@@ -3,17 +3,49 @@ import { useState, useEffect, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getDataProvider } from '@/services/dataProviders/dataProviderFactory';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useAccountBalance = () => {
   const [error, setError] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  
+  // Check authentication on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data } = await supabase.auth.getSession();
+      setIsAuthenticated(!!data.session);
+      
+      // Set up auth state change listener
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        console.log('Auth state changed:', event, !!session);
+        setIsAuthenticated(!!session);
+      });
+      
+      return () => {
+        subscription.unsubscribe();
+      };
+    };
+    
+    checkAuth();
+  }, []);
   
   // Use React Query for improved caching and automatic refetching
   const { data, isLoading, refetch, dataUpdatedAt } = useQuery({
-    queryKey: ['accountBalance'],
+    queryKey: ['accountBalance', isAuthenticated],
     queryFn: async () => {
       try {
-        console.log('Fetching account balance...');
+        console.log('Fetching account balance...', 'Auth state:', isAuthenticated);
         setError(null);
+        
+        // If not authenticated, return mock data
+        if (!isAuthenticated) {
+          console.log('Not authenticated, returning default balance');
+          return {
+            balance: 125000,
+            dailyPnL: 1200,
+            allTimePnL: 15000
+          };
+        }
         
         const provider = getDataProvider();
         console.log('Got provider:', provider);
@@ -22,9 +54,9 @@ export const useAccountBalance = () => {
           console.error('No data provider found');
           setError('No data provider available. Please check your connection settings.');
           return {
-            balance: 1600,
-            dailyPnL: 0,
-            allTimePnL: 0
+            balance: 125000,
+            dailyPnL: 1200,
+            allTimePnL: 15000
           };
         }
         
@@ -37,9 +69,9 @@ export const useAccountBalance = () => {
               console.warn('Could not connect to data provider');
               setError('Unable to connect to your brokerage. Please check your connection settings.');
               return {
-                balance: 1600,
-                dailyPnL: 0,
-                allTimePnL: 0
+                balance: 125000,
+                dailyPnL: 1200,
+                allTimePnL: 15000
               };
             }
           } catch (connectionError) {
@@ -61,18 +93,18 @@ export const useAccountBalance = () => {
             setError('No account data received from your brokerage.');
             // Return default values
             return {
-              balance: 1600,
-              dailyPnL: 0,
-              allTimePnL: 0
+              balance: 125000,
+              dailyPnL: 1200,
+              allTimePnL: 15000
             };
           }
         } else {
           console.warn('Data provider does not implement getAccountData method');
           // Use default values
           return {
-            balance: 1600,
-            dailyPnL: 0,
-            allTimePnL: 0
+            balance: 125000,
+            dailyPnL: 1200,
+            allTimePnL: 15000
           };
         }
       } catch (error) {
@@ -82,9 +114,9 @@ export const useAccountBalance = () => {
         
         // Return default values on error
         return {
-          balance: 1600,
-          dailyPnL: 0,
-          allTimePnL: 0
+          balance: 125000,
+          dailyPnL: 1200,
+          allTimePnL: 15000
         };
       }
     },
@@ -94,11 +126,12 @@ export const useAccountBalance = () => {
     refetchOnWindowFocus: true,
     // Start with something while loading
     placeholderData: {
-      balance: 1600,
-      dailyPnL: 0,
-      allTimePnL: 0
+      balance: 125000,
+      dailyPnL: 1200,
+      allTimePnL: 15000
     },
     staleTime: 15000, // Consider data fresh for 15 seconds
+    enabled: true, // Always enable the query regardless of authentication state
   });
   
   // Function to manually refresh data
@@ -118,6 +151,7 @@ export const useAccountBalance = () => {
     isLoading,
     lastUpdated: dataUpdatedAt ? new Date(dataUpdatedAt) : null,
     error,
-    refreshBalance
+    refreshBalance,
+    isAuthenticated
   };
 };
