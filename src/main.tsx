@@ -11,6 +11,11 @@ import ErrorBoundary from './components/ErrorBoundary.tsx'
 import QueryClientProvider from './components/QueryClientProvider.tsx'
 import UserProfilePage from './components/auth/UserProfilePage.tsx'
 import AuthenticationPage from './components/auth/AuthenticationPage.tsx'
+import { setupGlobalErrorHandling } from './lib/errorMonitoring.ts'
+import PerformanceMonitor from './components/PerformanceMonitor.tsx'
+
+// Set up global error handling for production
+setupGlobalErrorHandling();
 
 // Fix the root route path to use a wildcard (*) to allow nested routes
 const router = createBrowserRouter([
@@ -46,6 +51,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <ErrorBoundary>
       <QueryClientProvider>
         <RouterProvider router={router} />
+        <PerformanceMonitor />
       </QueryClientProvider>
     </ErrorBoundary>
   </React.StrictMode>,

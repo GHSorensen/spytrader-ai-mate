@@ -55,6 +55,10 @@ npm install || npm ci
 echo "Ensuring build tools are installed..."
 npm install --save-dev vite@^5.0.0 @vitejs/plugin-react-swc@latest
 
+# Install production optimization dependencies
+echo "Installing production optimization dependencies..."
+npm install --save-dev compression helmet
+
 # List installed packages to verify Vite installation
 echo "Verifying vite installation:"
 npm list vite
@@ -67,13 +71,13 @@ export NODE_ENV=$NODE_ENV_BACKUP
 echo "Starting build process..."
 if [ -f ./node_modules/.bin/vite ]; then
   echo "Using local vite command"
-  NODE_ENV=development ./node_modules/.bin/vite build
+  NODE_ENV=production ./node_modules/.bin/vite build --mode production
 elif command -v vite >/dev/null 2>&1; then
   echo "Using global vite command"
-  NODE_ENV=development vite build
+  NODE_ENV=production vite build --mode production
 else
   echo "Using npx to run vite"
-  NODE_ENV=development npx vite build
+  NODE_ENV=production npx vite build --mode production
 fi
 
 # If the build failed, try alternative approaches
@@ -81,10 +85,10 @@ if [ $? -ne 0 ]; then
   echo "First build attempt failed, trying alternative approach..."
   # Try with npm run build command if it exists in package.json
   if grep -q '"build":' package.json; then
-    NODE_ENV=development npm run build
+    NODE_ENV=production npm run build
   else
     # Last resort: directly use npx
-    NODE_ENV=development npx --no-install vite build || NODE_ENV=development npx vite build
+    NODE_ENV=production npx --no-install vite build || NODE_ENV=production npx vite build
   fi
 fi
 
