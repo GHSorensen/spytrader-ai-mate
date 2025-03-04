@@ -29,8 +29,70 @@ export class IBKRTradesService {
       twsHost: config.twsHost,
       twsPort: config.twsPort,
       hasApiKey: !!config.apiKey,
-      hasCallbackUrl: !!config.callbackUrl
+      hasCallbackUrl: !!config.callbackUrl,
+      hasAccessToken: !!config.accessToken,
+      hasRefreshToken: !!config.refreshToken
     }, null, 2));
+    
+    // Validate configuration immediately
+    this.validateConfiguration();
+  }
+  
+  /**
+   * Validate the service configuration
+   * @private
+   */
+  private validateConfiguration(): void {
+    try {
+      console.log("[IBKRTradesService] Validating configuration...");
+      
+      if (this.connectionMethod === 'webapi') {
+        // Check WebAPI required credentials
+        if (!this.config.apiKey) {
+          console.error("[IBKRTradesService] Configuration error: No API key provided for WebAPI");
+        }
+        
+        if (!this.config.callbackUrl) {
+          console.error("[IBKRTradesService] Configuration error: No callback URL provided for WebAPI");
+        }
+        
+        // Check token status
+        if (!this.config.accessToken && !this.config.refreshToken) {
+          console.error("[IBKRTradesService] Authentication error: No access token or refresh token available. Authentication required.");
+        } else if (!this.config.accessToken) {
+          console.warn("[IBKRTradesService] Authentication warning: No access token, but refresh token is available. Token refresh might be needed.");
+        }
+        
+        // Validate WebAPI service
+        if (!this.webApiDataService) {
+          console.error("[IBKRTradesService] Service error: WebAPI data service not initialized");
+        }
+      } else {
+        // Check TWS required settings
+        if (!this.config.twsHost) {
+          console.error("[IBKRTradesService] Configuration error: No TWS host provided");
+        }
+        
+        if (!this.config.twsPort) {
+          console.error("[IBKRTradesService] Configuration error: No TWS port provided");
+        }
+        
+        // Verify expected port based on paper trading status
+        const expectedPort = this.config.paperTrading ? '7497' : '7496';
+        if (this.config.twsPort !== expectedPort) {
+          console.warn(`[IBKRTradesService] TWS port warning: Using port ${this.config.twsPort}, but ${expectedPort} is expected for ${this.config.paperTrading ? 'paper' : 'live'} trading`);
+        }
+        
+        // Validate TWS service
+        if (!this.twsDataService) {
+          console.error("[IBKRTradesService] Service error: TWS data service not initialized");
+        }
+      }
+      
+      console.log("[IBKRTradesService] Configuration validation complete");
+    } catch (error) {
+      console.error("[IBKRTradesService] Error validating configuration:", error);
+    }
   }
   
   /**
@@ -39,6 +101,12 @@ export class IBKRTradesService {
   async getTrades(): Promise<SpyTrade[]> {
     try {
       console.log(`[IBKRTradesService] Getting trades from IBKR via ${this.connectionMethod}`);
+      
+      // Check authentication status before proceeding
+      if (this.connectionMethod === 'webapi' && !this.config.accessToken) {
+        console.error("[IBKRTradesService] Cannot get trades: No access token available. Please authenticate with IBKR first.");
+        throw new Error("Authentication required: No access token available");
+      }
       
       let trades: SpyTrade[];
       const startTime = Date.now();
@@ -74,6 +142,16 @@ export class IBKRTradesService {
     } catch (error) {
       console.error("[IBKRTradesService] Error fetching trades from Interactive Brokers:", error);
       console.error("[IBKRTradesService] Stack trace:", error instanceof Error ? error.stack : "No stack trace");
+      
+      // Enhanced error logging
+      if (error instanceof Error) {
+        if (error.message.includes("Authentication") || error.message.includes("token")) {
+          console.error("[IBKRTradesService] This appears to be an authentication error. Please check your IBKR credentials and connection status.");
+        } else if (error.message.includes("network") || error.message.includes("fetch")) {
+          console.error("[IBKRTradesService] This appears to be a network error. Please check your internet connection and IBKR service status.");
+        }
+      }
+      
       throw error;
     }
   }
@@ -86,6 +164,12 @@ export class IBKRTradesService {
       console.log(`[IBKRTradesService] Placing trade with Interactive Brokers via ${this.connectionMethod}`);
       console.log(`[IBKRTradesService] Order details:`, JSON.stringify(order, null, 2));
       console.log(`[IBKRTradesService] Paper trading mode: ${this.config.paperTrading ? 'Yes' : 'No'}`);
+      
+      // Check authentication status before proceeding
+      if (this.connectionMethod === 'webapi' && !this.config.accessToken) {
+        console.error("[IBKRTradesService] Cannot place trade: No access token available. Please authenticate with IBKR first.");
+        throw new Error("Authentication required: No access token available");
+      }
       
       // Check connection status before attempting trade
       console.log("[IBKRTradesService] Checking connection before placing trade");
@@ -116,6 +200,16 @@ export class IBKRTradesService {
     } catch (error) {
       console.error("[IBKRTradesService] Error placing trade with Interactive Brokers:", error);
       console.error("[IBKRTradesService] Stack trace:", error instanceof Error ? error.stack : "No stack trace");
+      
+      // Enhanced error logging
+      if (error instanceof Error) {
+        if (error.message.includes("Authentication") || error.message.includes("token")) {
+          console.error("[IBKRTradesService] This appears to be an authentication error. Please check your IBKR credentials and connection status.");
+        } else if (error.message.includes("network") || error.message.includes("fetch")) {
+          console.error("[IBKRTradesService] This appears to be a network error. Please check your internet connection and IBKR service status.");
+        }
+      }
+      
       throw error;
     }
   }
@@ -129,6 +223,13 @@ export class IBKRTradesService {
       // For TWS, we can check if the service is instantiated
       const hasConnection = !!this.twsDataService;
       console.log("[IBKRTradesService] TWS connection check:", hasConnection ? "Connected" : "Not connected");
+      
+      if (!hasConnection) {
+        console.error("[IBKRTradesService] TWS data service not available - please check TWS configuration");
+        return false;
+      }
+      
+      // Add additional TWS connection validation if possible
       return hasConnection;
     } catch (error) {
       console.error("[IBKRTradesService] Error checking TWS connection:", error);
@@ -142,11 +243,27 @@ export class IBKRTradesService {
    */
   private async checkWebApiConnection(): Promise<boolean> {
     try {
-      // For WebAPI, we'd ideally check if we have a valid token
-      // This is a simple placeholder check
-      const hasConnection = !!this.webApiDataService;
-      console.log("[IBKRTradesService] WebAPI connection check:", hasConnection ? "Service exists" : "No service");
-      return hasConnection;
+      // For WebAPI, check if we have a service and access token
+      const hasService = !!this.webApiDataService;
+      const hasToken = !!this.config.accessToken;
+      
+      console.log("[IBKRTradesService] WebAPI connection check:", {
+        serviceExists: hasService ? "Yes" : "No",
+        hasAccessToken: hasToken ? "Yes" : "No",
+        tokenPrefix: hasToken ? this.config.accessToken?.substring(0, 5) + "..." : "N/A"
+      });
+      
+      if (!hasService) {
+        console.error("[IBKRTradesService] WebAPI service not available - please check your configuration");
+        return false;
+      }
+      
+      if (!hasToken) {
+        console.error("[IBKRTradesService] No access token available - authentication required");
+        return false;
+      }
+      
+      return hasService && hasToken;
     } catch (error) {
       console.error("[IBKRTradesService] Error checking WebAPI connection:", error);
       return false;
