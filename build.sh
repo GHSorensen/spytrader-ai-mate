@@ -34,12 +34,14 @@ node --version
 echo "NPM version:"
 npm --version
 
-# Install necessary dependencies
+# First install express to make sure the server can run
 npm install express
-npm install
+
+# Install dependencies with legacy peer deps to avoid conflicts
+npm install --legacy-peer-deps
 
 # Run the build process
-npm run build
+npm run build --legacy-peer-deps
 
 # Create a marker file to indicate this is a Node.js project
 touch .node-project
