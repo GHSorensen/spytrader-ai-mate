@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAccountBalance } from '@/hooks/useAccountBalance';
@@ -30,13 +29,11 @@ const TradesPage: React.FC = () => {
     const checkConnection = async () => {
       try {
         const provider = getDataProvider();
-        // Type cast to BaseDataProvider to access the properties
-        const concreteProvider = provider as BaseDataProvider;
+        // Only use public methods and properties from the provider
         const status = {
           providerType: provider.constructor.name,
           isConnected: provider.isConnected(),
-          accessToken: concreteProvider.accessToken ? "Present" : "Missing",
-          config: concreteProvider.config
+          // Don't access protected properties
         };
         console.log("Provider status:", status);
         setConnectionDiagnostics(null);
