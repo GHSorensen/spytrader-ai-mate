@@ -9,7 +9,8 @@ import {
   generateEquityCurveData,
   generateMonthlyPerformanceData,
   generateProfitDistributionData,
-  generateDrawdownsData
+  generateDrawdownsData,
+  getMonthsForTimeFrame
 } from './mockData';
 
 export const useMockPerformanceData = (): MockDataGenerators => {
@@ -30,5 +31,6 @@ export const useMockPerformanceData = (): MockDataGenerators => {
     generateMonthlyPerformanceData,
     generateProfitDistributionData,
     generateDrawdownsData,
+    getMonthsForTimeFrame,
   };
 };
