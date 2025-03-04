@@ -32,14 +32,13 @@ if (!fs.existsSync(DIST_DIR)) {
 // Gzip compression
 app.use(compression());
 
-// Security headers with CSP configuration
-// Updated CSP to allow connections to render.com, IBKR, and Schwab
+// Security headers with improved CSP configuration
 app.use(
   helmet({
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdn.gpteng.co"],
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
         imgSrc: ["'self'", "data:", "https://sklwsxgxsqtwlqjhegms.supabase.co", "https://*.render.com"],

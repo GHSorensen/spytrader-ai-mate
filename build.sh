@@ -48,10 +48,10 @@ rm -rf node_modules || true
 NODE_ENV_BACKUP=$NODE_ENV
 export NODE_ENV=development
 echo "Installing dependencies in development mode first..."
-npm install || npm ci
+npm install --no-optional || npm ci --no-optional
 
 # Important: Explicitly install Vite 5.x and its plugins as dev dependencies
-# This ensures compatibility with lovable-tagger which requires Vite 5.x
+# This ensures compatibility with the project
 echo "Ensuring build tools are installed..."
 npm install --save-dev vite@^5.0.0 @vitejs/plugin-react-swc@latest
 
