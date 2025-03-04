@@ -1,6 +1,6 @@
 
 import { DataProviderConfig } from "@/lib/types/spy/dataProvider";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 
 /**
  * Ensures the callbackUrl is properly set for Schwab's HTTPS requirement
@@ -30,10 +30,16 @@ export function ensureSecureCallbackUrl(config: DataProviderConfig): string {
   }
   
   // Show a toast to notify the user about the callback URL
-  toast({
-    title: "Callback URL Notice",
-    description: `Using ${secureCallbackUrl} for Schwab authentication.`,
-  });
+  try {
+    if (window.toast) {
+      toast({
+        title: "Callback URL Notice",
+        description: `Using ${secureCallbackUrl} for Schwab authentication.`,
+      });
+    }
+  } catch (error) {
+    console.error("Failed to show toast notification:", error);
+  }
   
   return secureCallbackUrl;
 }

@@ -12,6 +12,7 @@ import QueryClientProvider from './components/QueryClientProvider.tsx'
 import UserProfilePage from './components/auth/UserProfilePage.tsx'
 import AuthenticationPage from './components/auth/AuthenticationPage.tsx'
 import { config, environment } from '@/config/environment'
+import { useToast } from './hooks/use-toast'
 
 // Fix the root route path to use a wildcard (*) to allow nested routes
 const router = createBrowserRouter([
@@ -51,9 +52,6 @@ if (config.logLevel === 'debug') {
 
 // Performance marks for startup metrics
 performance.mark('app-init-start');
-
-// Create a window variable to store the toast functions
-window.toast = undefined;
 
 // Initialize the React app
 ReactDOM.createRoot(document.getElementById('root')!).render(

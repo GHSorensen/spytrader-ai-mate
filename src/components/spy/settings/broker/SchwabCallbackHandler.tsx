@@ -1,8 +1,9 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { SchwabAuthManager } from '@/services/dataProviders/schwab/SchwabAuthManager';
 import { DataProviderConfig } from '@/lib/types/spy/dataProvider';
 import { config } from '@/config/environment';

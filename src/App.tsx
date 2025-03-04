@@ -13,8 +13,19 @@ import ErrorBoundary from './components/ErrorBoundary';
 import SchwabIntegrationPage from './pages/SchwabIntegrationPage';
 import DetailedPerformancePage from './components/performance/DetailedPerformancePage';
 import { Toaster } from './components/ui/toaster';
+import { useToast } from './hooks/use-toast';
 
 function App() {
+  const { add, remove, update } = useToast();
+  
+  // Set window.toast for global access
+  useEffect(() => {
+    window.toast = { add, remove, update };
+    return () => {
+      window.toast = undefined;
+    };
+  }, [add, remove, update]);
+  
   // Set up initial notifications on app load
   useEffect(() => {
     try {
