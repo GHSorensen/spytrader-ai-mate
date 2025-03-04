@@ -12,8 +12,8 @@ export function useIBKRIntegration() {
   const [apiKey, setApiKey] = useState('');
   const [callbackUrl, setCallbackUrl] = useState(`${window.location.origin}/auth/ibkr/callback`);
   const [twsHost, setTwsHost] = useState('localhost');
-  const [twsPort, setTwsPort] = useState('7496');
-  const [isPaperTrading, setIsPaperTrading] = useState(false);
+  const [twsPort, setTwsPort] = useState('7497'); // Default to paper trading port
+  const [isPaperTrading, setIsPaperTrading] = useState(true); // Default to paper trading
   const [isConfigured, setIsConfigured] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected' | 'error'>('disconnected');
   const navigate = useNavigate();
@@ -32,12 +32,15 @@ export function useIBKRIntegration() {
         
         if (config.twsHost) {
           setTwsHost(config.twsHost);
-          setTwsPort(config.twsPort || '7496');
+          setTwsPort(config.twsPort || '7497'); // Default to paper trading port
           if (config.connectionMethod === 'tws') {
             setApiMethod('tws');
           }
-          if (config.paperTrading) {
-            setIsPaperTrading(true);
+          if (config.paperTrading !== undefined) {
+            setIsPaperTrading(config.paperTrading);
+          } else {
+            // Default to paper trading if port is 7497
+            setIsPaperTrading(config.twsPort === '7497');
           }
         }
       } catch (err) {
@@ -53,7 +56,7 @@ export function useIBKRIntegration() {
     } else if (!isPaperTrading && twsPort === '7497') {
       setTwsPort('7496');
     }
-  }, [isPaperTrading]);
+  }, [isPaperTrading, twsPort]);
   
   return {
     // State

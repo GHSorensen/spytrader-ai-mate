@@ -1,93 +1,64 @@
 
-import React, { useState } from 'react';
-import { Terminal, ExternalLink, HelpCircle } from 'lucide-react';
-import { ibkrDocumentation } from '@/services/dataProviders/interactiveBrokers/documentation';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import React from 'react';
+import { CheckCircle2, Info } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const IBKRPrerequisites: React.FC = () => {
-  const [apiMethod, setApiMethod] = useState<'webapi' | 'tws'>('webapi');
-
+  const prerequisites = [
+    {
+      id: 'login',
+      title: 'Log in to Interactive Brokers',
+      description: 'Make sure you are logged in to your IBKR account'
+    },
+    {
+      id: 'tws',
+      title: 'For TWS users: Configure API settings',
+      description: 'Enable API connections in TWS API settings'
+    },
+    {
+      id: 'settings',
+      title: 'Confirm TWS API Settings',
+      description: 'Go to TWS > Edit > Global Configuration > API > Settings and ensure:'
+    }
+  ];
+  
+  const twsSettings = [
+    { text: 'Enable ActiveX and Socket Clients is checked', key: 'enable' },
+    { text: 'Socket port is correct (7496 for live, 7497 for paper trading)', key: 'port' },
+    { text: 'Allow connections from localhost only is recommended', key: 'localhost' },
+    { text: 'Uncheck Read-Only API if you want to place trades', key: 'readonly' }
+  ];
+  
   return (
-    <div className="bg-muted/50 p-4 rounded-lg">
-      <h3 className="font-medium mb-2 flex items-center">
-        <Terminal className="h-4 w-4 mr-2" />
-        IBKR Connection Options
-      </h3>
-      
-      <Tabs defaultValue={apiMethod} onValueChange={(value) => setApiMethod(value as 'webapi' | 'tws')}>
-        <TabsList className="mb-4">
-          <TabsTrigger value="webapi">Client Portal API (Web)</TabsTrigger>
-          <TabsTrigger value="tws">TWS API (Desktop)</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="webapi">
-          <div className="space-y-3">
-            <p className="text-sm text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 p-2 rounded flex items-start">
-              <HelpCircle className="h-4 w-4 mr-2 flex-shrink-0 mt-0.5" />
-              <span>
-                Finding the API settings in IBKR can be challenging. Look under "Users & Access Rights" and then 
-                "Access Rights" sections. You may need to contact IBKR support if you can't find these settings.
-              </span>
-            </p>
-            
-            <ul className="list-disc list-inside space-y-1 text-sm">
-              <li>You need an active Interactive Brokers account (IBKR Pro)</li>
-              <li>You'll need to create API credentials in the IBKR dashboard</li>
-              <li>OAuth credentials must be registered in your IBKR account</li>
-              <li>Your Client Portal API gateway must be active when trading</li>
-            </ul>
+    <div className="space-y-4">
+      <Alert>
+        <Info className="h-4 w-4" />
+        <AlertTitle>Before you connect</AlertTitle>
+        <AlertDescription>
+          <div className="text-sm space-y-2 mt-2">
+            {prerequisites.map((item) => (
+              <div key={item.id} className="flex items-start">
+                <CheckCircle2 className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="font-medium">{item.title}</p>
+                  <p className="text-muted-foreground">{item.description}</p>
+                  
+                  {item.id === 'settings' && (
+                    <ul className="mt-2 space-y-1 text-sm">
+                      {twsSettings.map((setting) => (
+                        <li key={setting.key} className="flex items-start">
+                          <span className="inline-block w-2 h-2 rounded-full bg-green-500 mt-1.5 mr-2"></span>
+                          {setting.text}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
-        </TabsContent>
-        
-        <TabsContent value="tws">
-          <div className="space-y-3">
-            <p className="text-sm text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 p-2 rounded flex items-start">
-              <HelpCircle className="h-4 w-4 mr-2 flex-shrink-0 mt-0.5" />
-              <span>
-                TWS API is generally easier to set up than Web API, but requires TWS (Trader Workstation) 
-                to be running on your computer when you want to trade.
-              </span>
-            </p>
-            
-            <ul className="list-disc list-inside space-y-1 text-sm">
-              <li>Download and install IBKR Trader Workstation (TWS)</li>
-              <li>In TWS, go to Edit → Global Configuration → API → Settings</li>
-              <li>Enable API connections and set a port number (default is 7496)</li>
-              <li>TWS must be running on your computer when trading</li>
-            </ul>
-          </div>
-        </TabsContent>
-      </Tabs>
-      
-      <div className="mt-4 text-sm flex flex-col space-y-2">
-        <a 
-          href="https://www.interactivebrokers.com/en/index.php?f=4985" 
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center text-primary hover:underline"
-        >
-          <span>IBKR API Documentation Portal</span>
-          <ExternalLink className="h-3 w-3 ml-1" />
-        </a>
-        <a 
-          href="https://interactivebrokers.github.io/tws-api/" 
-          target="_blank"
-          rel="noopener noreferrer" 
-          className="flex items-center text-primary hover:underline"
-        >
-          <span>TWS API Documentation</span>
-          <ExternalLink className="h-3 w-3 ml-1" />
-        </a>
-        <a 
-          href="https://interactivebrokers.github.io/cpwebapi/" 
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center text-primary hover:underline"
-        >
-          <span>Client Portal API Documentation</span>
-          <ExternalLink className="h-3 w-3 ml-1" />
-        </a>
-      </div>
+        </AlertDescription>
+      </Alert>
     </div>
   );
 };

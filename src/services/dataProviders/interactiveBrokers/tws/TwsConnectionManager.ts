@@ -30,6 +30,9 @@ export class TwsConnectionManager {
       if (this.config.paperTrading && this.config.twsPort === '7496') {
         console.log("Using paper trading port 7497 instead of 7496");
         this.config.twsPort = '7497';
+      } else if (!this.config.paperTrading && this.config.twsPort === '7497') {
+        console.log("Using live trading port 7496 instead of 7497");
+        this.config.twsPort = '7496';
       }
       
       // In a real implementation, we would make a socket connection to TWS
@@ -49,7 +52,7 @@ export class TwsConnectionManager {
           return this.connect();
         }
         
-        throw new Error("Failed to connect to TWS after multiple attempts. Please check if TWS is running and API connections are enabled.");
+        throw new Error("Failed to connect to TWS after multiple attempts. Please check if TWS is running, you are logged in, and API connections are enabled.");
       }
     } catch (error) {
       console.error("Error connecting to TWS:", error);
