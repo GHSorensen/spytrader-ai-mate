@@ -6,7 +6,13 @@ import { AISettingsDialog } from './AISettingsDialog';
 import NotificationCenter from './notifications/NotificationCenter';
 import { RiskToleranceType } from '@/lib/types/spy';
 import { schwabDocumentation } from '@/services/dataProviders/schwab/documentation';
-import { User, Settings, BarChart2 } from 'lucide-react';
+import { User, Settings, BarChart2, Menu } from 'lucide-react';
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetClose
+} from "@/components/ui/sheet";
 
 interface SpyHeaderProps {
   minimal?: boolean;
@@ -15,6 +21,7 @@ interface SpyHeaderProps {
 export const SpyHeaderWithNotifications: React.FC<SpyHeaderProps> = ({ minimal = false }) => {
   // Add state for AI settings dialog
   const [isAISettingsOpen, setIsAISettingsOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [riskTolerance, setRiskTolerance] = useState<RiskToleranceType>('moderate');
 
   // Handler for risk tolerance changes
@@ -23,7 +30,7 @@ export const SpyHeaderWithNotifications: React.FC<SpyHeaderProps> = ({ minimal =
   };
 
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex items-center justify-between w-full">
       <div className="flex items-center gap-6">
         <Link to="/" className="flex items-center space-x-2">
           <span className="font-bold text-xl text-primary">SPY Trading AI</span>
@@ -42,11 +49,74 @@ export const SpyHeaderWithNotifications: React.FC<SpyHeaderProps> = ({ minimal =
       </div>
       
       <div className="flex items-center gap-2">
-        <div className="relative group">
+        {/* Mobile Menu Button - only shown on small screens */}
+        <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="icon" className="md:hidden">
+              <Menu className="h-5 w-5" />
+              <span className="sr-only">Menu</span>
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-[250px] sm:w-[300px]">
+            <nav className="flex flex-col gap-4 mt-8">
+              <Link 
+                to="/" 
+                className="px-2 py-1 rounded hover:bg-accent"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Dashboard
+              </Link>
+              <Link 
+                to="/trades" 
+                className="px-2 py-1 rounded hover:bg-accent"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Trades
+              </Link>
+              <Link 
+                to="/performance" 
+                className="px-2 py-1 rounded hover:bg-accent"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Performance
+              </Link>
+              <Link 
+                to="/detailed-performance" 
+                className="px-2 py-1 rounded hover:bg-accent"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Analytics
+              </Link>
+              <Link 
+                to="/risk-console" 
+                className="px-2 py-1 rounded hover:bg-accent"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Risk Console
+              </Link>
+              <Link 
+                to="/schwab-integration" 
+                className="px-2 py-1 rounded hover:bg-accent"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Schwab Connect
+              </Link>
+              <Link 
+                to="/profile" 
+                className="px-2 py-1 rounded hover:bg-accent"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Profile
+              </Link>
+            </nav>
+          </SheetContent>
+        </Sheet>
+
+        <div className="hidden sm:relative sm:block group">
           <Button 
             variant="outline" 
             size="sm" 
-            className="text-xs"
+            className="text-xs hidden sm:inline-flex"
             onClick={() => schwabDocumentation.openUserGuide()}
           >
             Schwab Guide

@@ -131,35 +131,35 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
           )}
         </Button>
       </SheetTrigger>
-      <SheetContent className="sm:max-w-md">
+      <SheetContent className="sm:max-w-md p-4">
         <SheetHeader className="pb-4">
-          <SheetTitle className="text-xl flex items-center justify-between">
+          <SheetTitle className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <span>Notifications</span>
-            <div className="flex items-center space-x-2">
-              {notifications.length > 0 && (
-                <>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={handleMarkAllAsRead}
-                  >
-                    Mark all read
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={handleClearAll}
-                  >
-                    Clear all
-                  </Button>
-                </>
-              )}
-              <SheetClose asChild>
-                <Button variant="ghost" size="icon">
-                  <X className="h-4 w-4" />
+            {notifications.length > 0 && (
+              <div className="flex items-center space-x-2 self-end sm:self-auto">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className="text-xs px-2 h-8"
+                  onClick={handleMarkAllAsRead}
+                >
+                  Mark all read
                 </Button>
-              </SheetClose>
-            </div>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className="text-xs px-2 h-8"
+                  onClick={handleClearAll}
+                >
+                  Clear all
+                </Button>
+                <SheetClose asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <X className="h-4 w-4" />
+                  </Button>
+                </SheetClose>
+              </div>
+            )}
           </SheetTitle>
         </SheetHeader>
         
@@ -170,15 +170,15 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
               <p className="text-muted-foreground">No notifications</p>
             </div>
           ) : (
-            <div className="space-y-4 pr-4">
+            <div className="space-y-4 pr-2">
               {notifications.map((notification) => (
                 <div 
                   key={notification.id}
-                  className={`relative rounded-lg border p-4 ${
+                  className={`relative rounded-lg border p-3 ${
                     notification.read ? 'bg-card' : 'bg-accent'
                   }`}
                 >
-                  <div className="absolute top-4 right-4 flex items-center space-x-1">
+                  <div className="absolute top-2 right-2 flex items-center space-x-1">
                     {!notification.read && (
                       <Button 
                         variant="ghost" 
@@ -199,12 +199,12 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                     </Button>
                   </div>
                   
-                  <div className="flex items-start space-x-4">
+                  <div className="flex items-start space-x-3">
                     <div className="mt-1">
                       {getNotificationIcon(notification.type)}
                     </div>
-                    <div className="flex-1">
-                      <div className="flex items-center">
+                    <div className="flex-1 pr-8">
+                      <div className="flex flex-wrap items-center gap-1">
                         <h4 className="font-medium text-sm">
                           {notification.title}
                         </h4>
@@ -215,7 +215,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                             notification.priority === 'medium' ? 'secondary' :
                             'outline'
                           }
-                          className="ml-2 text-xs"
+                          className="text-xs"
                         >
                           {notification.priority}
                         </Badge>

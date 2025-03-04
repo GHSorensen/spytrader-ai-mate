@@ -31,7 +31,7 @@ export const AccountBalance: React.FC<AccountBalanceProps> = ({
             ${balance.toLocaleString()}
           </div>
           
-          <div className="flex items-center justify-between w-full mt-2 text-sm">
+          <div className="flex flex-col sm:flex-row items-center justify-between w-full mt-2 text-sm gap-2">
             <div className="flex items-center gap-1">
               <span className="text-muted-foreground">Daily:</span>
               <div className={cn("flex items-center", 
