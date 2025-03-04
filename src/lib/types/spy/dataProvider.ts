@@ -1,34 +1,39 @@
 
-import { SpyMarketData, SpyOption, SpyTrade } from "@/lib/types/spy";
-import { BrokerType } from "./broker";
+/**
+ * Configuration for data providers
+ */
+export type DataProviderType = 'td-ameritrade' | 'interactive-brokers' | 'schwab' | 'mock';
 
 export interface DataProviderConfig {
-  type: BrokerType;
+  type: DataProviderType;
   apiKey?: string;
   secretKey?: string;
   accountId?: string;
-  appKey?: string;
   callbackUrl?: string;
   refreshToken?: string;
-  accessToken?: string; // Added this property to fix the type error
-  paperTrading?: boolean;
+  accessToken?: string;
+  expiresAt?: number;
+  
+  // Added for TWS integration
+  twsHost?: string;
+  twsPort?: string;
+  connectionMethod?: 'webapi' | 'tws';
+}
+
+export interface DataProviderStatus {
+  connected: boolean;
+  errorMessage?: string;
+  lastUpdated: Date;
 }
 
 export interface DataProviderInterface {
-  getMarketData(): Promise<SpyMarketData>;
-  getOptions(): Promise<SpyOption[]>;
-  getOptionsByType(type: 'CALL' | 'PUT'): Promise<SpyOption[]>;
-  getOptionChain(symbol: string): Promise<SpyOption[]>;
-  getTrades(): Promise<SpyTrade[]>;
-  getTradesByStatus(status: string): Promise<SpyTrade[]>;
+  getMarketData(): Promise<any>;
+  getOptions(): Promise<any>;
+  getOptionsByType?(type: string): Promise<any>;
+  getOptionChain(symbol: string): Promise<any>;
+  getTrades(): Promise<any>;
+  getTradesByStatus?(status: string): Promise<any>;
   isConnected(): boolean;
   connect(): Promise<boolean>;
   disconnect(): Promise<boolean>;
 }
-
-export type DataProviderStatus = {
-  connected: boolean;
-  lastUpdated: Date;
-  errorMessage?: string;
-  quotesDelayed: boolean;
-};

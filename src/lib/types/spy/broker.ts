@@ -1,4 +1,5 @@
-export type BrokerType = 'interactive-brokers' | 'td-ameritrade' | 'schwab' | 'none';
+
+export type BrokerType = 'interactive-brokers' | 'td-ameritrade' | 'schwab' | 'interactive-brokers-tws' | 'none';
 
 export interface BrokerSettings {
   type: BrokerType;

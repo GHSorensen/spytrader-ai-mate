@@ -11,10 +11,12 @@ import { toast } from "@/hooks/use-toast";
  */
 export class InteractiveBrokersService extends BaseDataProvider {
   private auth: IBKRAuth;
+  private connectionMethod: 'webapi' | 'tws';
   
   constructor(config: DataProviderConfig) {
     super(config);
     this.auth = new IBKRAuth(config);
+    this.connectionMethod = config.connectionMethod || 'webapi';
   }
   
   /**
@@ -22,9 +24,23 @@ export class InteractiveBrokersService extends BaseDataProvider {
    */
   async connect(): Promise<boolean> {
     try {
-      console.log("Connecting to Interactive Brokers API...");
+      console.log(`Connecting to Interactive Brokers API via ${this.connectionMethod}...`);
       
-      // If we have a refresh token, use it to get a new access token
+      if (this.connectionMethod === 'tws') {
+        // Logic for TWS connection
+        if (!this.config.twsHost || !this.config.twsPort) {
+          throw new Error("TWS host and port are required for TWS connection");
+        }
+        
+        // In a real implementation, we would connect to TWS here
+        // For now, we'll just simulate a successful connection
+        console.log(`Connecting to TWS at ${this.config.twsHost}:${this.config.twsPort}`);
+        this.status.connected = true;
+        this.status.lastUpdated = new Date();
+        return true;
+      }
+      
+      // Web API connection logic
       if (this.config.refreshToken) {
         const authResult = await this.auth.refreshAccessToken(this.config.refreshToken);
         this.accessToken = authResult.accessToken;
@@ -36,7 +52,6 @@ export class InteractiveBrokersService extends BaseDataProvider {
         return true;
       }
       
-      // Otherwise, if we have an access token, use it
       if (this.config.accessToken) {
         this.accessToken = this.config.accessToken;
         const expiryDate = new Date();
@@ -47,8 +62,6 @@ export class InteractiveBrokersService extends BaseDataProvider {
         return true;
       }
       
-      // If we have no token, we'll need to go through the OAuth flow
-      // This would be handled elsewhere, directing the user to authorize
       this.status.connected = false;
       this.status.lastUpdated = new Date();
       

@@ -98,10 +98,12 @@ const IBKRIntegrationPage: React.FC = () => {
       }
       
       // Save TWS config to local storage
+      // Make sure to use 'interactive-brokers' as the base type with additional TWS properties
       const config: DataProviderConfig = {
-        type: 'interactive-brokers-tws',
+        type: 'interactive-brokers',
         twsHost,
-        twsPort
+        twsPort,
+        connectionMethod: 'tws' // Add a property to indicate TWS connection method
       };
       
       localStorage.setItem('ibkr-config', JSON.stringify(config));
