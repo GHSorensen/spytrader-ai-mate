@@ -47,30 +47,30 @@ const AuthenticationPage: React.FC = () => {
       </header>
       
       <main className="flex-1 container mx-auto flex items-center justify-center py-12 px-4">
-        <Card className="w-full max-w-md">
+        <Card className="w-full max-w-md shadow-sm">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-center">SPY Trading AI</CardTitle>
             <CardDescription className="text-center">
-              Join thousands of traders using AI to optimize their SPY options trades
+              Join thousands of traders using AI to optimize SPY options trades
             </CardDescription>
           </CardHeader>
           
           <CardContent>
             <Tabs defaultValue="signup" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">Login</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 mb-4">
+                <TabsTrigger value="signup" className="text-base py-2">Sign Up</TabsTrigger>
+                <TabsTrigger value="login" className="text-base py-2">Login</TabsTrigger>
               </TabsList>
               
-              <TabsContent value="login">
-                <div className="space-y-4 mt-4">
-                  <LoginForm isLoading={isLoading} setIsLoading={setIsLoading} />
+              <TabsContent value="signup">
+                <div className="space-y-4">
+                  <SignupForm isLoading={isLoading} setIsLoading={setIsLoading} />
                 </div>
               </TabsContent>
               
-              <TabsContent value="signup">
-                <div className="space-y-4 mt-4">
-                  <SignupForm isLoading={isLoading} setIsLoading={setIsLoading} />
+              <TabsContent value="login">
+                <div className="space-y-4">
+                  <LoginForm isLoading={isLoading} setIsLoading={setIsLoading} />
                 </div>
               </TabsContent>
             </Tabs>

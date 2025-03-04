@@ -39,7 +39,7 @@ export const AISettingsContent: React.FC<AISettingsContentProps> = ({
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <AISettingsTabs activeTab={activeTab} />
         
-        <ScrollArea className="h-[calc(60vh-150px)] pr-4">
+        <ScrollArea className="h-[calc(60vh-150px)] md:h-[calc(60vh-150px)] max-h-[60vh] pr-4">
           <TabsContent value="strategy" className="space-y-4 mt-4 data-[state=active]:block">
             <StrategyTabContent 
               settings={settings}

@@ -43,7 +43,7 @@ export const AISettingsDialog = ({
       }) => (
         <>
           <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[500px] max-h-[90vh] p-0 overflow-hidden flex flex-col">
+            <DialogContent className="sm:max-w-[500px] max-h-[85vh] p-0 overflow-hidden flex flex-col">
               <div className="p-6 pb-2 flex-shrink-0">
                 <AISettingsHeader activeTab={activeTab} />
               </div>
@@ -60,7 +60,7 @@ export const AISettingsDialog = ({
                 />
               </div>
               
-              <div className="p-6 pt-4 flex-shrink-0 border-t">
+              <div className="p-4 flex-shrink-0 border-t">
                 <AISettingsFooter 
                   onCancel={handleCancel}
                   onSave={handleSaveSettings}
