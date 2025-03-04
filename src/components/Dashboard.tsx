@@ -1,6 +1,6 @@
 
 import React from 'react';
-import SpyOverview from './spy/SpyOverview';
+import { SpyOverview } from './spy/SpyOverview';
 import { AccountBalance } from './spy/AccountBalance';
 import { TodaysTrades } from './spy/TodaysTrades';
 import { ActiveTrades } from './spy/ActiveTrades';
@@ -17,7 +17,11 @@ const Dashboard: React.FC = () => {
         </div>
         
         <div>
-          <AccountBalance />
+          <AccountBalance 
+            balance={125000} 
+            dailyPnL={1200} 
+            allTimePnL={15000}
+          />
         </div>
         
         <div>
