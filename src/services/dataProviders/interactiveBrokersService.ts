@@ -35,8 +35,7 @@ export class InteractiveBrokersService {
       connected: this.connected,
       config: {
         ...this.config,
-        // Mask any sensitive data
-        password: this.config.password ? '********' : undefined,
+        // No need to mask password since it's not in the config anymore
       },
       lastError: this.lastError,
       timestamp: new Date().toISOString()
