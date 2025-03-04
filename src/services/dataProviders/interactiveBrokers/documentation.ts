@@ -28,5 +28,19 @@ export const ibkrDocumentation = {
    */
   openClientPortalDocs: (): void => {
     window.open('https://www.interactivebrokers.com/campus/ibkr-api-page/web-api/reference/trading/', '_blank');
+  },
+  
+  /**
+   * Open the IBKR API settings page where users can create Client IDs
+   */
+  openAPISettings: (): void => {
+    window.open('https://www.interactivebrokers.com/secure/settings/client-portal', '_blank');
+  },
+  
+  /**
+   * Open documentation explaining what a Client ID is and how to create one
+   */
+  openClientIDHelp: (): void => {
+    window.open('https://interactivebrokers.github.io/cpwebapi/oauth/', '_blank');
   }
 };
