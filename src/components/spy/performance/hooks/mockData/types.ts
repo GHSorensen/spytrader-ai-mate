@@ -3,7 +3,8 @@ import {
   PerformanceChartData,
   PerformanceSummary,
   TradeAnalytics,
-  BacktestResult 
+  BacktestResult,
+  TimeFrame 
 } from '@/lib/types/spy';
 
 export interface MockDataGenerators {
@@ -31,4 +32,5 @@ export interface MockDataGenerators {
     depthPercent: number;
     recoveryDays: number;
   }[];
+  getMonthsForTimeFrame: (tf: TimeFrame) => number;
 }

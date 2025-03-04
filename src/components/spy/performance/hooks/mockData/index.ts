@@ -5,3 +5,4 @@ export * from './useMockTradeAnalytics';
 export * from './useMockChartData';
 export * from './useMockBacktestResults';
 export * from './types';
+export { getMonthsForTimeFrame } from '../utils/timeFrameUtils';
