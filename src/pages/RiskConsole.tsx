@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { RiskHeader } from '../components/spy/risk-console/RiskHeader';
 import { Footer } from '../components/spy/risk-console/Footer';
 import { DemoNotifications } from '../components/spy/risk-console/DemoNotifications';
-import { AITradingSettings, RiskToleranceType } from '@/lib/types/spy';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeftIcon } from 'lucide-react';
 import { RiskSignal, RiskAction, LearningInsight, StatisticalAnomaly } from '@/lib/types/spy/riskMonitoring';
@@ -73,16 +72,26 @@ const RiskConsole: React.FC = () => {
       }
     ];
     
-    // Mock insights
+    // Mock insights - fixing the property name to match the type definition
     const mockInsights: LearningInsight[] = [
       {
         id: 'insight-1',
         timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-        signalSource: 'volatility',
-        actionType: 'reduce_position_size',
-        effectiveness: 0.8,
+        signalPattern: {
+          source: 'volatility',
+          condition: 'volatile',
+          strength: 'strong',
+          direction: 'bearish'
+        },
+        actionTaken: 'reduce_position_size',
+        successRate: 0.8,
+        profitImpact: 750,
         description: 'Reducing position size during volatility spikes has been 80% effective',
-        confidence: 0.75
+        appliedCount: 12,
+        relatedRiskTolerance: 'moderate',
+        confidence: 0.75,
+        recommendedActions: ['reduce_position_size', 'adjust_stop_loss'],
+        averageProfitImpact: 680
       }
     ];
     
