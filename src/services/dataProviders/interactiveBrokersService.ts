@@ -20,6 +20,7 @@ export class InteractiveBrokersService extends BaseDataProvider {
     this.auth = new IBKRAuth(config);
     this.connectionManager = new IBKRConnectionManager(config);
     this.dataService = new IBKRDataService(config);
+    console.log("InteractiveBrokersService initialized with config:", config);
   }
   
   /**
@@ -30,15 +31,20 @@ export class InteractiveBrokersService extends BaseDataProvider {
       console.log(`Connecting to Interactive Brokers API via ${this.config.connectionMethod || 'webapi'}...`);
       
       const connected = await this.connectionManager.connect(this.auth);
+      console.log("Connection result:", connected);
       
       if (connected) {
         if (this.connectionManager.getAccessToken()) {
           this.accessToken = this.connectionManager.getAccessToken();
           this.dataService.setAccessToken(this.accessToken);
+          console.log("Access token set successfully");
+        } else {
+          console.warn("No access token received from connection manager");
         }
         
         if (this.connectionManager.getTokenExpiry()) {
           this.tokenExpiry = this.connectionManager.getTokenExpiry();
+          console.log("Token expiry set:", this.tokenExpiry);
         }
         
         this.status.connected = true;
@@ -140,7 +146,22 @@ export class InteractiveBrokersService extends BaseDataProvider {
         if (!connected) {
           console.log("Failed to connect to IBKR, falling back to paper trade");
           return this.createPaperTrade(order);
+        } else {
+          console.log("Successfully connected to IBKR");
         }
+      }
+      
+      // Always create a paper trade for immediate testing purposes
+      // This guarantees we'll at least have a fallback when troubleshooting
+      const mockResult = this.createPaperTrade(order);
+      
+      // Check if paper trading is forced via config
+      if (this.config.paperTrading) {
+        console.log("Paper trading is enabled in config, using paper trade");
+        toast.info("Paper Trading Mode", {
+          description: "Using paper trading as configured in settings.",
+        });
+        return mockResult;
       }
       
       // Check market hours (simplified check)
@@ -151,19 +172,28 @@ export class InteractiveBrokersService extends BaseDataProvider {
       const isWeekend = day === 0 || day === 6;
       const isMarketHours = !isWeekend && ((hour > 9 || (hour === 9 && minute >= 30)) && hour < 16);
       
-      if (!isMarketHours && !this.config.paperTrading) {
+      if (!isMarketHours) {
         console.log("Outside market hours, creating paper trade instead");
         toast.info("Outside Market Hours", {
           description: "Creating paper trade for demonstration purposes.",
         });
-        return this.createPaperTrade(order);
+        return mockResult;
       }
       
-      // Attempt to place the real trade
-      const result = await this.dataService.placeTrade(order);
-      console.log("Trade placed successfully:", result);
-      
-      return result;
+      // Attempt to place the real trade with the data service
+      try {
+        const result = await this.dataService.placeTrade(order);
+        console.log("Trade placed successfully with data service:", result);
+        return result;
+      } catch (dataError) {
+        console.error("Error placing trade with data service:", dataError);
+        toast.error("Trade Error", {
+          description: dataError instanceof Error ? dataError.message : "Error placing trade with broker. Using paper trade instead.",
+        });
+        
+        // Fall back to paper trade on error
+        return mockResult;
+      }
     } catch (error) {
       console.error("Error in placeTrade:", error);
       toast.error("Trade Error", {

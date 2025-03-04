@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, AlertCircle, Clock, Wifi, WifiOff } from 'lucide-react';
+import { CheckCircle, AlertCircle, Clock, Wifi, WifiOff, RefreshCcw } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { getDataProvider } from '@/services/dataProviders/dataProviderFactory';
@@ -19,6 +19,7 @@ export const IBKRStatusIndicator: React.FC<IBKRStatusIndicatorProps> = ({
   const { isConnected, dataSource, refreshAllData, reconnect, lastUpdated } = useIBKRRealTimeData();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [status, setStatus] = useState({
     connected: false,
     errorMessage: null as string | null,
@@ -30,7 +31,9 @@ export const IBKRStatusIndicator: React.FC<IBKRStatusIndicatorProps> = ({
   useEffect(() => {
     const checkAuth = async () => {
       const { data } = await supabase.auth.getSession();
-      setIsAuthenticated(!!data.session);
+      const hasSession = !!data.session;
+      console.log("IBKRStatusIndicator - Auth check:", hasSession);
+      setIsAuthenticated(hasSession);
       
       // Set up auth state change listener
       const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -61,6 +64,7 @@ export const IBKRStatusIndicator: React.FC<IBKRStatusIndicatorProps> = ({
         }
         
         const provider = getDataProvider();
+        console.log("IBKRStatusIndicator - Provider:", provider?.constructor.name);
         
         if (provider && provider.isConnected()) {
           // If provider has status property, use it for detailed status
@@ -76,6 +80,8 @@ export const IBKRStatusIndicator: React.FC<IBKRStatusIndicatorProps> = ({
             quotesDelayed: providerStatus.quotesDelayed,
             lastChecked: providerStatus.lastUpdated || new Date()
           });
+          
+          console.log("IBKRStatusIndicator - Provider status:", providerStatus);
         } else {
           setStatus({
             connected: false,
@@ -83,6 +89,8 @@ export const IBKRStatusIndicator: React.FC<IBKRStatusIndicatorProps> = ({
             quotesDelayed: true,
             lastChecked: new Date()
           });
+          
+          console.log("IBKRStatusIndicator - Not connected to provider");
         }
       } catch (error) {
         console.error("Error checking IBKR status:", error);
@@ -97,6 +105,35 @@ export const IBKRStatusIndicator: React.FC<IBKRStatusIndicatorProps> = ({
     
     checkDetailedStatus();
   }, [isConnected, isAuthenticated]);
+
+  // Handle manual reconnect with better feedback
+  const handleReconnect = async () => {
+    try {
+      setRefreshing(true);
+      toast.info("Attempting to reconnect to Interactive Brokers...");
+      
+      await reconnect();
+      
+      // Force refresh provider status after reconnection attempt
+      const provider = getDataProvider();
+      if (!provider.isConnected()) {
+        console.log("Reconnect didn't work, trying explicit connect");
+        const connected = await provider.connect();
+        if (connected) {
+          toast.success("Successfully connected to Interactive Brokers");
+        } else {
+          toast.error("Failed to connect to Interactive Brokers");
+        }
+      }
+      
+      refreshAllData();
+    } catch (error) {
+      console.error("Error in reconnect:", error);
+      toast.error(`Reconnection error: ${error instanceof Error ? error.message : "Unknown error"}`);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   // Format the last update time
   const formatTime = (date?: Date) => {
@@ -159,14 +196,16 @@ export const IBKRStatusIndicator: React.FC<IBKRStatusIndicatorProps> = ({
           {badgeProps.text}
         </Badge>
         
-        {showDetails && (
+        {showDetails && isAuthenticated && (
           <Button 
             variant="ghost" 
             size="sm" 
             className="h-6 text-xs"
-            onClick={refreshAllData}
+            onClick={handleReconnect}
+            disabled={refreshing}
           >
-            Refresh
+            <RefreshCcw className={`h-3 w-3 mr-1 ${refreshing ? 'animate-spin' : ''}`} />
+            {refreshing ? 'Connecting...' : 'Reconnect'}
           </Button>
         )}
       </div>
@@ -215,8 +254,18 @@ export const IBKRStatusIndicator: React.FC<IBKRStatusIndicatorProps> = ({
                   Close
                 </Button>
                 {isAuthenticated && (
-                  <Button onClick={reconnect}>
-                    Reconnect
+                  <Button 
+                    onClick={handleReconnect} 
+                    disabled={refreshing}
+                  >
+                    {refreshing ? (
+                      <>
+                        <RefreshCcw className="h-4 w-4 mr-2 animate-spin" />
+                        Connecting...
+                      </>
+                    ) : (
+                      <>Reconnect</>
+                    )}
                   </Button>
                 )}
               </div>

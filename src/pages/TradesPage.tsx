@@ -3,22 +3,48 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAccountBalance } from '@/hooks/useAccountBalance';
 import { Button } from "@/components/ui/button";
-import { PlusCircle, RefreshCw, LogIn } from "lucide-react";
+import { PlusCircle, RefreshCw, LogIn, AlertTriangle } from "lucide-react";
 import TradeCard from '@/components/trades/TradeCard';
 import { useTrades } from '@/hooks/useTrades';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { IBKRStatusIndicator } from '@/components/ibkr/IBKRStatusIndicator';
+import { getDataProvider } from '@/services/dataProviders/dataProviderFactory';
 
 const TradesPage: React.FC = () => {
   const accountData = useAccountBalance();
   const [activeTab, setActiveTab] = useState<string>('active');
-  const { trades, isLoading, handleCreateTestTrade, isPending, isAuthenticated, refetch } = useTrades(activeTab);
+  const { trades, isLoading, handleCreateTestTrade, isPending, isAuthenticated, refetch, lastError } = useTrades(activeTab);
+  const [connectionDiagnostics, setConnectionDiagnostics] = useState<string | null>(null);
 
   // Log component mounting to debug
   useEffect(() => {
     console.log("TradesPage mounted", "Authentication state:", isAuthenticated);
     return () => console.log("TradesPage unmounted");
+  }, [isAuthenticated]);
+
+  // Check connection status on mount
+  useEffect(() => {
+    const checkConnection = async () => {
+      try {
+        const provider = getDataProvider();
+        const status = {
+          providerType: provider.constructor.name,
+          isConnected: provider.isConnected(),
+          accessToken: provider.accessToken ? "Present" : "Missing",
+          config: provider.config
+        };
+        console.log("Provider status:", status);
+        setConnectionDiagnostics(null);
+      } catch (error) {
+        console.error("Error checking provider:", error);
+        setConnectionDiagnostics(error instanceof Error ? error.message : String(error));
+      }
+    };
+    
+    if (isAuthenticated) {
+      checkConnection();
+    }
   }, [isAuthenticated]);
 
   const onCreateTestTrade = useCallback(() => {
@@ -34,10 +60,11 @@ const TradesPage: React.FC = () => {
     }
     
     try {
+      toast.info("Attempting to create test trade...");
       handleCreateTestTrade();
     } catch (error) {
       console.error("Error in onCreateTestTrade:", error);
-      toast.error("Failed to create test trade");
+      toast.error("Failed to create test trade: " + (error instanceof Error ? error.message : "Unknown error"));
     }
   }, [handleCreateTestTrade, isPending, isAuthenticated]);
 
@@ -143,6 +170,26 @@ const TradesPage: React.FC = () => {
           </Button>
         </div>
       </div>
+
+      {connectionDiagnostics && (
+        <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-md p-3 text-sm flex items-start">
+          <AlertTriangle className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="font-medium">Connection diagnostics:</p>
+            <p className="mt-1">{connectionDiagnostics}</p>
+          </div>
+        </div>
+      )}
+
+      {lastError && (
+        <div className="bg-red-50 border border-red-200 text-red-800 rounded-md p-3 text-sm flex items-start">
+          <AlertTriangle className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="font-medium">Last error:</p>
+            <p className="mt-1">{lastError}</p>
+          </div>
+        </div>
+      )}
 
       <Tabs defaultValue="active" value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3 text-xs md:text-sm">

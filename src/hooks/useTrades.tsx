@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getDataProvider } from '@/services/dataProviders/dataProviderFactory';
 import { SpyTrade } from '@/lib/types/spy';
@@ -92,12 +91,12 @@ export const useTrades = (activeTab: string) => {
         return getMockTrades(activeTab);
       }
     },
-    refetchInterval: 30000, // Refresh every 30 seconds
+    refetchInterval: 30000, 
     refetchOnWindowFocus: true,
-    enabled: true, // Always enable the query regardless of authentication state
+    enabled: true, 
   });
 
-  // Create a paper trade for testing
+  // Create a paper trade for testing with enhanced error handling
   const createPaperTrade = useMutation({
     mutationFn: async () => {
       setLastError(null);
@@ -106,32 +105,49 @@ export const useTrades = (activeTab: string) => {
       
       try {
         if (!isAuthenticated) {
+          const errorMsg = "Authentication required to create test trade";
+          setLastError(errorMsg);
           toast.error("Authentication Required", {
             description: "Please sign in to create a test trade."
           });
-          throw new Error("Authentication required");
+          throw new Error(errorMsg);
         }
         
         // Create a mock SPY option trade
         const provider = getDataProvider();
         
         if (!provider) {
+          const errorMsg = "No data provider available";
+          setLastError(errorMsg);
           toast.error("Provider Missing", {
             description: "No data provider available. Please configure a broker integration."
           });
-          throw new Error("No data provider available");
+          throw new Error(errorMsg);
         }
         
-        console.log("Got data provider:", provider);
+        console.log("Got data provider:", provider.constructor.name);
         
-        // Check if provider is connected
-        if (!provider.isConnected()) {
+        // Force connection attempt before proceeding
+        let isConnected = provider.isConnected();
+        console.log("Initial connection status:", isConnected);
+        
+        if (!isConnected) {
           console.log("Provider not connected, attempting to connect...");
-          const connected = await provider.connect();
-          if (!connected) {
-            toast.error("Connection Failed", {
-              description: "Could not connect to your broker. Using a paper trade instead."
-            });
+          try {
+            const connected = await provider.connect();
+            console.log("Connection attempt result:", connected);
+            isConnected = connected;
+            
+            if (!connected) {
+              console.log("Connection failed, but will try paper trade");
+              toast.warning("Connection Status", {
+                description: "Could not connect to your broker. Using a paper trade instead."
+              });
+            }
+          } catch (connErr) {
+            console.error("Connection error:", connErr);
+            setLastError(`Connection error: ${connErr instanceof Error ? connErr.message : "Unknown connection error"}`);
+            // Continue with paper trade
           }
         }
         
@@ -150,21 +166,33 @@ export const useTrades = (activeTab: string) => {
         if (provider && typeof provider.placeTrade === 'function') {
           console.log("Provider has placeTrade method, calling it");
           
-          const result = await provider.placeTrade(order);
-          console.log("Trade placed, result:", result);
-          
-          // If the result indicates a paper trade was created instead
-          if (result.isPaperTrade) {
-            toast.success("Paper Trade Created", {
-              description: result.message || "Created paper trade for testing purposes."
+          try {
+            const result = await provider.placeTrade(order);
+            console.log("Trade placed, result:", result);
+            
+            // If the result indicates a paper trade was created instead
+            if (result.isPaperTrade) {
+              toast.success("Paper Trade Created", {
+                description: result.message || "Created paper trade for testing purposes."
+              });
+            } else {
+              toast.success("Test Trade Created", {
+                description: "Your test trade has been successfully created."
+              });
+            }
+            
+            return result;
+          } catch (tradeError) {
+            console.error("Trade placement error:", tradeError);
+            setLastError(`Trade error: ${tradeError instanceof Error ? tradeError.message : "Unknown trade error"}`);
+            
+            // Create fallback paper trade
+            const fallbackTrade = createMockTrade();
+            toast.warning("Trade Error", {
+              description: "Error placing trade. Created paper trade instead."
             });
-          } else {
-            toast.success("Test Trade Created", {
-              description: "Your test trade has been successfully created."
-            });
+            return { trade: fallbackTrade, isPaperTrade: true };
           }
-          
-          return result;
         } else {
           console.log("Provider doesn't have placeTrade method, creating mock trade");
           // Fallback to create a mock trade directly
@@ -175,12 +203,14 @@ export const useTrades = (activeTab: string) => {
             description: "Created a paper trade for testing purposes."
           });
           
-          return { trade: mockTrade };
+          return { trade: mockTrade, isPaperTrade: true };
         }
       } catch (error) {
         console.error("Error in createPaperTrade:", error);
         const errorMessage = error instanceof Error ? error.message : "Unknown error creating trade";
-        setLastError(errorMessage);
+        if (!lastError) {
+          setLastError(errorMessage);
+        }
         throw error;
       } finally {
         setIsCreatingTrade(false);
@@ -200,7 +230,7 @@ export const useTrades = (activeTab: string) => {
     }
   });
 
-  const handleCreateTestTrade = () => {
+  const handleCreateTestTrade = useCallback(() => {
     console.log("handleCreateTestTrade called, auth state:", isAuthenticated);
     
     if (isCreatingTrade || createPaperTrade.isPending) {
@@ -218,8 +248,10 @@ export const useTrades = (activeTab: string) => {
     }
     
     console.log("Starting paper trade creation");
+    // Reset last error before starting new attempt
+    setLastError(null);
     createPaperTrade.mutate();
-  };
+  }, [isAuthenticated, isCreatingTrade, createPaperTrade]);
 
   // Helper function to create mock trades
   const getMockTrades = (tab: string): SpyTrade[] => {
