@@ -1,10 +1,11 @@
 
-// vite.config.js - Using ESM format with .js extension
+// vite.config.ts
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { fileURLToPath } from 'url';
 
+// Dynamically create __dirname equivalent for ESM
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({

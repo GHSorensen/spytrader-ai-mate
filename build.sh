@@ -44,32 +44,39 @@ echo "Cleaning existing dependencies..."
 npm cache clean --force || true
 rm -rf node_modules || true
 
-# Install all dependencies including dev dependencies
-echo "Installing dependencies with dev dependencies..."
-npm install --include=dev || npm install --also=dev || npm install
+# Important: Install dependencies with the --include=dev flag to ensure development dependencies 
+# like Vite and plugins are installed even though NODE_ENV is set to production
+echo "Installing dependencies including dev dependencies..."
+npm install --include=dev || npm install --also=dev || npm ci --also=dev || npm install
 
-# Make sure Vite is explicitly installed globally for this build
-echo "Ensuring Vite is installed..."
-npm install -g vite || true
+# Explicitly install Vite and its React plugin to ensure they are available
+echo "Ensuring build tools are installed..."
+npm install --no-save vite@latest @vitejs/plugin-react-swc
 
-# Try the build
+# Try the build using various methods to handle different npm versions
 echo "Starting build process..."
-if command -v vite >/dev/null 2>&1; then
-  echo "Using global vite command"
-  vite build
-elif [ -f ./node_modules/.bin/vite ]; then
+if [ -f ./node_modules/.bin/vite ]; then
   echo "Using local vite command"
   ./node_modules/.bin/vite build
+elif command -v vite >/dev/null 2>&1; then
+  echo "Using global vite command"
+  vite build
 else
   echo "Using npx to run vite"
   npx vite build
 fi
 
-# If the build failed, try with a simplified approach using the Vite CLI
+# If the build failed, try with an alternative approach
 if [ $? -ne 0 ]; then
   echo "First build attempt failed, trying alternative approach..."
-  npm i -D vite @vitejs/plugin-react-swc
-  npx --no-install vite build
+  # Try with npm run build command if it exists in package.json
+  if grep -q '"build":' package.json; then
+    npm run build
+  else
+    # Last resort: use npx with --no-install flag
+    npm install -D vite@latest @vitejs/plugin-react-swc
+    NODE_ENV=development npx --no-install vite build
+  fi
 fi
 
 # Create a marker file to indicate this is a Node.js project
