@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -9,12 +8,22 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
+import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
 
-const UserProfilePage: React.FC = () => {
-  // User info state
-  const [name, setName] = useState('John Doe');
-  const [email, setEmail] = useState('john@example.com');
-  const [phone, setPhone] = useState('(555) 123-4567');
+interface UserProfilePageProps {
+  userProfile?: any;
+}
+
+const UserProfilePage: React.FC<UserProfilePageProps> = ({ userProfile: propUserProfile }) => {
+  const navigate = useNavigate();
+  const [session, setSession] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<any>(propUserProfile);
+  
+  // Form state
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   
   // Security state
   const [currentPassword, setCurrentPassword] = useState('');
@@ -27,13 +36,79 @@ const UserProfilePage: React.FC = () => {
   const [riskAlerts, setRiskAlerts] = useState(true);
   const [marketUpdates, setMarketUpdates] = useState(true);
   const [tradeConfirmations, setTradeConfirmations] = useState(true);
-  
-  const handleUpdateProfile = (e: React.FormEvent) => {
-    e.preventDefault();
-    toast.success('Profile updated successfully');
+
+  useEffect(() => {
+    // Get current session
+    const getSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      setSession(data.session);
+      
+      // If we have a session but no profile from props, fetch it
+      if (data.session && !propUserProfile) {
+        fetchUserProfile(data.session.user.id);
+      }
+    };
+    
+    getSession();
+  }, [propUserProfile]);
+
+  useEffect(() => {
+    // When user profile changes, update form values
+    if (userProfile) {
+      setName(userProfile.username || '');
+      setEmail(session?.user?.email || '');
+      setPhone(userProfile.phone || '');
+    }
+  }, [userProfile, session]);
+
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+        
+      if (error) {
+        console.error("Error fetching user profile:", error);
+        return;
+      }
+      
+      setUserProfile(data);
+    } catch (error) {
+      console.error("Error in profile fetch process:", error);
+    }
   };
   
-  const handleUpdatePassword = (e: React.FormEvent) => {
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!session) {
+      toast.error('You must be logged in to update your profile');
+      return;
+    }
+    
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          username: name,
+          phone: phone
+        })
+        .eq('id', session.user.id);
+        
+      if (error) {
+        toast.error('Failed to update profile: ' + error.message);
+        return;
+      }
+      
+      toast.success('Profile updated successfully');
+    } catch (error: any) {
+      toast.error('Error updating profile: ' + error.message);
+    }
+  };
+  
+  const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (newPassword !== confirmPassword) {
@@ -41,22 +116,43 @@ const UserProfilePage: React.FC = () => {
       return;
     }
     
-    toast.success('Password updated successfully');
-    setCurrentPassword('');
-    setNewPassword('');
-    setConfirmPassword('');
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+      
+      if (error) {
+        toast.error('Failed to update password: ' + error.message);
+        return;
+      }
+      
+      toast.success('Password updated successfully');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (error: any) {
+      toast.error('Error updating password: ' + error.message);
+    }
   };
   
   const handleUpdateNotifications = (e: React.FormEvent) => {
     e.preventDefault();
+    // In a real app, we would save notification preferences to the database
     toast.success('Notification preferences updated');
   };
+
+  // If no session, redirect to login
+  useEffect(() => {
+    if (session === null) {
+      navigate('/auth');
+    }
+  }, [session, navigate]);
   
   return (
     <div className="flex flex-col min-h-screen">
       <header className="border-b">
         <div className="container py-4">
-          <SpyHeaderWithNotifications />
+          <SpyHeaderWithNotifications userProfile={userProfile} />
         </div>
       </header>
       
@@ -85,7 +181,7 @@ const UserProfilePage: React.FC = () => {
               <CardContent>
                 <form onSubmit={handleUpdateProfile} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Full Name</Label>
+                    <Label htmlFor="name">Full Name or Username</Label>
                     <Input 
                       id="name" 
                       value={name} 
@@ -98,8 +194,10 @@ const UserProfilePage: React.FC = () => {
                       id="email" 
                       type="email" 
                       value={email} 
-                      onChange={(e) => setEmail(e.target.value)} 
+                      disabled
+                      className="bg-muted"
                     />
+                    <p className="text-xs text-muted-foreground">Email cannot be changed</p>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="phone">Phone</Label>
