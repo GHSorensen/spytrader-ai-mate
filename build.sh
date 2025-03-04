@@ -34,14 +34,15 @@ node --version
 echo "NPM version:"
 npm --version
 
-# First install express to make sure the server can run
+# First install express to ensure the server can run
 npm install express
 
-# Install dependencies with legacy peer deps to avoid conflicts
-npm install --legacy-peer-deps
+# Install ALL dependencies with --force to bypass peer dependency conflicts
+# This is more aggressive than --legacy-peer-deps and should resolve the ERESOLVE errors
+npm install --force
 
-# Run the build process
-npm run build --legacy-peer-deps
+# Run the build process with --force flag
+npm run build --force
 
 # Create a marker file to indicate this is a Node.js project
 touch .node-project
