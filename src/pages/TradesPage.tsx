@@ -10,6 +10,8 @@ import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { IBKRStatusIndicator } from '@/components/ibkr/IBKRStatusIndicator';
 import { getDataProvider } from '@/services/dataProviders/dataProviderFactory';
+import { InteractiveBrokersService } from '@/services/dataProviders/interactiveBrokersService';
+import { BaseDataProvider } from '@/services/dataProviders/base/BaseDataProvider';
 
 const TradesPage: React.FC = () => {
   const accountData = useAccountBalance();
@@ -28,11 +30,13 @@ const TradesPage: React.FC = () => {
     const checkConnection = async () => {
       try {
         const provider = getDataProvider();
+        // Type cast to BaseDataProvider to access the properties
+        const concreteProvider = provider as BaseDataProvider;
         const status = {
           providerType: provider.constructor.name,
           isConnected: provider.isConnected(),
-          accessToken: provider.accessToken ? "Present" : "Missing",
-          config: provider.config
+          accessToken: concreteProvider.accessToken ? "Present" : "Missing",
+          config: concreteProvider.config
         };
         console.log("Provider status:", status);
         setConnectionDiagnostics(null);
