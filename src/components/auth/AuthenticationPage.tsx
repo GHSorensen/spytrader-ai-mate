@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SpyHeaderWithNotifications } from '@/components/spy/SpyHeaderWithNotifications';
@@ -12,6 +12,7 @@ const AuthenticationPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [defaultTab, setDefaultTab] = useState('signup');
   const navigate = useNavigate();
+  const location = useLocation();
   
   useEffect(() => {
     const checkSession = async () => {
@@ -35,6 +36,9 @@ const AuthenticationPage: React.FC = () => {
     
     checkSession();
     
+    const returnPath = location.state?.returnTo || '/dashboard';
+    console.log("Return path:", returnPath);
+    
     const hash = window.location.hash;
     if (hash && hash.includes('access_token')) {
       console.log("Detected auth callback in URL");
@@ -45,8 +49,8 @@ const AuthenticationPage: React.FC = () => {
       console.log("Auth state changed:", event, session);
       
       if (event === 'SIGNED_IN' && session) {
-        console.log("User signed in, redirecting to dashboard");
-        navigate('/dashboard');
+        console.log("User signed in, redirecting to:", returnPath);
+        navigate(returnPath);
         toast.success('Successfully logged in');
       }
       else if (event === 'SIGNED_OUT') {
@@ -69,7 +73,7 @@ const AuthenticationPage: React.FC = () => {
     return () => {
       subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, [navigate, location]);
   
   const switchToLogin = () => {
     setDefaultTab('login');
