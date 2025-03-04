@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { AISettingsDialog } from './AISettingsDialog';
-import NotificationCenter from './notifications/NotificationCenter';
+import { NotificationCenter } from './notifications';
 import { RiskToleranceType } from '@/lib/types/spy';
 import { schwabDocumentation } from '@/services/dataProviders/schwab/documentation';
 import { User, Settings, BarChart2, Menu } from 'lucide-react';

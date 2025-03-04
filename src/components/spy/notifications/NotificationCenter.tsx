@@ -1,15 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Bell, 
-  CheckCircle, 
-  AlertTriangle, 
-  ShieldAlert, 
-  LineChart, 
-  Wallet,
-  Clock,
-  X
-} from 'lucide-react';
+import { Bell, X } from 'lucide-react';
 import { 
   Sheet, 
   SheetContent, 
@@ -19,23 +10,15 @@ import {
   SheetClose
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { format } from 'date-fns';
-import notificationService, { 
-  Notification, 
-  NotificationType 
-} from '@/services/notification/notificationService';
-
-interface NotificationCenterProps {
-  className?: string;
-}
+import notificationService from '@/services/notification/notificationService';
+import { NotificationCenterProps } from './types';
+import NotificationList from './NotificationList';
 
 export const NotificationCenter: React.FC<NotificationCenterProps> = ({
   className
 }) => {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifications, setNotifications] = useState(notificationService.getNotifications());
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   
@@ -90,27 +73,6 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
     setUnreadCount(notificationService.getUnreadNotifications().length);
   };
   
-  // Function to get the icon for a notification type
-  const getNotificationIcon = (type: NotificationType) => {
-    switch (type) {
-      case 'trade_execution':
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
-      case 'security_alert':
-        return <ShieldAlert className="h-5 w-5 text-red-500" />;
-      case 'capital_warning':
-        return <Wallet className="h-5 w-5 text-amber-500" />;
-      case 'portfolio_balance':
-        return <LineChart className="h-5 w-5 text-blue-500" />;
-      case 'risk_alert':
-        return <AlertTriangle className="h-5 w-5 text-amber-500" />;
-      case 'anomaly_detected':
-        return <AlertTriangle className="h-5 w-5 text-purple-500" />;
-      case 'system_message':
-      default:
-        return <Clock className="h-5 w-5 text-gray-500" />;
-    }
-  };
-  
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
@@ -163,76 +125,11 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
           </SheetTitle>
         </SheetHeader>
         
-        <ScrollArea className="h-[calc(100vh-6rem)]">
-          {notifications.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center space-y-2">
-              <Bell className="h-10 w-10 text-muted-foreground opacity-50" />
-              <p className="text-muted-foreground">No notifications</p>
-            </div>
-          ) : (
-            <div className="space-y-4 pr-2">
-              {notifications.map((notification) => (
-                <div 
-                  key={notification.id}
-                  className={`relative rounded-lg border p-3 ${
-                    notification.read ? 'bg-card' : 'bg-accent'
-                  }`}
-                >
-                  <div className="absolute top-2 right-2 flex items-center space-x-1">
-                    {!notification.read && (
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-6 w-6"
-                        onClick={() => handleMarkAsRead(notification.id)}
-                      >
-                        <CheckCircle className="h-4 w-4" />
-                      </Button>
-                    )}
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-6 w-6"
-                      onClick={() => handleRemoveNotification(notification.id)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  
-                  <div className="flex items-start space-x-3">
-                    <div className="mt-1">
-                      {getNotificationIcon(notification.type)}
-                    </div>
-                    <div className="flex-1 pr-8">
-                      <div className="flex flex-wrap items-center gap-1">
-                        <h4 className="font-medium text-sm">
-                          {notification.title}
-                        </h4>
-                        <Badge
-                          variant={
-                            notification.priority === 'critical' ? 'destructive' :
-                            notification.priority === 'high' ? 'destructive' :
-                            notification.priority === 'medium' ? 'secondary' :
-                            'outline'
-                          }
-                          className="text-xs"
-                        >
-                          {notification.priority}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {notification.message}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        {format(new Date(notification.timestamp), 'PPp')}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </ScrollArea>
+        <NotificationList 
+          notifications={notifications}
+          onMarkAsRead={handleMarkAsRead}
+          onRemove={handleRemoveNotification}
+        />
       </SheetContent>
     </Sheet>
   );
