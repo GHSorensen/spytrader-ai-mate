@@ -1,10 +1,13 @@
 
-// vite.config.ts - Using CommonJS format
-const { defineConfig } = require("vite");
-const react = require("@vitejs/plugin-react-swc");
-const path = require("path");
+// vite.config.js - Using ESM format with .js extension
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react-swc";
+import path from "path";
+import { fileURLToPath } from 'url';
 
-module.exports = defineConfig({
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+export default defineConfig({
   server: {
     host: "::",
     port: 8080,

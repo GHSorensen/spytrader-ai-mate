@@ -44,35 +44,32 @@ echo "Cleaning existing dependencies..."
 npm cache clean --force || true
 rm -rf node_modules || true
 
-# Install core dependencies first
-echo "Installing core dependencies..."
-npm install --no-audit --no-fund --no-optional
+# Install all dependencies including dev dependencies
+echo "Installing dependencies with dev dependencies..."
+npm install --include=dev || npm install --also=dev || npm install
 
-# Explicitly install vite and related packages
-echo "Installing Vite and related packages..."
-npm install vite@latest --no-audit --no-fund --no-optional --force
-npm install @vitejs/plugin-react-swc@latest --no-audit --no-fund --no-optional --force
-npm install react react-dom @tanstack/react-query --no-audit --no-fund --no-optional --force
+# Make sure Vite is explicitly installed globally for this build
+echo "Ensuring Vite is installed..."
+npm install -g vite || true
 
-# Verify vite is installed in node_modules
-echo "Verifying vite installation..."
-ls -la node_modules/vite || echo "Vite not found in node_modules"
-
-# Add a local bin folder and symlink vite
-echo "Creating local vite binary..."
-mkdir -p ./node_bin
-NODE_BIN_PATH=$(pwd)/node_bin
-ln -sf $(pwd)/node_modules/.bin/vite $NODE_BIN_PATH/vite
-chmod +x $NODE_BIN_PATH/vite
-export PATH="$NODE_BIN_PATH:$PATH"
-
-# Run the build process
+# Try the build
 echo "Starting build process..."
-if $NODE_BIN_PATH/vite build; then
-  echo "Build succeeded with direct vite binary."
+if command -v vite >/dev/null 2>&1; then
+  echo "Using global vite command"
+  vite build
+elif [ -f ./node_modules/.bin/vite ]; then
+  echo "Using local vite command"
+  ./node_modules/.bin/vite build
 else
-  echo "Build failed, trying with npx..."
-  npx vite build || NODE_ENV=production npx vite build --debug
+  echo "Using npx to run vite"
+  npx vite build
+fi
+
+# If the build failed, try with a simplified approach using the Vite CLI
+if [ $? -ne 0 ]; then
+  echo "First build attempt failed, trying alternative approach..."
+  npm i -D vite @vitejs/plugin-react-swc
+  npx --no-install vite build
 fi
 
 # Create a marker file to indicate this is a Node.js project
