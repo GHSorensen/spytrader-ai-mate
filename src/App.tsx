@@ -14,6 +14,8 @@ import SchwabIntegrationPage from './pages/SchwabIntegrationPage';
 import DetailedPerformancePage from './components/performance/DetailedPerformancePage';
 import { Toaster } from './components/ui/toaster';
 import { toast } from './hooks/use-toast';
+import AuthenticationPage from './components/auth/AuthenticationPage';
+import UserProfilePage from './components/auth/UserProfilePage';
 
 function App() {
   // Set up initial notifications on app load
@@ -58,6 +60,8 @@ function App() {
         <Route path="/risk-console" element={<RiskConsole />} />
         <Route path="/risk-monitoring-test" element={<RiskMonitoringTest />} />
         <Route path="/schwab-integration" element={<SchwabIntegrationPage />} />
+        <Route path="/auth" element={<AuthenticationPage />} />
+        <Route path="/profile" element={<UserProfilePage />} />
         <Route path="*" element={<Navigate to="/not-found" replace />} />
       </Routes>
       <Toaster />

@@ -16,12 +16,21 @@ const SignupForm: React.FC<SignupFormProps> = ({ isLoading, setIsLoading }) => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
+  const [signupError, setSignupError] = useState<string | null>(null);
   
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSignupError(null);
     
     if (password !== confirmPassword) {
+      setSignupError('Passwords do not match');
       toast.error('Passwords do not match');
+      return;
+    }
+    
+    if (password.length < 6) {
+      setSignupError('Password must be at least 6 characters');
+      toast.error('Password must be at least 6 characters');
       return;
     }
     
@@ -38,12 +47,34 @@ const SignupForm: React.FC<SignupFormProps> = ({ isLoading, setIsLoading }) => {
         },
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Signup error:", error);
+        throw error;
+      }
       
-      toast.success('Account created successfully. Please check your email for verification.');
-      // Stay on the page to allow them to sign in
+      if (data?.user) {
+        toast.success('Account created successfully! Please check your email for verification.');
+        console.log("User created:", data.user);
+        
+        // Check if email confirmation is required
+        if (data.user.identities && data.user.identities.length === 0) {
+          toast.info('Please check your email to confirm your account before logging in');
+        } else {
+          // If no email confirmation is needed, we can consider the user signed in
+          toast.success('Account created and logged in successfully!');
+        }
+      }
     } catch (error: any) {
-      toast.error(error.message || 'Error creating account');
+      console.error("Error in signup process:", error);
+      
+      // Handle specific error cases
+      if (error.message?.includes('User already registered')) {
+        setSignupError('This email is already registered. Please log in instead.');
+        toast.error('This email is already registered. Please log in instead.');
+      } else {
+        setSignupError(error.message || 'Error creating account');
+        toast.error(error.message || 'Error creating account');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -79,6 +110,7 @@ const SignupForm: React.FC<SignupFormProps> = ({ isLoading, setIsLoading }) => {
           type="password" 
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          minLength={6}
           required
         />
       </div>
@@ -89,9 +121,17 @@ const SignupForm: React.FC<SignupFormProps> = ({ isLoading, setIsLoading }) => {
           type="password" 
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
+          minLength={6}
           required
         />
       </div>
+      
+      {signupError && (
+        <div className="text-sm text-red-500 mt-2">
+          {signupError}
+        </div>
+      )}
+      
       <Button type="submit" className="w-full" disabled={isLoading}>
         {isLoading ? 'Creating account...' : 'Create account'}
       </Button>
