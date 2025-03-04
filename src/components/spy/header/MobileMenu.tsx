@@ -51,64 +51,30 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
           <Button
             variant="ghost"
             className="justify-start text-sm px-2 py-1.5 h-auto font-normal hover:bg-accent"
-            onClick={() => handleNavigation('/trades')}
+            onClick={() => handleNavigation('/data-providers')}
           >
-            Trades
+            Data Providers
           </Button>
           <Button
             variant="ghost"
             className="justify-start text-sm px-2 py-1.5 h-auto font-normal hover:bg-accent"
-            onClick={() => handleNavigation('/performance')}
+            onClick={() => handleNavigation('/interactive-brokers')}
           >
-            Performance
+            Interactive Brokers
           </Button>
           <Button
             variant="ghost"
             className="justify-start text-sm px-2 py-1.5 h-auto font-normal hover:bg-accent"
-            onClick={() => handleNavigation('/detailed-performance')}
+            onClick={() => handleNavigation('/td-ameritrade')}
           >
-            Analytics
-          </Button>
-          
-          <div className="text-sm font-medium text-muted-foreground mb-2 mt-4 px-2">Risk Management</div>
-          <Button
-            variant="ghost"
-            className="justify-start text-sm px-2 py-1.5 h-auto font-normal hover:bg-accent"
-            onClick={() => handleNavigation('/risk-console')}
-          >
-            Risk Console
-          </Button>
-          
-          <div className="text-sm font-medium text-muted-foreground mb-2 mt-4 px-2">Integrations</div>
-          <Button
-            variant="ghost"
-            className="justify-start text-sm px-2 py-1.5 h-auto font-normal hover:bg-accent"
-            onClick={() => handleNavigation('/schwab-integration')}
-          >
-            Schwab Connect
+            TD Ameritrade
           </Button>
           <Button
             variant="ghost"
             className="justify-start text-sm px-2 py-1.5 h-auto font-normal hover:bg-accent"
-            onClick={() => handleNavigation('/ibkr-integration')}
+            onClick={() => handleNavigation('/ibkr')}
           >
-            IBKR Connect
-          </Button>
-          
-          <div className="text-sm font-medium text-muted-foreground mb-2 mt-4 px-2">Account</div>
-          <Button
-            variant="ghost"
-            className="justify-start text-sm px-2 py-1.5 h-auto font-normal hover:bg-accent"
-            onClick={() => handleNavigation('/profile')}
-          >
-            Profile
-          </Button>
-          <Button
-            variant="ghost"
-            className="justify-start text-sm px-2 py-1.5 h-auto font-normal hover:bg-accent"
-            onClick={() => handleNavigation('/auth')}
-          >
-            Sign In / Sign Up
+            IBKR Integration
           </Button>
         </div>
       </SheetContent>
