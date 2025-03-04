@@ -3,7 +3,7 @@
  * Utility functions for error monitoring
  */
 
-import { ErrorContext } from './types';
+import { ErrorContext } from '../types';
 import { isProduction } from '@/config/environment';
 
 // Error storage to avoid duplicate reports

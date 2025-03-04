@@ -6,7 +6,7 @@
 import { config, environment, isProduction } from '@/config/environment';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { ErrorContext } from './types';
+import { ErrorContext } from '../types';
 import { 
   getErrorHash, 
   reportedErrors, 
@@ -15,7 +15,7 @@ import {
   getErrorCount,
   incrementErrorCount,
   resetErrorCount
-} from './utils';
+} from '../utils/errorUtils';
 
 /**
  * Log errors to console in development and to monitoring service in production

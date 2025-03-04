@@ -61,15 +61,6 @@ if (config.logLevel === 'debug') {
   console.log('Debug logging enabled');
 }
 
-// Add enhanced error handlers for production
-window.addEventListener('error', (event) => {
-  console.error('Global error caught:', event.error);
-});
-
-window.addEventListener('unhandledrejection', (event) => {
-  console.error('Unhandled rejection:', event.reason);
-});
-
 // Performance marks for startup metrics
 performance.mark('app-init-start');
 

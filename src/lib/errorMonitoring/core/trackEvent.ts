@@ -3,7 +3,7 @@
  * Event tracking functionality for performance and user actions
  */
 import { isProduction } from '@/config/environment';
-import { EventProperties } from './types';
+import { EventProperties } from '../types';
 
 /**
  * Track events for analytics and monitoring purposes
