@@ -2,7 +2,6 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Shield, TrendingUp } from 'lucide-react';
-import { SpyHeaderWithNotifications } from '@/components/spy/SpyHeaderWithNotifications';
 
 interface RiskHeaderProps {
   autoMode: boolean;
@@ -19,13 +18,6 @@ export const RiskHeader: React.FC<RiskHeaderProps> = ({
 }) => {
   return (
     <>
-      {/* Header */}
-      <header className="border-b">
-        <div className="container py-4">
-          <SpyHeaderWithNotifications />
-        </div>
-      </header>
-      
       {/* Title and Action Buttons */}
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-3xl font-bold tracking-tight">Risk Management Console</h2>

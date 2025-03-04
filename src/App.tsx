@@ -19,6 +19,7 @@ import { toast } from './hooks/use-toast';
 import AuthenticationPage from './components/auth/AuthenticationPage';
 import UserProfilePage from './components/auth/UserProfilePage';
 import { supabase } from './integrations/supabase/client';
+import { SpyHeaderWithNotifications } from './components/spy/SpyHeaderWithNotifications';
 
 function App() {
   const [session, setSession] = useState(null);
@@ -72,21 +73,44 @@ function App() {
     };
   }, []);
 
+  // Creating a layout wrapper that includes the header for authenticated routes
+  const AuthenticatedLayout = ({ children }) => (
+    <>
+      <header className="border-b">
+        <div className="container py-4">
+          <SpyHeaderWithNotifications />
+        </div>
+      </header>
+      {children}
+    </>
+  );
+
+  // A custom Route component for authenticated routes that includes the layout
+  const AuthenticatedRoute = ({ element }) => {
+    return session ? (
+      <AuthenticatedLayout>
+        {element}
+      </AuthenticatedLayout>
+    ) : (
+      <Navigate to="/auth" replace />
+    );
+  };
+
   return (
     <ErrorBoundary>
       <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/trade-automation" element={<TradeAutomation />} />
-        <Route path="/performance" element={<PerformanceDashboard />} />
-        <Route path="/detailed-performance" element={<DetailedPerformancePage />} />
-        <Route path="/risk-console" element={<RiskConsole />} />
-        <Route path="/risk-monitoring-test" element={<RiskMonitoringTest />} />
-        <Route path="/schwab-integration" element={<SchwabIntegrationPage />} />
-        <Route path="/ibkr-integration" element={<IBKRIntegrationPage />} />
+        <Route path="/" element={session ? <Navigate to="/dashboard" replace /> : <Index />} />
+        <Route path="/dashboard" element={<AuthenticatedRoute element={<Dashboard />} />} />
+        <Route path="/trade-automation" element={<AuthenticatedRoute element={<TradeAutomation />} />} />
+        <Route path="/performance" element={<AuthenticatedRoute element={<PerformanceDashboard />} />} />
+        <Route path="/detailed-performance" element={<AuthenticatedRoute element={<DetailedPerformancePage />} />} />
+        <Route path="/risk-console" element={<AuthenticatedRoute element={<RiskConsole />} />} />
+        <Route path="/risk-monitoring-test" element={<AuthenticatedRoute element={<RiskMonitoringTest />} />} />
+        <Route path="/schwab-integration" element={<AuthenticatedRoute element={<SchwabIntegrationPage />} />} />
+        <Route path="/ibkr-integration" element={<AuthenticatedRoute element={<IBKRIntegrationPage />} />} />
         <Route path="/auth/ibkr/callback" element={<IBKRCallbackPage />} />
-        <Route path="/auth" element={<AuthenticationPage />} />
-        <Route path="/profile" element={<UserProfilePage />} />
+        <Route path="/auth" element={session ? <Navigate to="/dashboard" replace /> : <AuthenticationPage />} />
+        <Route path="/profile" element={<AuthenticatedRoute element={<UserProfilePage />} />} />
         <Route path="/not-found" element={<NotFound />} />
         <Route path="*" element={<Navigate to="/not-found" replace />} />
       </Routes>

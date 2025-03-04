@@ -1,76 +1,35 @@
 
 import React, { useState } from 'react';
-import { AITradingSettings, RiskToleranceType } from '@/lib/types/spy';
-import { useRiskMonitoring } from '@/hooks/useRiskMonitoring';
-import { useAnomalyDetection } from '@/hooks/useAnomalyDetection';
-import { DEFAULT_SETTINGS } from '@/components/spy/settings/AISettingsTypes';
-import { RiskHeader } from '@/components/spy/risk-console/RiskHeader';
-import { MainTabs } from '@/components/spy/risk-console/MainTabs';
-import { Footer } from '@/components/spy/risk-console/Footer';
-import { DemoNotifications } from '@/components/spy/risk-console/DemoNotifications';
+import { RiskHeader } from '../components/spy/risk-console/RiskHeader';
+import { MainTabs } from '../components/spy/risk-console/MainTabs';
+import { Footer } from '../components/spy/risk-console/Footer';
+import { DemoNotifications } from '../components/spy/risk-console/DemoNotifications';
+import { useRiskMonitoring } from '../hooks/useRiskMonitoring';
 
-const RiskConsole = () => {
-  const [settings] = useState<AITradingSettings>(DEFAULT_SETTINGS);
-  const [riskTolerance] = useState<RiskToleranceType>('moderate');
-
-  // Use our risk monitoring hook
-  const {
-    isLoading: riskLoading,
-    latestSignals,
-    latestActions,
-    learningInsights,
-    autoMode,
-    performRiskMonitoring,
-    toggleAutoMode
-  } = useRiskMonitoring(settings, riskTolerance);
+const RiskConsole: React.FC = () => {
+  const [autoMode, setAutoMode] = useState(false);
+  const { performRiskMonitoring, isLoading } = useRiskMonitoring();
   
-  // Use our anomaly detection hook
-  const {
-    isLoading: anomalyLoading,
-    anomalies,
-    riskSignals,
-    lastDetectionTime,
-    runDetection
-  } = useAnomalyDetection({
-    showNotifications: true,
-    params: {
-      sensitivity: 0.7,
-      timeWindow: '1h'
-    }
-  });
+  const toggleAutoMode = () => {
+    setAutoMode(!autoMode);
+  };
   
-  // Combined loading state
-  const isLoading = riskLoading || anomalyLoading;
-
   return (
-    <div className="min-h-screen bg-background">
-      {/* Demo notifications (invisible component) */}
-      <DemoNotifications />
-      
-      {/* Header with navigation and action buttons */}
-      <RiskHeader 
-        autoMode={autoMode}
-        isLoading={isLoading} 
-        toggleAutoMode={toggleAutoMode}
-        performRiskMonitoring={performRiskMonitoring}
-      />
-      
-      {/* Main Content */}
-      <main className="container py-6">
-        {/* Main Tabs for different views */}
-        <MainTabs 
+    <div className="container mx-auto py-6">
+      <div className="flex flex-col min-h-[calc(100vh-8rem)]">
+        <RiskHeader
+          autoMode={autoMode}
           isLoading={isLoading}
-          latestSignals={latestSignals}
-          latestActions={latestActions}
-          learningInsights={learningInsights}
-          anomalies={anomalies}
-          lastDetectionTime={lastDetectionTime}
-          riskSignals={riskSignals}
+          toggleAutoMode={toggleAutoMode}
+          performRiskMonitoring={performRiskMonitoring}
         />
         
-        {/* Footer with navigation links */}
+        <MainTabs />
+        
         <Footer />
-      </main>
+        
+        <DemoNotifications />
+      </div>
     </div>
   );
 };
