@@ -8,8 +8,9 @@ import { isProduction } from '@/config/environment';
 
 // Error storage to avoid duplicate reports
 export const reportedErrors = new Set<string>();
-export const MAX_STORED_ERRORS = 100;
+// Counters and constants as writable values
 export let errorCount = 0;
+export const MAX_STORED_ERRORS = 100;
 
 // Error sampling rate for high-frequency errors (only send some to server)
 export const ERROR_SAMPLING_RATE = isProduction ? 0.1 : 1.0; // 10% in production, 100% in dev

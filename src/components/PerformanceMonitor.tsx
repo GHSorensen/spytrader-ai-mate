@@ -1,11 +1,4 @@
 
-/**
- * Performance monitoring component
- * 
- * This component is responsible for setting up and managing performance monitoring
- * throughout the application.
- */
-
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { trackEvent } from '@/lib/errorMonitoring';
