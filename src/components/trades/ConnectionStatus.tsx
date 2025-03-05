@@ -1,12 +1,13 @@
-
 import React from 'react';
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, RefreshCw, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ClassifiedError } from '@/lib/errorMonitoring/types/errorClassification';
+import IBKRErrorDisplay from './IBKRErrorDisplay';
 
 interface ConnectionStatusProps {
   connectionDiagnostics: string | null;
-  lastError: Error | null;
+  lastError: Error | ClassifiedError | null;
   isRetrying?: boolean;
   retryCount?: number;
   reconnectAttempts?: number;
@@ -41,6 +42,19 @@ const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
     );
   }
 
+  // If we have a classified error, use the specialized error display
+  if (lastError) {
+    return (
+      <IBKRErrorDisplay 
+        error={lastError}
+        onRetry={onManualReconnect}
+        isRetrying={isRetrying}
+        showDetails={true}
+      />
+    );
+  }
+
+  // Otherwise use the generic connection status alert
   return (
     <Alert variant="destructive" className="bg-amber-50 border-amber-300 text-amber-900">
       <AlertCircle className="h-4 w-4 text-amber-600" />
@@ -52,11 +66,6 @@ const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
         {connectionDiagnostics && (
           <div className="mb-2">
             <strong>Connection diagnostic:</strong> {connectionDiagnostics}
-          </div>
-        )}
-        {lastError && (
-          <div className="mb-2">
-            <strong>Last error:</strong> {lastError.message}
           </div>
         )}
         {isRetrying && (

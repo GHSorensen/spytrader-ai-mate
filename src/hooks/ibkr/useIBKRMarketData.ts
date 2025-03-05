@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getDataProvider } from '@/services/dataProviders/dataProviderFactory';
 import { SpyMarketData } from '@/lib/types/spy';
 import { logError } from '@/lib/errorMonitoring/core/logger';
+import { handleIBKRError } from '@/services/dataProviders/interactiveBrokers/utils/errorHandler';
 
 // Default polling interval for market data
 const DEFAULT_POLLING_INTERVAL = 3000;
@@ -67,17 +68,16 @@ export const useIBKRMarketData = ({
         return data;
       } catch (error) {
         console.error("[useIBKRMarketData] Error fetching market data:", error);
-        console.error("[useIBKRMarketData] Stack trace:", error instanceof Error ? error.stack : "No stack trace");
         
-        // Log the error to monitoring system
-        if (error instanceof Error) {
-          logError(error, { 
-            service: 'useIBKRMarketData', 
-            method: 'getMarketData'
-          });
-        }
+        // Use the IBKR-specific error handler with detailed context
+        const classifiedError = handleIBKRError(error, {
+          service: 'useIBKRMarketData',
+          method: 'getMarketData',
+          connectionMethod: (provider as any)?.config?.connectionMethod,
+          paperTrading: (provider as any)?.config?.paperTrading
+        });
         
-        throw error;
+        throw classifiedError;
       }
     },
     refetchInterval: pollingInterval,

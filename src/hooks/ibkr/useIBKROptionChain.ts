@@ -2,7 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { getDataProvider } from '@/services/dataProviders/dataProviderFactory';
 import { SpyOption } from '@/lib/types/spy';
-import { logError } from '@/lib/errorMonitoring/core/logger';
+import { handleIBKRError } from '@/services/dataProviders/interactiveBrokers/utils/errorHandler';
 
 interface OptionChainOptions {
   symbol: string;
@@ -49,16 +49,16 @@ export const useIBKROptionChain = ({
       } catch (error) {
         console.error(`[useIBKROptionChain] Error fetching option chain for ${symbol}:`, error);
         
-        // Log the error to monitoring system
-        if (error instanceof Error) {
-          logError(error, { 
-            service: 'useIBKROptionChain', 
-            method: 'getOptionChain',
-            symbol
-          });
-        }
+        // Use the IBKR-specific error handler with detailed context
+        const classifiedError = handleIBKRError(error, {
+          service: 'useIBKROptionChain', 
+          method: 'getOptionChain',
+          symbol,
+          connectionMethod: (provider as any)?.config?.connectionMethod,
+          paperTrading: (provider as any)?.config?.paperTrading
+        });
         
-        throw error;
+        throw classifiedError;
       }
     },
     enabled,

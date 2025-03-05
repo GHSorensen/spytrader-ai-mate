@@ -1,6 +1,8 @@
-
 import { useState, useCallback, useEffect } from 'react';
-import { logError } from '@/lib/errorMonitoring';
+import { logError } from '@/lib/errorMonitoring/core/logger';
+import { isIBKRErrorRetryable, getIBKRErrorRetryDelay } from '@/services/dataProviders/interactiveBrokers/utils/errorHandler';
+import { ClassifiedError } from '@/lib/errorMonitoring/types/errorClassification';
+import { classifyError } from '@/lib/errorMonitoring/utils/errorClassifier';
 
 interface RetryConfig {
   maxRetries?: number;
@@ -12,7 +14,7 @@ interface RetryConfig {
 
 /**
  * Hook that provides retry policy functionality for IBKR data requests
- * Implements exponential backoff for failed requests
+ * Implements exponential backoff for failed requests with enhanced error classification
  */
 export const useIBKRRetryPolicy = (config?: RetryConfig) => {
   // Configure retry policy with defaults
@@ -27,7 +29,7 @@ export const useIBKRRetryPolicy = (config?: RetryConfig) => {
   // Track retry state
   const [retryCount, setRetryCount] = useState(0);
   const [isRetrying, setIsRetrying] = useState(false);
-  const [lastError, setLastError] = useState<Error | null>(null);
+  const [lastError, setLastError] = useState<ClassifiedError | null>(null);
   
   // Reset retry state when configuration changes
   useEffect(() => {
@@ -37,7 +39,13 @@ export const useIBKRRetryPolicy = (config?: RetryConfig) => {
   }, [maxRetries, initialDelay, backoffFactor, maxDelay]);
   
   // Calculate backoff delay using exponential backoff
-  const calculateBackoff = useCallback((attempt: number): number => {
+  const calculateBackoff = useCallback((attempt: number, error?: ClassifiedError): number => {
+    // If we have a classified error, use its specific retry delay
+    if (error) {
+      return getIBKRErrorRetryDelay(error, attempt);
+    }
+    
+    // Otherwise use standard exponential backoff
     const delay = Math.min(
       initialDelay * Math.pow(backoffFactor, attempt),
       maxDelay
@@ -75,30 +83,33 @@ export const useIBKRRetryPolicy = (config?: RetryConfig) => {
         attempts++;
         setRetryCount(attempts);
         
-        if (error instanceof Error) {
-          setLastError(error);
-          
-          // Log the error with context
-          logError(error, {
-            ...(context || {}),
-            retryAttempt: attempts,
-            maxRetries,
-          });
-        }
+        // Classify the error for better handling
+        const classifiedError = classifyError(error);
+        setLastError(classifiedError);
+        
+        // Log the error with context
+        logError(classifiedError, {
+          ...(context || {}),
+          retryAttempt: attempts,
+          maxRetries,
+        });
         
         // Check if the error has a status code that should be retried
-        const errorStatus = (error as any)?.status;
+        const errorStatus = classifiedError.status;
         const shouldRetryStatus = errorStatus && retryOnCodes.includes(errorStatus);
         
-        // If we've exceeded max retries, rethrow the error
-        if (attempts >= maxRetries || (!shouldRetryStatus && errorStatus)) {
+        // Check if the error is retryable based on classification
+        const isRetryable = shouldRetryStatus || isIBKRErrorRetryable(classifiedError);
+        
+        // If we've exceeded max retries or the error isn't retryable, rethrow the error
+        if (attempts >= maxRetries || !isRetryable) {
           setIsRetrying(false);
-          console.error(`Operation failed after ${attempts} retries`);
-          throw error;
+          console.error(`Operation failed after ${attempts} retries, error not retryable: ${isRetryable}`);
+          throw classifiedError;
         }
         
         // Otherwise, wait for backoff period and retry
-        const backoffDelay = calculateBackoff(attempts);
+        const backoffDelay = calculateBackoff(attempts, classifiedError);
         console.log(`Retrying operation in ${Math.round(backoffDelay)}ms (attempt ${attempts}/${maxRetries})`);
         
         setIsRetrying(true);
