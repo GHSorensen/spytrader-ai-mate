@@ -11,37 +11,24 @@ import { RefreshCw } from "lucide-react";
 
 const TradesPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('active');
-  const { trades, isLoading, handleCreateTestTrade, isPending, isAuthenticated, refetch, lastError, isRetrying, retryCount } = useTrades(activeTab);
-  const [connectionDiagnostics, setConnectionDiagnostics] = useState<string | null>(null);
+  const { 
+    trades, 
+    isLoading, 
+    handleCreateTestTrade, 
+    isPending, 
+    isAuthenticated, 
+    refetch, 
+    lastError, 
+    isRetrying, 
+    retryCount,
+    connectionDiagnostics,
+    reconnectAttempts
+  } = useTrades(activeTab);
 
   // Log component mounting to debug
   useEffect(() => {
     console.log("TradesPage mounted", "Authentication state:", isAuthenticated);
     return () => console.log("TradesPage unmounted");
-  }, [isAuthenticated]);
-
-  // Check connection status on mount
-  useEffect(() => {
-    const checkConnection = async () => {
-      try {
-        const provider = getDataProvider();
-        // Only use public methods and properties from the provider
-        const status = {
-          providerType: provider.constructor.name,
-          isConnected: provider.isConnected(),
-          // Don't access protected properties
-        };
-        console.log("Provider status:", status);
-        setConnectionDiagnostics(null);
-      } catch (error) {
-        console.error("Error checking provider:", error);
-        setConnectionDiagnostics(error instanceof Error ? error.message : String(error));
-      }
-    };
-    
-    if (isAuthenticated) {
-      checkConnection();
-    }
   }, [isAuthenticated]);
 
   const onCreateTestTrade = useCallback(() => {
@@ -71,6 +58,30 @@ const TradesPage: React.FC = () => {
     toast.info("Refreshing trades data");
   }, [refetch]);
 
+  // Handler for manual reconnection
+  const handleManualReconnect = useCallback(async () => {
+    try {
+      console.log("Manual reconnect initiated");
+      toast.info("Attempting to reconnect...");
+      
+      const provider = getDataProvider();
+      if (provider) {
+        const connected = await provider.connect();
+        if (connected) {
+          toast.success("Successfully reconnected");
+          refetch();
+        } else {
+          toast.error("Failed to reconnect");
+        }
+      } else {
+        toast.error("Data provider not available");
+      }
+    } catch (error) {
+      console.error("Reconnect error:", error);
+      toast.error("Reconnection failed: " + (error instanceof Error ? error.message : "Unknown error"));
+    }
+  }, [refetch]);
+
   // If not authenticated, show sign-in prompt
   if (!isAuthenticated) {
     return <SignInPrompt onRefreshBalance={onRefreshTrades} />;
@@ -86,6 +97,7 @@ const TradesPage: React.FC = () => {
         isLoading={isLoading}
         isRetrying={isRetrying}
         retryCount={retryCount}
+        reconnectAttempts={reconnectAttempts}
       />
 
       <ConnectionStatus 
@@ -93,6 +105,8 @@ const TradesPage: React.FC = () => {
         lastError={lastError}
         isRetrying={isRetrying}
         retryCount={retryCount}
+        reconnectAttempts={reconnectAttempts}
+        onManualReconnect={handleManualReconnect}
       />
 
       <TradeTabs 

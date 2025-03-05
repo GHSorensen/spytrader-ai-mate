@@ -11,6 +11,7 @@ interface TradePageHeaderProps {
   isLoading: boolean;
   isRetrying?: boolean;
   retryCount?: number;
+  reconnectAttempts?: number;
 }
 
 const TradePageHeader: React.FC<TradePageHeaderProps> = ({
@@ -20,7 +21,8 @@ const TradePageHeader: React.FC<TradePageHeaderProps> = ({
   onRefreshTrades,
   isLoading,
   isRetrying = false,
-  retryCount = 0
+  retryCount = 0,
+  reconnectAttempts = 0
 }) => {
   return (
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -29,6 +31,9 @@ const TradePageHeader: React.FC<TradePageHeaderProps> = ({
         <p className="text-muted-foreground mt-1">
           View and manage your current trades
           {isRetrying && <span className="ml-2 text-amber-600 text-sm">(Reconnecting... Attempt {retryCount})</span>}
+          {!isRetrying && reconnectAttempts > 0 && 
+            <span className="ml-2 text-green-600 text-sm">(Reconnected after {reconnectAttempts} attempts)</span>
+          }
         </p>
       </div>
       <div className="flex items-center gap-2 self-end sm:self-auto">
