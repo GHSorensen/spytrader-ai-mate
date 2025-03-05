@@ -62,7 +62,7 @@ describe('useIBKRConnection', () => {
       await result.current.connect();
     });
     
-    expect(result.current.connectionStatus).toBe('disconnected');
+    expect(result.current.connectionStatus).toBe('error');
     expect(result.current.error).toBe('Connection failed');
     expect(mockToast).toHaveBeenCalled();
   });

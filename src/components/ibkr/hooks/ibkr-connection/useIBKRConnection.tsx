@@ -8,100 +8,111 @@ import { useIBKRConnectionMonitoring } from './useIBKRConnectionMonitoring';
 interface UseIBKRConnectionReturn {
   connectionStatus: IBKRConnectionStatus;
   isConnecting: boolean;
-  setIsConnecting: (value: boolean) => void;
-  setConnectionStatus: (value: IBKRConnectionStatus) => void;
   isLoading: boolean;
   error: string | null;
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
-  isMonitoring: boolean;
-  startMonitoring: () => void;
-  stopMonitoring: () => void;
-  checkConnectionStatus: () => Promise<IBKRConnectionStatus>;
+  setConnectionStatus: (status: IBKRConnectionStatus) => void;
+  refreshConnectionStatus: () => Promise<IBKRConnectionStatus>;
+  monitoringInfo: {
+    isMonitoring: boolean;
+    lastChecked: Date | null;
+    startMonitoring: () => void;
+    stopMonitoring: () => void;
+  };
 }
 
 export const useIBKRConnection = (): UseIBKRConnectionReturn => {
   const { toast } = useToast();
   
-  // Connection state
   const [connectionStatus, setConnectionStatus] = useState<IBKRConnectionStatus>('disconnected');
   const [isConnecting, setIsConnecting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+  
+  // Use the monitoring hook
   const {
     isMonitoring,
     lastChecked,
     startMonitoring,
     stopMonitoring,
-    checkConnectionStatus
+    checkConnectionStatus: refreshConnectionStatus
   } = useIBKRConnectionMonitoring(setConnectionStatus);
 
   const connect = useCallback(async () => {
-    setIsLoading(true);
     try {
+      setIsConnecting(true);
       setConnectionStatus('connecting');
-      await connectToIBKR();
-      setConnectionStatus('connected');
       setError(null);
       
-      // Start monitoring once connected
+      await connectToIBKR();
+      
+      setConnectionStatus('connected');
+      
+      // Start monitoring after connecting
       startMonitoring();
       
       toast({
-        title: 'IBKR Connected',
-        description: 'Successfully connected to IBKR',
+        title: 'Connected',
+        description: 'Successfully connected to Interactive Brokers',
+        variant: 'success',
       });
     } catch (err: any) {
-      setConnectionStatus('disconnected');
-      setError(err.message || 'Failed to connect to IBKR');
+      setConnectionStatus('error');
+      setError(err.message || 'Connection failed');
+      
       toast({
-        title: 'Error',
-        description: `Failed to connect to IBKR: ${err.message}`,
+        title: 'Connection Failed',
+        description: err.message || 'Failed to connect to Interactive Brokers',
         variant: 'destructive',
       });
     } finally {
-      setIsLoading(false);
+      setIsConnecting(false);
     }
-  }, [toast, startMonitoring]);
+  }, [startMonitoring, toast]);
 
   const disconnect = useCallback(async () => {
-    setIsLoading(true);
     try {
+      setIsLoading(true);
+      
       // Stop monitoring before disconnecting
       stopMonitoring();
       
       await disconnectFromIBKR();
+      
       setConnectionStatus('disconnected');
-      setError(null);
+      
       toast({
-        title: 'IBKR Disconnected',
-        description: 'Successfully disconnected from IBKR',
+        title: 'Disconnected',
+        description: 'Successfully disconnected from Interactive Brokers',
       });
     } catch (err: any) {
-      setError(err.message || 'Failed to disconnect from IBKR');
+      setError(err.message || 'Disconnection failed');
+      
       toast({
-        title: 'Error',
-        description: `Failed to disconnect from IBKR: ${err.message}`,
+        title: 'Disconnection Failed',
+        description: err.message || 'Failed to disconnect from Interactive Brokers',
         variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
     }
-  }, [toast, stopMonitoring]);
+  }, [stopMonitoring, toast]);
 
   return {
     connectionStatus,
     isConnecting,
-    setIsConnecting,
-    setConnectionStatus,
     isLoading,
     error,
     connect,
     disconnect,
-    isMonitoring,
-    startMonitoring,
-    stopMonitoring,
-    checkConnectionStatus
+    setConnectionStatus,
+    refreshConnectionStatus,
+    monitoringInfo: {
+      isMonitoring,
+      lastChecked,
+      startMonitoring,
+      stopMonitoring
+    }
   };
 };

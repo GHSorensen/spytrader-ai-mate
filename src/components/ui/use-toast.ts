@@ -1,5 +1,5 @@
 
 // Re-export the toast API from our hooks directory
-import { toast } from "sonner";
+import { toast, useToast } from "@/hooks/use-toast";
 
-export { toast };
+export { toast, useToast };

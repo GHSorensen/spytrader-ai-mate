@@ -1,6 +1,6 @@
 
 // Re-export Sonner's toast API
-import { toast as sonnerToast, Toast, ToastT } from "sonner";
+import { toast as sonnerToast, ToastT } from "sonner";
 
 // To maintain backward compatibility, we'll export a wrapped version
 // that supports the old interface along with the new one
@@ -48,4 +48,11 @@ export const toast = Object.assign(
   }
 );
 
-export type { Toast };
+// Add a useToast hook for backward compatibility
+export const useToast = () => {
+  return {
+    toast,
+  };
+};
+
+export type { ToastT as Toast };
