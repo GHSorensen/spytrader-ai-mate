@@ -32,13 +32,13 @@ export const useIBKRRealTimeData = () => {
     refetch: refetchMarketData 
   } = useIBKRMarketData();
 
-  // Get options data from IBKR
+  // Get options data from IBKR - fix here: pass required symbol parameter
   const { 
     options, 
     isLoading: optionsLoading, 
     isError: optionsError,
     refetch: refetchOptions 
-  } = useIBKROptionChain();
+  } = useIBKROptionChain({ symbol: 'SPY' });  // Adding required symbol parameter
 
   // Combine loading states
   const isLoading = marketDataLoading || optionsLoading;
