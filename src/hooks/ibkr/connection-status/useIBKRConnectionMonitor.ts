@@ -1,5 +1,5 @@
 
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { toast } from 'sonner';
 import { useIBKRConnectionStatus } from './useIBKRConnectionStatus';
 import { useConnectionHistory } from './useConnectionHistory';
@@ -60,7 +60,7 @@ export function useIBKRConnectionMonitor(
   const { getDetailedDiagnostics } = useDiagnostics();
 
   // Track connection status changes
-  useEffect(() => {
+  useCallback(() => {
     if (onStatusChange) {
       onStatusChange({ isConnected, dataSource });
     }
@@ -83,6 +83,7 @@ export function useIBKRConnectionMonitor(
         console.log('[useIBKRConnectionMonitor] Manual reconnect successful');
         toast.success("Successfully reconnected");
         resetReconnectAttempts();
+        return true;
       } else {
         console.log('[useIBKRConnectionMonitor] Manual reconnect failed');
         toast.error("Reconnection Failed", {
@@ -91,6 +92,7 @@ export function useIBKRConnectionMonitor(
         
         // Record failure
         recordReconnectAttempt(1, maxReconnectAttempts, false);
+        return false;
       }
     } catch (error) {
       console.error('[useIBKRConnectionMonitor] Error during manual reconnect:', error);
@@ -103,6 +105,8 @@ export function useIBKRConnectionMonitor(
         service: 'useIBKRConnectionMonitor',
         method: 'handleManualReconnect'
       });
+      
+      return false;
     }
   }, [reconnect, resetReconnectAttempts, recordReconnectAttempt, maxReconnectAttempts]);
 

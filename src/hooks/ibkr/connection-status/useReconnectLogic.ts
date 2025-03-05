@@ -1,23 +1,27 @@
 
-import { useState, useEffect, useCallback } from 'react';
-import { toast } from 'sonner';
-import { logConnectionError } from './utils';
+import { useState, useEffect, useCallback, useRef } from 'react';
+
+interface ReconnectOptions {
+  autoReconnect: boolean;
+  maxReconnectAttempts: number;
+  reconnectInterval: number;
+  onAttempt?: (attempt: number, max: number) => void;
+  onFailure?: (attempt: number) => void;
+}
 
 /**
- * Hook to manage automatic reconnection logic
+ * Hook for handling reconnection logic
  */
 export function useReconnectLogic(
   isConnected: boolean,
   connectionLostTime: Date | null,
   reconnectFn: () => Promise<boolean>,
-  options: {
-    autoReconnect: boolean;
-    maxReconnectAttempts: number;
-    reconnectInterval: number;
-    onAttempt: (attempt: number, max: number) => void;
-    onFailure: (attempt: number) => void;
-  }
+  options: ReconnectOptions
 ) {
+  const [isReconnecting, setIsReconnecting] = useState(false);
+  const [reconnectAttempts, setReconnectAttempts] = useState(0);
+  const reconnectTimerRef = useRef<number | null>(null);
+  
   const {
     autoReconnect,
     maxReconnectAttempts,
@@ -26,79 +30,94 @@ export function useReconnectLogic(
     onFailure
   } = options;
   
-  const [isReconnecting, setIsReconnecting] = useState(false);
-  const [reconnectAttempts, setReconnectAttempts] = useState(0);
-
-  // Auto-reconnect logic
+  // Reset reconnect attempts when connected
   useEffect(() => {
-    let reconnectTimer: number | null = null;
-    
-    const attemptReconnect = async () => {
-      if (isConnected || !autoReconnect || reconnectAttempts >= maxReconnectAttempts) {
-        return;
-      }
-      
-      setIsReconnecting(true);
-      onAttempt(reconnectAttempts + 1, maxReconnectAttempts);
-      
-      try {
-        console.log(`[useReconnectLogic] Attempting reconnect (${reconnectAttempts + 1}/${maxReconnectAttempts})`);
-        const success = await reconnectFn();
-        
-        if (success) {
-          console.log('[useReconnectLogic] Reconnect successful');
-          setReconnectAttempts(0);
-        } else {
-          setReconnectAttempts(prev => prev + 1);
-          console.log(`[useReconnectLogic] Reconnect failed, attempts: ${reconnectAttempts + 1}`);
-          onFailure(reconnectAttempts + 1);
-          
-          if (reconnectAttempts + 1 >= maxReconnectAttempts) {
-            toast.error("Reconnection Failed", {
-              description: `Failed to reconnect after ${maxReconnectAttempts} attempts. Please try manually reconnecting.`,
-            });
-          }
-        }
-      } catch (error) {
-        console.error('[useReconnectLogic] Error during reconnect:', error);
-        setReconnectAttempts(prev => prev + 1);
-        
-        logConnectionError(error, {
-          service: 'useReconnectLogic',
-          method: 'attemptReconnect',
-          reconnectAttempt: reconnectAttempts + 1
-        });
-      } finally {
-        setIsReconnecting(false);
-      }
-    };
-    
-    if (!isConnected && connectionLostTime && autoReconnect && reconnectAttempts < maxReconnectAttempts) {
-      reconnectTimer = window.setTimeout(attemptReconnect, reconnectInterval);
+    if (isConnected) {
+      setReconnectAttempts(0);
     }
-    
+  }, [isConnected]);
+  
+  // Clean up timer on unmount
+  useEffect(() => {
     return () => {
-      if (reconnectTimer) {
-        clearTimeout(reconnectTimer);
+      if (reconnectTimerRef.current !== null) {
+        window.clearTimeout(reconnectTimerRef.current);
       }
     };
+  }, []);
+  
+  // Handle auto-reconnect
+  useEffect(() => {
+    if (
+      autoReconnect && 
+      !isConnected && 
+      connectionLostTime && 
+      !isReconnecting && 
+      reconnectAttempts < maxReconnectAttempts
+    ) {
+      const attemptReconnect = async () => {
+        const nextAttempt = reconnectAttempts + 1;
+        setReconnectAttempts(nextAttempt);
+        setIsReconnecting(true);
+        
+        if (onAttempt) {
+          onAttempt(nextAttempt, maxReconnectAttempts);
+        }
+        
+        try {
+          console.log(`[useReconnectLogic] Attempting reconnect ${nextAttempt}/${maxReconnectAttempts}`);
+          const success = await reconnectFn();
+          
+          if (success) {
+            console.log(`[useReconnectLogic] Reconnection successful on attempt ${nextAttempt}`);
+          } else {
+            console.log(`[useReconnectLogic] Reconnection attempt ${nextAttempt} failed`);
+            
+            if (nextAttempt >= maxReconnectAttempts) {
+              console.log(`[useReconnectLogic] Maximum reconnection attempts reached`);
+              if (onFailure) {
+                onFailure(nextAttempt);
+              }
+            }
+          }
+        } catch (error) {
+          console.error(`[useReconnectLogic] Error during reconnection attempt ${nextAttempt}:`, error);
+          
+          if (nextAttempt >= maxReconnectAttempts) {
+            console.log(`[useReconnectLogic] Maximum reconnection attempts reached with error`);
+            if (onFailure) {
+              onFailure(nextAttempt);
+            }
+          }
+        } finally {
+          setIsReconnecting(false);
+        }
+      };
+      
+      // Schedule next reconnect attempt
+      reconnectTimerRef.current = window.setTimeout(
+        attemptReconnect,
+        reconnectInterval
+      );
+    }
   }, [
-    isConnected, 
-    autoReconnect, 
-    reconnectAttempts, 
-    maxReconnectAttempts, 
-    reconnectInterval, 
-    connectionLostTime, 
+    autoReconnect,
+    isConnected,
+    connectionLostTime,
+    isReconnecting,
+    reconnectAttempts,
+    maxReconnectAttempts,
+    reconnectInterval,
     reconnectFn,
     onAttempt,
     onFailure
   ]);
-
+  
   // Reset reconnect attempts
   const resetReconnectAttempts = useCallback(() => {
     setReconnectAttempts(0);
   }, []);
-
+  
   return {
     isReconnecting,
     reconnectAttempts,

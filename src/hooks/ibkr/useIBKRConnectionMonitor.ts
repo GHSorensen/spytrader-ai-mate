@@ -1,4 +1,3 @@
 
-// Re-export from modular implementation
-import { useIBKRConnectionMonitor as useModularIBKRConnectionMonitor } from './connection-status';
-export const useIBKRConnectionMonitor = useModularIBKRConnectionMonitor;
+import { useIBKRConnectionMonitor as useModularConnectionMonitor } from './connection-status/useIBKRConnectionMonitor';
+export { useIBKRConnectionMonitor };

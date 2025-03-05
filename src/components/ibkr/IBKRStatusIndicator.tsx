@@ -10,10 +10,12 @@ import useConnectionStatus from './status/useConnectionStatus';
 
 interface IBKRStatusIndicatorProps {
   showDetails?: boolean;
+  showTestLink?: boolean;
 }
 
 export const IBKRStatusIndicator: React.FC<IBKRStatusIndicatorProps> = ({ 
-  showDetails = false 
+  showDetails = false,
+  showTestLink = false
 }) => {
   const { isConnected, dataSource, refreshAllData, reconnect, lastUpdated } = useIBKRRealTimeData();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -65,6 +67,17 @@ export const IBKRStatusIndicator: React.FC<IBKRStatusIndicatorProps> = ({
             isRefreshing={refreshing}
             onClick={handleReconnect}
           />
+        )}
+        
+        {showTestLink && (
+          <a 
+            href="/ibkr-test" 
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-muted-foreground hover:text-primary transition-colors ml-2"
+          >
+            Test Dashboard
+          </a>
         )}
       </div>
       

@@ -3,64 +3,68 @@ import { useState, useCallback } from 'react';
 import { ConnectionHistoryEvent } from './types';
 
 /**
- * Hook to track connection history events
+ * Hook to track connection history and events
  */
 export function useConnectionHistory() {
   const [connectionHistory, setConnectionHistory] = useState<ConnectionHistoryEvent[]>([]);
   const [connectionLostTime, setConnectionLostTime] = useState<Date | null>(null);
-
-  const addHistoryEvent = useCallback((event: ConnectionHistoryEvent) => {
-    setConnectionHistory(prev => [...prev, event]);
-  }, []);
-
-  const handleConnectionChange = useCallback((isConnected: boolean, wasReconnectAttempt = false) => {
-    const timestamp = new Date();
+  
+  /**
+   * Handle connection status change
+   */
+  const handleConnectionChange = useCallback((
+    isConnected: boolean,
+    wasReconnect: boolean = false
+  ) => {
+    const now = new Date();
+    let event: ConnectionHistoryEvent['event'];
     
     if (isConnected) {
-      // Connection established
-      addHistoryEvent({ 
-        timestamp, 
-        event: wasReconnectAttempt ? 'reconnect_success' : 'connected',
-        details: `Connected successfully${wasReconnectAttempt ? ' after reconnect' : ''}` 
-      });
+      event = wasReconnect ? 'reconnect_success' : 'connected';
       setConnectionLostTime(null);
-    } else if (!isConnected && connectionLostTime === null) {
-      // Connection lost for the first time
-      addHistoryEvent({ 
-        timestamp, 
-        event: 'disconnected',
-        details: 'Connection lost' 
-      });
-      setConnectionLostTime(timestamp);
+    } else {
+      event = 'disconnected';
+      setConnectionLostTime(now);
     }
-  }, [connectionLostTime, addHistoryEvent]);
-
-  const recordReconnectAttempt = useCallback((attempt: number, maxAttempts: number, success?: boolean) => {
-    const timestamp = new Date();
     
-    if (success === undefined) {
-      // Just recording an attempt
-      addHistoryEvent({ 
-        timestamp, 
-        event: 'reconnect_attempt',
-        details: `Reconnect attempt ${attempt} of ${maxAttempts}` 
-      });
-    } else if (success === false) {
-      // Recording a failure
-      addHistoryEvent({ 
-        timestamp, 
-        event: 'reconnect_failure',
-        details: `Reconnect attempt ${attempt} failed` 
-      });
+    const historyEvent: ConnectionHistoryEvent = {
+      timestamp: now,
+      event
+    };
+    
+    setConnectionHistory(prev => [...prev, historyEvent]);
+  }, []);
+  
+  /**
+   * Record a reconnection attempt
+   */
+  const recordReconnectAttempt = useCallback((
+    attempt: number,
+    maxAttempts: number,
+    isAttempt: boolean = true
+  ) => {
+    const now = new Date();
+    let event: ConnectionHistoryEvent['event'] = 'reconnect_attempt';
+    let details = `Attempt ${attempt} of ${maxAttempts}`;
+    
+    if (!isAttempt) {
+      event = 'reconnect_failure';
+      details = `Failed after ${attempt} attempt${attempt !== 1 ? 's' : ''}`;
     }
-    // Success is handled by handleConnectionChange
-  }, [addHistoryEvent]);
-
+    
+    const historyEvent: ConnectionHistoryEvent = {
+      timestamp: now,
+      event,
+      details
+    };
+    
+    setConnectionHistory(prev => [...prev, historyEvent]);
+  }, []);
+  
   return {
     connectionHistory,
     connectionLostTime,
     handleConnectionChange,
-    recordReconnectAttempt,
-    addHistoryEvent
+    recordReconnectAttempt
   };
 }
