@@ -1,13 +1,22 @@
 
+/**
+ * Interactive Brokers Options Service
+ * 
+ * This service provides a unified interface for fetching options data from Interactive Brokers
+ * regardless of whether the TWS desktop application or the WebAPI is being used.
+ * 
+ * The service handles:
+ * - Routing requests to the appropriate data source (TWS or WebAPI)
+ * - Standardized error handling across all methods
+ * - Diagnostic information collection
+ */
+
 import { DataProviderConfig } from "@/lib/types/spy/dataProvider";
 import { SpyOption } from "@/lib/types/spy";
 import { TwsDataService } from "../tws/TwsDataService";
 import { WebApiDataService } from "../webapi/WebApiDataService";
 import { logError } from "@/lib/errorMonitoring/core/logger";
 
-/**
- * Service for handling options data from Interactive Brokers
- */
 export class IBKROptionsService {
   private config: DataProviderConfig;
   private twsDataService: TwsDataService;
@@ -31,7 +40,8 @@ export class IBKROptionsService {
   
   /**
    * Get all available options from Interactive Brokers
-   * @returns Promise resolving to an array of options
+   * 
+   * @returns Promise resolving to an array of options, empty array if error occurs
    */
   async getOptions(): Promise<SpyOption[]> {
     try {
@@ -55,7 +65,7 @@ export class IBKROptionsService {
       console.error("[IBKROptionsService] Error fetching options from Interactive Brokers:", error);
       if (error instanceof Error) {
         this.lastError = error;
-        // Log the error to our monitoring system
+        // Log the error to our monitoring system with context
         logError(error, { 
           service: 'IBKROptionsService', 
           method: 'getOptions',
@@ -63,15 +73,16 @@ export class IBKROptionsService {
         });
       }
       
-      // Return empty array instead of failing to be consistent with getOptionChain
+      // Always return empty array on error for consistent behavior
       return [];
     }
   }
   
   /**
    * Get option chain for a specific symbol from Interactive Brokers
+   * 
    * @param symbol Stock symbol to get options for (e.g., "SPY")
-   * @returns Promise resolving to an array of options for the specified symbol
+   * @returns Promise resolving to an array of options for the specified symbol, empty array if error occurs
    */
   async getOptionChain(symbol: string): Promise<SpyOption[]> {
     try {
@@ -95,7 +106,7 @@ export class IBKROptionsService {
       console.error(`[IBKROptionsService] Error fetching option chain for ${symbol} from Interactive Brokers:`, error);
       if (error instanceof Error) {
         this.lastError = error;
-        // Log the error to our monitoring system
+        // Log the error to our monitoring system with context
         logError(error, { 
           service: 'IBKROptionsService', 
           method: 'getOptionChain',
@@ -104,14 +115,14 @@ export class IBKROptionsService {
         });
       }
       
-      // Return empty array and log error instead of failing completely
-      console.log(`[IBKROptionsService] Returning empty option chain due to error`);
+      // Always return empty array on error for consistent behavior
       return [];
     }
   }
   
   /**
    * Get diagnostics information about the options service
+   * 
    * @returns Diagnostic information including connection method, last fetch time, and error state
    */
   getDiagnostics(): {

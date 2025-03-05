@@ -1,4 +1,18 @@
 
+/**
+ * Interactive Brokers Options Service Tests
+ * 
+ * These tests verify the behavior of the options service layer that interacts
+ * with Interactive Brokers. The tests focus on:
+ * 
+ * 1. Proper routing to TWS or WebAPI based on config
+ * 2. Consistent error handling across methods
+ * 3. Proper diagnostic information collection
+ * 
+ * @group services/dataProviders
+ * @group interactive-brokers
+ */
+
 import { IBKROptionsService } from "../IBKROptionsService";
 import { DataProviderConfig } from "@/lib/types/spy/dataProvider";
 import { logError } from "@/lib/errorMonitoring/core/logger";
@@ -42,6 +56,9 @@ describe("IBKROptionsService", () => {
     );
   });
 
+  /**
+   * Tests for the getOptions method
+   */
   describe("getOptions", () => {
     it("should return options from WebAPI when connection method is webapi", async () => {
       // Arrange
@@ -94,6 +111,9 @@ describe("IBKROptionsService", () => {
     });
   });
 
+  /**
+   * Tests for the getOptionChain method
+   */
   describe("getOptionChain", () => {
     it("should return option chain from WebAPI when connection method is webapi", async () => {
       // Arrange
@@ -147,6 +167,9 @@ describe("IBKROptionsService", () => {
     });
   });
 
+  /**
+   * Tests for the getDiagnostics method
+   */
   describe("getDiagnostics", () => {
     it("should return diagnostic information", () => {
       // Act
