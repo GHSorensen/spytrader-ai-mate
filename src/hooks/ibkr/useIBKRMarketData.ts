@@ -6,17 +6,25 @@ import { logError } from '@/lib/errorMonitoring/core/logger';
 
 // Default polling interval for market data
 const DEFAULT_POLLING_INTERVAL = 3000;
+// Default stale time (15 seconds)
+const DEFAULT_STALE_TIME = 15000;
+// Default cache time (5 minutes)
+const DEFAULT_CACHE_TIME = 300000;
 
 interface MarketDataOptions {
   enabled?: boolean;
   pollingInterval?: number;
   retryCount?: number;
+  staleTime?: number;
+  cacheTime?: number;
 }
 
 export const useIBKRMarketData = ({
   enabled = true,
   pollingInterval = DEFAULT_POLLING_INTERVAL,
-  retryCount = 3
+  retryCount = 3,
+  staleTime = DEFAULT_STALE_TIME,
+  cacheTime = DEFAULT_CACHE_TIME
 }: MarketDataOptions = {}) => {
   const marketDataQuery = useQuery({
     queryKey: ['marketData'],
@@ -75,7 +83,9 @@ export const useIBKRMarketData = ({
     refetchInterval: pollingInterval,
     refetchOnWindowFocus: true,
     retry: retryCount,
-    enabled
+    enabled,
+    staleTime,
+    gcTime: cacheTime
   });
 
   return {
@@ -84,6 +94,11 @@ export const useIBKRMarketData = ({
     isError: marketDataQuery.isError,
     error: marketDataQuery.error,
     lastUpdated: marketDataQuery.dataUpdatedAt ? new Date(marketDataQuery.dataUpdatedAt) : undefined,
-    refetch: marketDataQuery.refetch
+    refetch: marketDataQuery.refetch,
+    isFetching: marketDataQuery.isFetching,
+    isStale: marketDataQuery.isStale,
+    isRefetching: marketDataQuery.isRefetching,
+    status: marketDataQuery.status,
+    fetchStatus: marketDataQuery.fetchStatus
   };
 };

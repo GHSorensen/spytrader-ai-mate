@@ -24,22 +24,33 @@ export const useIBKRRealTimeData = () => {
     reconnect 
   } = useIBKRConnectionStatus();
 
-  // Get market data from IBKR
+  // Get market data from IBKR with optimized caching
   const { 
     marketData, 
     isLoading: marketDataLoading, 
     isError: marketDataError,
     lastUpdated,
-    refetch: refetchMarketData 
-  } = useIBKRMarketData();
+    refetch: refetchMarketData,
+    isFetching: isMarketDataFetching
+  } = useIBKRMarketData({
+    staleTime: 15000,        // Data considered stale after 15 seconds
+    cacheTime: 300000,       // Cache for 5 minutes
+    pollingInterval: 30000,  // Poll every 30 seconds
+  });
 
-  // Get options data from IBKR
+  // Get options data from IBKR with optimized caching
   const { 
     options, 
     isLoading: optionsLoading, 
     isError: optionsError,
-    refetch: refetchOptions 
-  } = useIBKROptionChain({ symbol: 'SPY' });
+    refetch: refetchOptions,
+    isFetching: isOptionsFetching
+  } = useIBKROptionChain({ 
+    symbol: 'SPY',
+    staleTime: 60000,        // Options data stays fresh for 1 minute
+    cacheTime: 600000,       // Cache for 10 minutes 
+    refetchInterval: 60000,  // Refetch every minute
+  });
 
   // Setup retry policy for data operations
   const {
@@ -54,6 +65,7 @@ export const useIBKRRealTimeData = () => {
 
   // Combine loading states
   const isLoading = marketDataLoading || optionsLoading || isRetrying;
+  const isFetching = isMarketDataFetching || isOptionsFetching || isRetrying;
 
   // Combine error states
   const isError = marketDataError || optionsError || internalErrors.length > 0;
@@ -144,6 +156,7 @@ export const useIBKRRealTimeData = () => {
     connectionDiagnostics,
     isLoading,
     isError,
+    isFetching,
     retryCount,
     isRetrying,
     

@@ -1,17 +1,29 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useQuery } from '@tanstack/react-query';
-import { getSpyMarketData } from '@/services/spyOptionsService';
-import { ArrowUp, ArrowDown, BarChart2 } from 'lucide-react';
+import { ArrowUp, ArrowDown, BarChart2, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useIBKRMarketData } from '@/hooks/ibkr/useIBKRMarketData';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 export const SpyOverview = () => {
-  const { data: spyData, isLoading } = useQuery({
-    queryKey: ['spyMarketData'],
-    queryFn: getSpyMarketData,
-    refetchInterval: 60000, // Refresh every minute
+  const { 
+    marketData: spyData, 
+    isLoading, 
+    refetch, 
+    isFetching,
+    lastUpdated 
+  } = useIBKRMarketData({
+    pollingInterval: 60000, // Poll every minute
+    staleTime: 30000, // Consider data stale after 30 seconds
+    cacheTime: 600000 // Keep in cache for 10 minutes
   });
+
+  const handleManualRefresh = () => {
+    refetch();
+    toast.info("Refreshing market data...");
+  };
 
   if (isLoading) {
     return (
@@ -32,7 +44,23 @@ export const SpyOverview = () => {
   return (
     <Card className="col-span-3">
       <CardHeader className="pb-2 p-4 md:p-6">
-        <CardTitle className="text-xl md:text-2xl font-bold tracking-tight">SPY Overview</CardTitle>
+        <div className="flex justify-between items-center">
+          <CardTitle className="text-xl md:text-2xl font-bold tracking-tight">SPY Overview</CardTitle>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleManualRefresh}
+            disabled={isFetching}
+          >
+            <RefreshCw className={cn("h-4 w-4 mr-1", isFetching && "animate-spin")} />
+            {isFetching ? "Refreshing..." : "Refresh"}
+          </Button>
+        </div>
+        {lastUpdated && (
+          <p className="text-xs text-muted-foreground">
+            Last updated: {lastUpdated.toLocaleTimeString()}
+          </p>
+        )}
       </CardHeader>
       <CardContent className="p-4 md:p-6">
         {spyData && (

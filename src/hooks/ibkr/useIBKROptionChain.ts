@@ -4,21 +4,22 @@ import { getDataProvider } from '@/services/dataProviders/dataProviderFactory';
 import { SpyOption } from '@/lib/types/spy';
 import { logError } from '@/lib/errorMonitoring/core/logger';
 
-// Default polling interval for option chain
-const DEFAULT_POLLING_INTERVAL = 6000;
-
 interface OptionChainOptions {
   symbol: string;
   enabled?: boolean;
-  pollingInterval?: number;
-  retryCount?: number;
+  staleTime?: number;
+  cacheTime?: number;
+  refetchInterval?: number | false;
+  refetchOnWindowFocus?: boolean;
 }
 
 export const useIBKROptionChain = ({
   symbol,
   enabled = true,
-  pollingInterval = DEFAULT_POLLING_INTERVAL,
-  retryCount = 2
+  staleTime = 60000, // Options data stays fresh for 1 minute
+  cacheTime = 300000, // Cache for 5 minutes
+  refetchInterval = 60000, // Refetch every minute
+  refetchOnWindowFocus = true
 }: OptionChainOptions) => {
   const optionChainQuery = useQuery({
     queryKey: ['optionChain', symbol],
@@ -26,10 +27,9 @@ export const useIBKROptionChain = ({
       try {
         console.log(`[useIBKROptionChain] Fetching option chain for ${symbol}...`);
         const provider = getDataProvider();
-        console.log("[useIBKROptionChain] Using provider:", provider?.constructor.name);
         
         if (!provider) {
-          console.error("[useIBKROptionChain] No data provider available for option chain");
+          console.error("[useIBKROptionChain] No data provider available");
           throw new Error("No data provider available");
         }
         
@@ -40,54 +40,42 @@ export const useIBKROptionChain = ({
         
         console.log(`[useIBKROptionChain] Calling provider.getOptionChain('${symbol}')`);
         const startTime = Date.now();
-        const data = await provider.getOptionChain(symbol);
+        const options = await provider.getOptionChain(symbol);
         const endTime = Date.now();
         
-        console.log(`[useIBKROptionChain] Option chain fetched in ${endTime - startTime}ms`);
-        console.log("[useIBKROptionChain] Received options count:", data?.length || 0);
+        console.log(`[useIBKROptionChain] Option chain fetched in ${endTime - startTime}ms, received ${options?.length || 0} options`);
         
-        // Log a sample of the options if available
-        if (data && data.length > 0) {
-          console.log("[useIBKROptionChain] First 3 options sample:", 
-            data.slice(0, 3).map(opt => ({
-              strike: opt.strikePrice,
-              type: opt.type,
-              expiry: opt.expirationDate,
-              bid: opt.bidPrice,
-              ask: opt.askPrice
-            }))
-          );
-        }
-        
-        return data || [];
+        return options || [];
       } catch (error) {
         console.error(`[useIBKROptionChain] Error fetching option chain for ${symbol}:`, error);
-        console.error("[useIBKROptionChain] Stack trace:", error instanceof Error ? error.stack : "No stack trace");
         
         // Log the error to monitoring system
         if (error instanceof Error) {
           logError(error, { 
             service: 'useIBKROptionChain', 
             method: 'getOptionChain',
-            symbol 
+            symbol
           });
         }
         
-        // Return empty array instead of throwing to handle errors gracefully
-        return [];
+        throw error;
       }
     },
-    refetchInterval: pollingInterval,
-    retry: retryCount,
-    enabled: enabled && !!symbol
+    enabled,
+    staleTime,
+    gcTime: cacheTime,
+    refetchInterval,
+    refetchOnWindowFocus
   });
 
   return {
-    options: optionChainQuery.data || [],
+    options: optionChainQuery.data as SpyOption[] | undefined,
     isLoading: optionChainQuery.isLoading,
     isError: optionChainQuery.isError,
     error: optionChainQuery.error,
-    lastUpdated: optionChainQuery.dataUpdatedAt ? new Date(optionChainQuery.dataUpdatedAt) : undefined,
-    refetch: optionChainQuery.refetch
+    refetch: optionChainQuery.refetch,
+    isFetching: optionChainQuery.isFetching,
+    isRefetching: optionChainQuery.isRefetching,
+    lastUpdated: optionChainQuery.dataUpdatedAt ? new Date(optionChainQuery.dataUpdatedAt) : undefined
   };
 };
