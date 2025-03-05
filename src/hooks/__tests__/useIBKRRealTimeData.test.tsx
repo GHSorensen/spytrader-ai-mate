@@ -1,4 +1,3 @@
-
 import { renderHook, act } from '@testing-library/react-hooks';
 import { useIBKRRealTimeData } from '../useIBKRRealTimeData';
 import { useIBKRConnectionStatus } from '../ibkr/useIBKRConnectionStatus';
@@ -185,8 +184,6 @@ describe('useIBKRRealTimeData', () => {
     expect(mockReconnect).toHaveBeenCalled();
   });
 
-  // New tests for edge cases and error handling
-
   test('should handle all hooks being in loading state', () => {
     (useIBKRMarketData as jest.Mock).mockReturnValue({
       marketData: null,
@@ -276,11 +273,9 @@ describe('useIBKRRealTimeData', () => {
       await result.current.refreshAllData();
     });
     
-    // Both refetch functions should be called even if one fails
     expect(mockMarketDataRefetch).toHaveBeenCalled();
     expect(mockOptionsRefetch).toHaveBeenCalled();
     
-    // Error should be logged
     expect(logError).toHaveBeenCalledWith(expect.any(Error), expect.any(Object));
   });
 
@@ -302,4 +297,3 @@ describe('useIBKRRealTimeData', () => {
     expect(result.current.dataSource).toBe('delayed');
   });
 });
-

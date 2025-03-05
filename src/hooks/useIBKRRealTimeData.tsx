@@ -1,23 +1,20 @@
 
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { useIBKRConnectionStatus } from './ibkr/useIBKRConnectionStatus';
 import { useIBKRMarketData } from './ibkr/useIBKRMarketData';
 import { useIBKROptionChain } from './ibkr/useIBKROptionChain';
 import { useIBKRRetryPolicy } from './ibkr/useIBKRRetryPolicy';
+import { useIBKRDataRefresh } from './ibkr/useIBKRDataRefresh';
+import { useIBKRConnectionCheck } from './ibkr/useIBKRConnectionCheck';
+import { useIBKRErrorHandler } from './ibkr/useIBKRErrorHandler';
+import { useIBKRStatusCombiner } from './ibkr/useIBKRStatusCombiner';
 import { SpyMarketData, SpyOption } from '@/lib/types/spy';
-import { ClassifiedError } from '@/lib/errorMonitoring/types/errorClassification';
-import { handleIBKRError } from '@/services/dataProviders/interactiveBrokers/utils/errorHandler';
-import { getDataProvider } from '@/services/dataProviders/dataProviderFactory';
-import { getProviderErrorContext } from '@/services/dataProviders/interactiveBrokers/utils/providerUtils';
 
 /**
  * Hook to provide consolidated access to IBKR real-time data
  * including market data, options, and connection status
  */
 export const useIBKRRealTimeData = () => {
-  // Track any internal errors in state
-  const [internalErrors, setInternalErrors] = useState<ClassifiedError[]>([]);
-
   // Get connection status from IBKR
   const { 
     isConnected, 
@@ -70,118 +67,38 @@ export const useIBKRRealTimeData = () => {
     retryOnCodes: [429, 503, 504]
   });
 
-  // Combine loading states
-  const isLoading = marketDataLoading || optionsLoading || isRetrying;
-  const isFetching = isMarketDataFetching || isOptionsFetching || isRetrying;
+  // Error handling
+  const { internalErrors, setInternalErrors, getActiveError } = useIBKRErrorHandler();
 
-  // Combine error states
-  const isError = marketDataError || optionsError || internalErrors.length > 0;
-  
-  // Get the most relevant error to display
-  const getActiveError = useCallback((): ClassifiedError | null => {
-    if (lastError) return lastError;
-    if (marketDataErrorDetails) return marketDataErrorDetails as ClassifiedError;
-    if (optionsErrorDetails) return optionsErrorDetails as ClassifiedError;
-    if (internalErrors.length > 0) return internalErrors[internalErrors.length - 1];
-    return null;
-  }, [lastError, marketDataErrorDetails, optionsErrorDetails, internalErrors]);
+  // Data refresh operations
+  const { refreshAllData } = useIBKRDataRefresh(
+    refetchMarketData,
+    refetchOptions,
+    executeWithRetry,
+    setInternalErrors
+  );
 
-  /**
-   * Refresh all data from IBKR with retry capability
-   * Handles errors gracefully to ensure all data sources are attempted
-   * even if one fails
-   */
-  const refreshAllData = useCallback(async () => {
-    console.log("Refreshing all IBKR data sources");
-    const refreshErrors: ClassifiedError[] = [];
-    
-    try {
-      // Attempt to refresh market data with retry policy
-      await executeWithRetry(
-        () => refetchMarketData(),
-        { 
-          component: 'useIBKRRealTimeData', 
-          method: 'refreshAllData',
-          subMethod: 'refetchMarketData'
-        }
-      );
-    } catch (error) {
-      console.error("Error refreshing market data:", error);
-      // Classify the error for better handling
-      const provider = getDataProvider();
-      const { connectionMethod, paperTrading } = getProviderErrorContext(provider);
-      
-      const classifiedError = handleIBKRError(error, {
-        service: 'useIBKRRealTimeData',
-        method: 'refreshAllData.marketData',
-        connectionMethod,
-        paperTrading
-      });
-      refreshErrors.push(classifiedError);
-    }
-    
-    try {
-      // Attempt to refresh options data with retry policy
-      await executeWithRetry(
-        () => refetchOptions(),
-        { 
-          component: 'useIBKRRealTimeData', 
-          method: 'refreshAllData',
-          subMethod: 'refetchOptions'
-        }
-      );
-    } catch (error) {
-      console.error("Error refreshing options data:", error);
-      // Classify the error for better handling
-      const provider = getDataProvider();
-      const { connectionMethod, paperTrading } = getProviderErrorContext(provider);
-      
-      const classifiedError = handleIBKRError(error, {
-        service: 'useIBKRRealTimeData',
-        method: 'refreshAllData.options',
-        connectionMethod,
-        paperTrading
-      });
-      refreshErrors.push(classifiedError);
-    }
-    
-    if (refreshErrors.length > 0) {
-      setInternalErrors(prev => [...prev, ...refreshErrors]);
-    }
-  }, [refetchMarketData, refetchOptions, executeWithRetry]);
+  // Connection check operations
+  const { forceConnectionCheck } = useIBKRConnectionCheck(
+    checkConnection,
+    executeWithRetry,
+    setInternalErrors
+  );
 
-  /**
-   * Force a connection check with IBKR with retry capability
-   * Useful when connection status might be stale
-   */
-  const forceConnectionCheck = useCallback(() => {
-    console.log("Forcing IBKR connection check");
-    try {
-      executeWithRetry(
-        async () => {
-          checkConnection();
-          return true;
-        },
-        { 
-          component: 'useIBKRRealTimeData', 
-          method: 'forceConnectionCheck'
-        }
-      );
-    } catch (error) {
-      console.error("Error checking connection:", error);
-      // Classify the error for better handling
-      const provider = getDataProvider();
-      const { connectionMethod, paperTrading } = getProviderErrorContext(provider);
-      
-      const classifiedError = handleIBKRError(error, {
-        service: 'useIBKRRealTimeData',
-        method: 'forceConnectionCheck',
-        connectionMethod,
-        paperTrading
-      });
-      setInternalErrors(prev => [...prev, classifiedError]);
-    }
-  }, [checkConnection, executeWithRetry]);
+  // Status combining
+  const { isLoading, isFetching, isError } = useIBKRStatusCombiner({
+    marketDataLoading,
+    optionsLoading,
+    isRetrying,
+    marketDataError,
+    optionsError,
+    internalErrors,
+    isMarketDataFetching,
+    isOptionsFetching
+  });
+
+  // Get the most relevant error
+  const activeError = getActiveError(lastError, marketDataErrorDetails, optionsErrorDetails);
 
   return {
     // Data
@@ -199,7 +116,7 @@ export const useIBKRRealTimeData = () => {
     isRetrying,
     
     // Errors
-    lastError: getActiveError(),
+    lastError: activeError,
     
     // Actions
     refreshAllData,
