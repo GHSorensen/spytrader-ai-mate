@@ -24,6 +24,9 @@ export class IBKROptionsService {
   private connectionMethod: 'webapi' | 'tws';
   private lastFetchTime: Date | null = null;
   private lastError: Error | null = null;
+  private fetchInProgress: boolean = false;
+  private lastFetchDuration: number = 0;
+  private fetchCount: number = 0;
   
   constructor(
     config: DataProviderConfig,
@@ -45,23 +48,40 @@ export class IBKROptionsService {
    */
   async getOptions(): Promise<SpyOption[]> {
     try {
+      // Set fetch tracking metrics
+      this.fetchInProgress = true;
+      this.fetchCount++;
+      const startTime = Date.now();
+      
       console.log("[IBKROptionsService] Fetching options via:", this.connectionMethod);
       this.lastFetchTime = new Date();
       
+      let options: SpyOption[] = [];
+      
       if (this.connectionMethod === 'tws') {
         console.log("[IBKROptionsService] Requesting options from TWS");
-        const options = await this.twsDataService.getOptions();
+        options = await this.twsDataService.getOptions();
         console.log(`[IBKROptionsService] Received ${options.length} options from TWS`);
-        this.lastError = null;
-        return options;
+      } else {
+        console.log("[IBKROptionsService] Requesting options from WebAPI");
+        options = await this.webApiDataService.getOptions();
+        console.log(`[IBKROptionsService] Received ${options.length} options from WebAPI`);
       }
       
-      console.log("[IBKROptionsService] Requesting options from WebAPI");
-      const options = await this.webApiDataService.getOptions();
-      console.log(`[IBKROptionsService] Received ${options.length} options from WebAPI`);
+      // Calculate fetch duration
+      const endTime = Date.now();
+      this.lastFetchDuration = endTime - startTime;
+      console.log(`[IBKROptionsService] Fetch completed in ${this.lastFetchDuration}ms`);
+      
+      // Clear any previous errors
       this.lastError = null;
+      this.fetchInProgress = false;
+      
       return options;
     } catch (error) {
+      // Update fetch status
+      this.fetchInProgress = false;
+      
       console.error("[IBKROptionsService] Error fetching options from Interactive Brokers:", error);
       if (error instanceof Error) {
         this.lastError = error;
@@ -86,23 +106,40 @@ export class IBKROptionsService {
    */
   async getOptionChain(symbol: string): Promise<SpyOption[]> {
     try {
+      // Set fetch tracking metrics
+      this.fetchInProgress = true;
+      this.fetchCount++;
+      const startTime = Date.now();
+      
       console.log(`[IBKROptionsService] Fetching option chain for ${symbol} via:`, this.connectionMethod);
       this.lastFetchTime = new Date();
       
+      let options: SpyOption[] = [];
+      
       if (this.connectionMethod === 'tws') {
         console.log(`[IBKROptionsService] Requesting option chain for ${symbol} from TWS`);
-        const options = await this.twsDataService.getOptionChain(symbol);
+        options = await this.twsDataService.getOptionChain(symbol);
         console.log(`[IBKROptionsService] Received ${options.length} options in chain from TWS`);
-        this.lastError = null;
-        return options;
+      } else {
+        console.log(`[IBKROptionsService] Requesting option chain for ${symbol} from WebAPI`);
+        options = await this.webApiDataService.getOptionChain(symbol);
+        console.log(`[IBKROptionsService] Received ${options.length} options in chain from WebAPI`);
       }
       
-      console.log(`[IBKROptionsService] Requesting option chain for ${symbol} from WebAPI`);
-      const options = await this.webApiDataService.getOptionChain(symbol);
-      console.log(`[IBKROptionsService] Received ${options.length} options in chain from WebAPI`);
+      // Calculate fetch duration
+      const endTime = Date.now();
+      this.lastFetchDuration = endTime - startTime;
+      console.log(`[IBKROptionsService] Fetch completed in ${this.lastFetchDuration}ms`);
+      
+      // Clear any previous errors
       this.lastError = null;
+      this.fetchInProgress = false;
+      
       return options;
     } catch (error) {
+      // Update fetch status
+      this.fetchInProgress = false;
+      
       console.error(`[IBKROptionsService] Error fetching option chain for ${symbol} from Interactive Brokers:`, error);
       if (error instanceof Error) {
         this.lastError = error;
@@ -129,11 +166,17 @@ export class IBKROptionsService {
     connectionMethod: 'webapi' | 'tws';
     lastFetchTime: Date | null;
     lastErrorMessage: string | null;
+    fetchInProgress: boolean;
+    lastFetchDuration: number;
+    fetchCount: number;
   } {
     return {
       connectionMethod: this.connectionMethod,
       lastFetchTime: this.lastFetchTime,
-      lastErrorMessage: this.lastError ? this.lastError.message : null
+      lastErrorMessage: this.lastError ? this.lastError.message : null,
+      fetchInProgress: this.fetchInProgress,
+      lastFetchDuration: this.lastFetchDuration,
+      fetchCount: this.fetchCount
     };
   }
 }
