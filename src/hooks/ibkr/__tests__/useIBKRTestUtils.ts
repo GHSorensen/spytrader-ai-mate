@@ -1,66 +1,108 @@
 
-import { useIBKRConnectionStatus } from '../useIBKRConnectionStatus';
-import { useIBKRMarketData } from '../useIBKRMarketData';
-import { useIBKROptionChain } from '../useIBKROptionChain';
-import { createMockMarketData, createMockOptions } from './useIBKRDataTestUtils';
+import { SpyMarketData } from "@/lib/types/spy/marketData";
+import { SpyOption } from "@/lib/types/spy/options";
+import { ClassifiedError } from "@/lib/errorMonitoring/types/errorClassification";
 
 /**
- * Setup mock implementations for the IBKR hooks for testing
+ * Creates mock market data for testing
  */
-export const setupIBKRHookMocks = () => {
-  jest.clearAllMocks();
-  
-  // Setup default mock return values
-  (useIBKRConnectionStatus as jest.Mock).mockReturnValue({
-    isConnected: true,
-    dataSource: 'live',
-    connectionDiagnostics: {
-      status: 'connected',
-      lastChecked: new Date(),
-    },
-    checkConnection: jest.fn(),
-    reconnect: jest.fn(),
-  });
-  
-  (useIBKRMarketData as jest.Mock).mockReturnValue({
-    marketData: createMockMarketData(),
-    isLoading: false,
-    isError: false,
-    error: null,
-    lastUpdated: new Date(),
-    refetch: jest.fn(),
-    isFetching: false,
-  });
-  
-  (useIBKROptionChain as jest.Mock).mockReturnValue({
-    options: createMockOptions(),
-    isLoading: false,
-    isError: false,
-    error: null,
-    refetch: jest.fn(),
-    isFetching: false,
-  });
+export const createMockMarketData = (): SpyMarketData => {
+  return {
+    price: 498.75,
+    previousClose: 497.82,
+    change: 0.93,
+    changePercent: 0.19,
+    volume: 31840213,
+    averageVolume: 42615200,
+    high: 501.15,
+    low: 498.12,
+    open: 498.45,
+    timestamp: new Date(),
+    vix: 15.23,
+    paperTrading: false,
+  };
 };
 
 /**
- * Create a test wrapper with QueryClientProvider
+ * Creates mock options for testing
  */
-export const createTestQueryWrapper = () => {
-  const { QueryClient, QueryClientProvider } = require('@tanstack/react-query');
-  const React = require('react');
-  
-  // Setup a fresh QueryClient
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-      },
-    },
-  });
+export const createMockOptions = (): SpyOption[] => {
+  const today = new Date();
+  const nextWeek = new Date(today);
+  nextWeek.setDate(today.getDate() + 7);
+  const nextMonth = new Date(today);
+  nextMonth.setDate(today.getDate() + 30);
 
-  return ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={queryClient}>
-      {children}
-    </QueryClientProvider>
-  );
+  return [
+    {
+      id: "test-opt-1",
+      symbol: "SPY",
+      strikePrice: 500,
+      expirationDate: nextWeek,
+      type: "CALL",
+      premium: 3.45,
+      impliedVolatility: 0.21,
+      openInterest: 12543,
+      volume: 3421,
+      delta: 0.56,
+      gamma: 0.08,
+      theta: -0.15,
+      vega: 0.12,
+      paperTrading: false,
+    },
+    {
+      id: "test-opt-2",
+      symbol: "SPY",
+      strikePrice: 495,
+      expirationDate: nextMonth,
+      type: "PUT",
+      premium: 2.87,
+      impliedVolatility: 0.19,
+      openInterest: 9876,
+      volume: 2198,
+      delta: -0.48,
+      gamma: 0.07,
+      theta: -0.14,
+      vega: 0.11,
+      paperTrading: false,
+    }
+  ];
+};
+
+/**
+ * Mock function creator for testing
+ */
+export const createMockCheckConnectionFn = () => jest.fn();
+
+/**
+ * Creates a mock executeWithRetry function
+ */
+export const createMockExecuteWithRetryFn = (shouldSucceed: boolean = true) => {
+  if (shouldSucceed) {
+    return jest.fn().mockResolvedValue(true);
+  } else {
+    return jest.fn().mockRejectedValue(new Error("Connection failed"));
+  }
+};
+
+/**
+ * Creates a mock setInternalErrors function
+ */
+export const createMockSetInternalErrorsFn = () => jest.fn();
+
+/**
+ * Test utility to create initial test errors
+ */
+export const createTestErrors = (): ClassifiedError[] => {
+  return [
+    {
+      code: "TEST_ERROR",
+      message: "Test error for testing",
+      component: "TestComponent",
+      method: "testMethod",
+      category: "API_ERROR",
+      timestamp: new Date(),
+      details: { additionalInfo: "test details" }
+    }
+  ];
 };
