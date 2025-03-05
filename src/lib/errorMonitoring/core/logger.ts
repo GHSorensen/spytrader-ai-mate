@@ -31,7 +31,7 @@ export function logError(error: Error, context?: ErrorContext): void {
         error.stack
       );
       
-      // In development we would show a toast, but we'll skip for now
+      // Show toast in development for immediate feedback
       try {
         showErrorToast(error.message, error.stack);
       } catch (e) {
