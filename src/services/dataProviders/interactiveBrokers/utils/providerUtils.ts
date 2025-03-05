@@ -36,11 +36,15 @@ export function getProviderConfigProperty(
  * @returns An object containing connectionMethod and paperTrading properties
  */
 export function getProviderErrorContext(provider: DataProviderInterface | null | undefined): {
-  connectionMethod: string | undefined;
+  connectionMethod: "webapi" | "tws" | undefined;
   paperTrading: boolean | undefined;
 } {
+  const connectionMethod = getProviderConfigProperty(provider, 'connectionMethod');
+  
   return {
-    connectionMethod: getProviderConfigProperty(provider, 'connectionMethod'),
+    connectionMethod: (connectionMethod === 'webapi' || connectionMethod === 'tws') 
+      ? connectionMethod 
+      : undefined,
     paperTrading: getProviderConfigProperty(provider, 'paperTrading')
   };
 }
