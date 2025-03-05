@@ -1,6 +1,14 @@
 
-import { classifyError, createClassifiedError, isRetryableError } from '@/lib/errorMonitoring/utils/errorClassifier';
-import { ErrorType, ClassifiedError } from '@/lib/errorMonitoring/types/errorClassification';
+import { 
+  classifyError, 
+  createClassifiedError, 
+  isRetryableError 
+} from '@/lib/errorMonitoring/utils/errorClassifier';
+import { 
+  ErrorType, 
+  ClassifiedError,
+  ErrorCategory 
+} from '@/lib/errorMonitoring/types/errorClassification';
 import { logError } from '@/lib/errorMonitoring/core/logger';
 
 /**

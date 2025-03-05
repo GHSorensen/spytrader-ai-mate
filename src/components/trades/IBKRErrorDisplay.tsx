@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { 
@@ -32,23 +31,19 @@ const IBKRErrorDisplay: React.FC<IBKRErrorDisplayProps> = ({
   isRetrying = false,
   showDetails = false
 }) => {
-  // Don't show anything if there are no errors
   if (!error) {
     return null;
   }
   
-  // Default values
   let title = "An error occurred";
   let icon = <AlertCircle className="h-4 w-4" />;
   let description = error.message;
-  let variant: "default" | "destructive" | "warning" = "destructive";
+  let variant: "default" | "destructive" = "destructive";
   let actionText = "Try again";
   
-  // Classification-based customization
   if ((error as ClassifiedError).category) {
     const classifiedError = error as ClassifiedError;
     
-    // Set appropriate icon and variant based on error category
     switch (classifiedError.category) {
       case ErrorCategory.CONNECTION:
         icon = <NetworkIcon className="h-4 w-4" />;
@@ -95,7 +90,6 @@ const IBKRErrorDisplay: React.FC<IBKRErrorDisplayProps> = ({
         break;
     }
     
-    // Additional customization based on specific error types
     if (classifiedError.errorType === ErrorType.CONNECTION_REFUSED) {
       description = "Connection to Interactive Brokers was refused. Is TWS running and API connections enabled?";
     } else if (classifiedError.errorType === ErrorType.AUTH_EXPIRED) {
@@ -109,9 +103,7 @@ const IBKRErrorDisplay: React.FC<IBKRErrorDisplayProps> = ({
     <Alert variant={variant} className={
       variant === "destructive" 
         ? "bg-red-50 border-red-300 text-red-900 mb-4" 
-        : variant === "warning"
-          ? "bg-amber-50 border-amber-300 text-amber-900 mb-4"
-          : "mb-4"
+        : "mb-4"
     }>
       <div className="text-red-600">{icon}</div>
       <AlertTitle className={

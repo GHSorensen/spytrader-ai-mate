@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { getDataProvider } from '@/services/dataProviders/dataProviderFactory';
 import { SpyMarketData } from '@/lib/types/spy';
@@ -52,7 +51,6 @@ export const useIBKRMarketData = ({
         
         console.log(`[useIBKRMarketData] Market data fetched in ${endTime - startTime}ms`);
         
-        // Debug the returned data
         if (data) {
           console.log("[useIBKRMarketData] Received market data:", {
             price: data.price,
@@ -69,12 +67,11 @@ export const useIBKRMarketData = ({
       } catch (error) {
         console.error("[useIBKRMarketData] Error fetching market data:", error);
         
-        // Use the IBKR-specific error handler with detailed context
         const classifiedError = handleIBKRError(error, {
           service: 'useIBKRMarketData',
           method: 'getMarketData',
-          connectionMethod: (provider as any)?.config?.connectionMethod,
-          paperTrading: (provider as any)?.config?.paperTrading
+          connectionMethod: provider?.config?.connectionMethod,
+          paperTrading: provider?.config?.paperTrading
         });
         
         throw classifiedError;

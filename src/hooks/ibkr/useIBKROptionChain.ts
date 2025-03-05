@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { getDataProvider } from '@/services/dataProviders/dataProviderFactory';
 import { SpyOption } from '@/lib/types/spy';
@@ -16,9 +15,9 @@ interface OptionChainOptions {
 export const useIBKROptionChain = ({
   symbol,
   enabled = true,
-  staleTime = 60000, // Options data stays fresh for 1 minute
-  cacheTime = 300000, // Cache for 5 minutes
-  refetchInterval = 60000, // Refetch every minute
+  staleTime = 60000,
+  cacheTime = 300000,
+  refetchInterval = 60000,
   refetchOnWindowFocus = true
 }: OptionChainOptions) => {
   const optionChainQuery = useQuery({
@@ -49,13 +48,12 @@ export const useIBKROptionChain = ({
       } catch (error) {
         console.error(`[useIBKROptionChain] Error fetching option chain for ${symbol}:`, error);
         
-        // Use the IBKR-specific error handler with detailed context
         const classifiedError = handleIBKRError(error, {
           service: 'useIBKROptionChain', 
           method: 'getOptionChain',
           symbol,
-          connectionMethod: (provider as any)?.config?.connectionMethod,
-          paperTrading: (provider as any)?.config?.paperTrading
+          connectionMethod: provider?.config?.connectionMethod,
+          paperTrading: provider?.config?.paperTrading
         });
         
         throw classifiedError;
