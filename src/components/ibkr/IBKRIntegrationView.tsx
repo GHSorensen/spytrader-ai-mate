@@ -10,6 +10,7 @@ import IBKRApiKeyInfo from './IBKRApiKeyInfo';
 import IBKRActionButtons from './IBKRActionButtons';
 import ConnectionStatus from './ConnectionStatus';
 import IBKRStatusIndicator from './IBKRStatusIndicator';
+import ConnectionMonitor from './ConnectionMonitor';
 
 interface IBKRIntegrationViewProps {
   isConnecting: boolean;
@@ -36,6 +37,8 @@ interface IBKRIntegrationViewProps {
   onTestConnection: () => void;
   onStartAuth: () => void;
   onTwsConnect: () => void;
+  onManualReconnect?: () => void;
+  reconnectAttempts?: number;
 }
 
 const IBKRIntegrationView: React.FC<IBKRIntegrationViewProps> = ({
@@ -58,7 +61,9 @@ const IBKRIntegrationView: React.FC<IBKRIntegrationViewProps> = ({
   onBackToDashboard,
   onTestConnection,
   onStartAuth,
-  onTwsConnect
+  onTwsConnect,
+  onManualReconnect,
+  reconnectAttempts = 0
 }) => {
   return (
     <div className="flex flex-col min-h-screen">
@@ -85,6 +90,10 @@ const IBKRIntegrationView: React.FC<IBKRIntegrationViewProps> = ({
             </CardHeader>
             
             <CardContent className="space-y-6">
+              {isConfigured && (
+                <ConnectionMonitor showDetails={true} className="mb-6" />
+              )}
+              
               <IBKRApiKeyInfo />
               <IBKRPrerequisites />
               
@@ -123,6 +132,8 @@ const IBKRIntegrationView: React.FC<IBKRIntegrationViewProps> = ({
                 onTestConnection={onTestConnection}
                 onStartAuth={onStartAuth}
                 onTwsConnect={onTwsConnect}
+                onManualReconnect={onManualReconnect}
+                reconnectAttempts={reconnectAttempts}
               />
             </CardFooter>
           </Card>
