@@ -106,7 +106,7 @@ export const useIBKRConnectionCheck = (
       // For specific connection errors, show toast notification
       if (
         classifiedError.errorType === ErrorType.CONNECTION_REFUSED ||
-        classifiedError.errorType === ErrorType.NETWORK_ERROR ||
+        classifiedError.errorType === ErrorType.CONNECTION_CLOSED ||
         classifiedError.errorType === ErrorType.AUTH_EXPIRED
       ) {
         toast.error("Connection Error", {
