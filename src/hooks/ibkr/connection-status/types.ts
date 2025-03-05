@@ -46,6 +46,6 @@ export interface UseIBKRConnectionMonitorReturn {
   connectionLostTime: Date | null;
   connectionHistory: ConnectionHistoryEvent[];
   handleManualReconnect: () => Promise<void>;
-  forceConnectionCheck: () => void;
+  forceConnectionCheck: () => Promise<void>;
   getDetailedDiagnostics: () => any;
 }

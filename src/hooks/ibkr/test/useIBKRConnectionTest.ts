@@ -1,292 +1,319 @@
 
-import { useState, useCallback, useEffect } from 'react';
-import { getDataProvider } from '@/services/dataProviders/dataProviderFactory';
+import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
-import { useIBKRConnectionMonitor } from '@/hooks/ibkr/connection-status/useIBKRConnectionMonitor';
+import { getDataProvider } from '@/services/dataProviders/dataProviderFactory';
+import { useIBKRConnectionMonitor } from '@/hooks/ibkr/useIBKRConnectionMonitor';
 
-export interface ConnectionTestResult {
+interface ConnectionTestResult {
   success: boolean;
-  latency?: number;
+  message: string;
+  details?: string;
   timestamp: Date;
-  error?: string;
-  provider?: string;
-  details?: Record<string, any>;
 }
 
-export type TestType = 'connection' | 'authentication' | 'market-data' | 'reconnect';
+interface ConnectionTestState {
+  isRunningTests: boolean;
+  testResults: ConnectionTestResult[];
+  lastTestRun: Date | null;
+}
 
-/**
- * Hook for testing IBKR connections and providing detailed diagnostics
- */
-export const useIBKRConnectionTest = () => {
-  const [testResults, setTestResults] = useState<Record<TestType, ConnectionTestResult[]>>({
-    'connection': [],
-    'authentication': [],
-    'market-data': [],
-    'reconnect': []
-  });
-  const [isTestRunning, setIsTestRunning] = useState<Record<TestType, boolean>>({
-    'connection': false,
-    'authentication': false,
-    'market-data': false,
-    'reconnect': false
+export function useIBKRConnectionTest() {
+  const [testState, setTestState] = useState<ConnectionTestState>({
+    isRunningTests: false,
+    testResults: [],
+    lastTestRun: null
   });
 
-  // Use the connection monitor for status info
-  const { 
-    isConnected, 
-    dataSource, 
-    handleManualReconnect,
-    getDetailedDiagnostics 
-  } = useIBKRConnectionMonitor();
-
-  /**
-   * Run a test with timing and error handling
-   */
-  const runTest = useCallback(async <T>(
-    testType: TestType, 
-    testFn: () => Promise<T>,
-    successCheck: (result: T) => boolean = () => true,
-    getDetails: (result: T) => Record<string, any> = () => ({})
-  ): Promise<ConnectionTestResult> => {
-    setIsTestRunning(prev => ({ ...prev, [testType]: true }));
-    
-    const startTime = performance.now();
-    const timestamp = new Date();
-    const provider = getDataProvider();
-    const providerName = provider?.constructor?.name || 'Unknown';
-    
-    try {
-      const result = await testFn();
-      const endTime = performance.now();
-      const latency = Math.round(endTime - startTime);
-      
-      const success = successCheck(result);
-      const details = getDetails(result);
-      
-      const testResult: ConnectionTestResult = {
-        success,
-        latency,
-        timestamp,
-        provider: providerName,
-        details
-      };
-      
-      setTestResults(prev => ({
-        ...prev,
-        [testType]: [...(prev[testType] || []), testResult]
-      }));
-      
-      return testResult;
-    } catch (error) {
-      const endTime = performance.now();
-      const latency = Math.round(endTime - startTime);
-      
-      const testResult: ConnectionTestResult = {
-        success: false,
-        latency,
-        timestamp,
-        provider: providerName,
-        error: error instanceof Error ? error.message : String(error)
-      };
-      
-      setTestResults(prev => ({
-        ...prev,
-        [testType]: [...(prev[testType] || []), testResult]
-      }));
-      
-      return testResult;
-    } finally {
-      setIsTestRunning(prev => ({ ...prev, [testType]: false }));
-    }
-  }, []);
-
-  /**
-   * Test simple connection status
-   */
-  const testConnection = useCallback(async () => {
-    return runTest(
-      'connection',
-      async () => {
-        const provider = getDataProvider();
-        
-        if (!provider) {
-          throw new Error('No data provider available');
-        }
-        
-        if (typeof provider.isConnected !== 'function') {
-          throw new Error('Provider has no isConnected method');
-        }
-        
-        return provider.isConnected();
-      },
-      (result) => !!result,
-      (result) => ({ isConnected: result })
-    );
-  }, [runTest]);
-
-  /**
-   * Test provider authentication
-   */
-  const testAuthentication = useCallback(async () => {
-    return runTest(
-      'authentication',
-      async () => {
-        const provider = getDataProvider();
-        
-        if (!provider) {
-          throw new Error('No data provider available');
-        }
-        
-        // Check if authentication methods exist
-        const hasAuth = typeof (provider as any).isAuthenticated === 'function';
-        
-        if (!hasAuth) {
-          // Try to infer from status
-          const connected = typeof provider.isConnected === 'function' 
-            ? provider.isConnected()
-            : false;
-            
-          return { authenticated: connected, method: 'inferred' };
-        }
-        
-        // Use direct authentication check
-        const authenticated = await (provider as any).isAuthenticated();
-        return { authenticated, method: 'direct' };
-      },
-      (result) => result.authenticated,
-      (result) => result
-    );
-  }, [runTest]);
-
-  /**
-   * Test market data retrieval
-   */
-  const testMarketData = useCallback(async () => {
-    return runTest(
-      'market-data',
-      async () => {
-        const provider = getDataProvider();
-        
-        if (!provider) {
-          throw new Error('No data provider available');
-        }
-        
-        if (typeof provider.getMarketData !== 'function') {
-          throw new Error('Provider has no getMarketData method');
-        }
-        
-        return provider.getMarketData();
-      },
-      (result) => !!result && typeof result === 'object',
-      (result) => ({ dataReceived: !!result, dataFields: Object.keys(result || {}) })
-    );
-  }, [runTest]);
-
-  /**
-   * Test reconnection capability
-   */
-  const testReconnect = useCallback(async () => {
-    return runTest(
-      'reconnect',
-      async () => {
-        // Try manual reconnection
-        const reconnectResult = await handleManualReconnect();
-        
-        // Wait a moment for connection to stabilize
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Get the latest connection state
-        const provider = getDataProvider();
-        const isNowConnected = provider && typeof provider.isConnected === 'function'
-          ? provider.isConnected()
-          : false;
-          
-        return {
-          reconnectExecuted: true,
-          reconnectSucceeded: !!reconnectResult,
-          currentlyConnected: isNowConnected
-        };
-      },
-      (result) => result.currentlyConnected,
-      (result) => result
-    );
-  }, [runTest, handleManualReconnect]);
-
-  /**
-   * Run a comprehensive test suite
-   */
-  const runComprehensiveTest = useCallback(async () => {
-    toast.info("Running comprehensive IBKR connection tests...");
-    
-    const results = {
-      connection: await testConnection(),
-      authentication: await testAuthentication(),
-      marketData: await testMarketData()
-    };
-    
-    const allSuccessful = Object.values(results).every(r => r.success);
-    
-    if (allSuccessful) {
-      toast.success("All IBKR connection tests passed");
-    } else {
-      toast.error("Some IBKR connection tests failed", {
-        description: "Check the test results for details"
-      });
-    }
-    
-    return results;
-  }, [testConnection, testAuthentication, testMarketData]);
-
-  /**
-   * Get full diagnostic information
-   */
-  const getDiagnostics = useCallback(() => {
-    const provider = getDataProvider();
-    
-    return {
-      monitoringDiagnostics: getDetailedDiagnostics(),
-      testResults,
-      provider: {
-        type: provider?.constructor.name,
-        methods: provider ? Object.getOwnPropertyNames(
-          Object.getPrototypeOf(provider)
-        ).filter(m => m !== 'constructor') : [],
-        connectionMethod: (provider as any)?.config?.connectionMethod,
-        paperTrading: (provider as any)?.config?.paperTrading
-      },
-      browser: {
-        userAgent: navigator.userAgent,
-        language: navigator.language,
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        timestamp: new Date().toISOString()
-      }
-    };
-  }, [testResults, getDetailedDiagnostics]);
-
-  return {
-    // Test functions
-    testConnection,
-    testAuthentication,
-    testMarketData,
-    testReconnect,
-    runComprehensiveTest,
-    
-    // Test state
-    testResults,
-    isTestRunning,
-    
-    // Connection state
+  const {
     isConnected,
     dataSource,
+    handleManualReconnect,
+    getDetailedDiagnostics
+  } = useIBKRConnectionMonitor();
+
+  // Add a test result to the list
+  const addTestResult = useCallback((result: Omit<ConnectionTestResult, 'timestamp'>) => {
+    setTestState(prev => ({
+      ...prev,
+      testResults: [
+        ...prev.testResults,
+        {
+          ...result,
+          timestamp: new Date()
+        }
+      ]
+    }));
+  }, []);
+
+  // Clear test results
+  const clearTestResults = useCallback(() => {
+    setTestState(prev => ({
+      ...prev,
+      testResults: []
+    }));
+  }, []);
+
+  // Run a basic connection test
+  const testBasicConnection = useCallback(async (): Promise<boolean> => {
+    try {
+      const provider = getDataProvider();
+      
+      if (!provider) {
+        addTestResult({
+          success: false,
+          message: "Data provider not found",
+          details: "The IBKR data provider could not be instantiated"
+        });
+        return false;
+      }
+
+      // Check if isConnected method exists and call it
+      if (typeof provider.isConnected !== 'function') {
+        addTestResult({
+          success: false,
+          message: "Invalid provider implementation",
+          details: "The data provider is missing the isConnected method"
+        });
+        return false;
+      }
+
+      const connected = provider.isConnected();
+      
+      addTestResult({
+        success: connected,
+        message: connected ? "Successfully connected to IBKR" : "Not connected to IBKR",
+        details: `Connection verified through provider.isConnected()`
+      });
+      
+      return connected;
+    } catch (error) {
+      addTestResult({
+        success: false,
+        message: "Connection test failed with error",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+      return false;
+    }
+  }, [addTestResult]);
+
+  // Test data retrieval
+  const testDataRetrieval = useCallback(async (): Promise<boolean> => {
+    try {
+      const provider = getDataProvider();
+      
+      if (!provider) {
+        addTestResult({
+          success: false,
+          message: "Data provider not found",
+          details: "The IBKR data provider could not be instantiated"
+        });
+        return false;
+      }
+
+      // Check if getMarketData method exists
+      if (typeof provider.getMarketData !== 'function') {
+        addTestResult({
+          success: false,
+          message: "Invalid provider implementation",
+          details: "The data provider is missing the getMarketData method"
+        });
+        return false;
+      }
+
+      // Try to get market data
+      const startTime = Date.now();
+      const marketData = await provider.getMarketData();
+      const endTime = Date.now();
+      
+      const success = !!marketData && typeof marketData === 'object';
+      
+      addTestResult({
+        success,
+        message: success ? "Successfully retrieved market data" : "Failed to retrieve market data",
+        details: success 
+          ? `Market data retrieved in ${endTime - startTime}ms` 
+          : "Market data request returned null or invalid response"
+      });
+      
+      return success;
+    } catch (error) {
+      addTestResult({
+        success: false,
+        message: "Data retrieval test failed with error",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+      return false;
+    }
+  }, [addTestResult]);
+
+  // Test authentication status
+  const testAuthentication = useCallback(async (): Promise<boolean> => {
+    try {
+      const provider = getDataProvider();
+      
+      if (!provider) {
+        addTestResult({
+          success: false,
+          message: "Data provider not found",
+          details: "The IBKR data provider could not be instantiated"
+        });
+        return false;
+      }
+
+      // Check for authentication method or property
+      if (typeof provider.isAuthenticated === 'function') {
+        const authenticated = provider.isAuthenticated();
+        
+        addTestResult({
+          success: authenticated,
+          message: authenticated ? "Successfully authenticated with IBKR" : "Not authenticated with IBKR",
+          details: `Authentication verified through provider.isAuthenticated()`
+        });
+        
+        return authenticated;
+      }
+      
+      // If no direct auth method, check connection as proxy for auth
+      const connected = typeof provider.isConnected === 'function' && provider.isConnected();
+      
+      addTestResult({
+        success: connected,
+        message: connected ? "Connected to IBKR (auth assumed)" : "Not connected to IBKR",
+        details: `No direct authentication method found, using connection status as proxy`
+      });
+      
+      return connected;
+    } catch (error) {
+      addTestResult({
+        success: false,
+        message: "Authentication test failed with error",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+      return false;
+    }
+  }, [addTestResult]);
+
+  // Test reconnection
+  const testReconnection = useCallback(async (): Promise<boolean> => {
+    try {
+      addTestResult({
+        success: true,
+        message: "Starting reconnection test",
+        details: "Attempting to reconnect to IBKR"
+      });
+      
+      // Call the reconnect function
+      await handleManualReconnect();
+      
+      // Check if reconnect was successful
+      const provider = getDataProvider();
+      
+      if (!provider || typeof provider.isConnected !== 'function') {
+        addTestResult({
+          success: false,
+          message: "Reconnection test inconclusive",
+          details: "Cannot verify reconnection result due to missing provider or methods"
+        });
+        return false;
+      }
+      
+      const connected = provider.isConnected();
+      
+      addTestResult({
+        success: connected,
+        message: connected ? "Reconnection successful" : "Reconnection failed",
+        details: `Connection status after reconnection attempt: ${connected ? "Connected" : "Disconnected"}`
+      });
+      
+      return connected;
+    } catch (error) {
+      addTestResult({
+        success: false,
+        message: "Reconnection test failed with error",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+      return false;
+    }
+  }, [addTestResult, handleManualReconnect]);
+
+  // Run comprehensive test suite
+  const runComprehensiveTests = useCallback(async () => {
+    setTestState(prev => ({
+      ...prev,
+      isRunningTests: true,
+      lastTestRun: new Date()
+    }));
     
-    // Utilities
-    getDiagnostics,
-    clearTestResults: () => setTestResults({
-      'connection': [],
-      'authentication': [],
-      'market-data': [],
-      'reconnect': []
-    })
+    try {
+      toast.info("Running IBKR connection tests", {
+        description: "Testing connection, authentication, and data retrieval"
+      });
+      
+      // Start with a clean slate
+      clearTestResults();
+      
+      // Get current diagnostics
+      const diagnostics = getDetailedDiagnostics();
+      addTestResult({
+        success: true,
+        message: "Collected connection diagnostics",
+        details: JSON.stringify(diagnostics, null, 2).substring(0, 500) + "..."
+      });
+      
+      // Run test sequence
+      await testBasicConnection();
+      await testAuthentication();
+      await testDataRetrieval();
+      
+      // Evaluate overall success
+      const allTests = testState.testResults;
+      const failedTests = allTests.filter(test => !test.success);
+      
+      if (failedTests.length === 0) {
+        toast.success("All IBKR connection tests passed", {
+          description: "Connection, authentication, and data retrieval tests successful"
+        });
+      } else {
+        toast.error("Some IBKR connection tests failed", {
+          description: `${failedTests.length} of ${allTests.length} tests failed`
+        });
+      }
+    } catch (error) {
+      toast.error("Error running tests", {
+        description: error instanceof Error ? error.message : "Unknown error occurred"
+      });
+      
+      addTestResult({
+        success: false,
+        message: "Test suite execution failed",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    } finally {
+      setTestState(prev => ({
+        ...prev,
+        isRunningTests: false
+      }));
+    }
+  }, [
+    clearTestResults,
+    testBasicConnection,
+    testAuthentication,
+    testDataRetrieval,
+    addTestResult,
+    getDetailedDiagnostics,
+    testState.testResults
+  ]);
+
+  return {
+    ...testState,
+    isConnected,
+    dataSource,
+    runConnectionTest: testBasicConnection,
+    runAuthenticationTest: testAuthentication,
+    runDataRetrievalTest: testDataRetrieval,
+    runReconnectionTest: testReconnection,
+    runComprehensiveTests,
+    clearTestResults,
+    getDiagnostics: getDetailedDiagnostics
   };
-};
+}

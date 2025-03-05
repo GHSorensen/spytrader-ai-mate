@@ -69,7 +69,7 @@ export function useIBKRConnectionMonitor(
   }, [isConnected, dataSource, onStatusChange, reconnectAttempts, handleConnectionChange]);
 
   // Manual reconnect handler - reset attempt counter and try immediately
-  const handleManualReconnect = useCallback(async () => {
+  const handleManualReconnect = useCallback(async (): Promise<void> => {
     try {
       console.log('[useIBKRConnectionMonitor] Manual reconnect attempt');
       toast.info("Attempting to reconnect...");
@@ -83,7 +83,6 @@ export function useIBKRConnectionMonitor(
         console.log('[useIBKRConnectionMonitor] Manual reconnect successful');
         toast.success("Successfully reconnected");
         resetReconnectAttempts();
-        return true;
       } else {
         console.log('[useIBKRConnectionMonitor] Manual reconnect failed');
         toast.error("Reconnection Failed", {
@@ -92,7 +91,6 @@ export function useIBKRConnectionMonitor(
         
         // Record failure
         recordReconnectAttempt(1, maxReconnectAttempts, false);
-        return false;
       }
     } catch (error) {
       console.error('[useIBKRConnectionMonitor] Error during manual reconnect:', error);
@@ -105,8 +103,6 @@ export function useIBKRConnectionMonitor(
         service: 'useIBKRConnectionMonitor',
         method: 'handleManualReconnect'
       });
-      
-      return false;
     }
   }, [reconnect, resetReconnectAttempts, recordReconnectAttempt, maxReconnectAttempts]);
 
