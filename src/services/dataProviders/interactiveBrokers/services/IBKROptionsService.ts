@@ -3,6 +3,7 @@ import { DataProviderConfig } from "@/lib/types/spy/dataProvider";
 import { SpyOption } from "@/lib/types/spy";
 import { TwsDataService } from "../tws/TwsDataService";
 import { WebApiDataService } from "../webapi/WebApiDataService";
+import { logError } from "@/lib/errorMonitoring/core/logger";
 
 /**
  * Service for handling options data from Interactive Brokers
@@ -29,7 +30,8 @@ export class IBKROptionsService {
   }
   
   /**
-   * Get options
+   * Get all available options from Interactive Brokers
+   * @returns Promise resolving to an array of options
    */
   async getOptions(): Promise<SpyOption[]> {
     try {
@@ -53,15 +55,23 @@ export class IBKROptionsService {
       console.error("[IBKROptionsService] Error fetching options from Interactive Brokers:", error);
       if (error instanceof Error) {
         this.lastError = error;
+        // Log the error to our monitoring system
+        logError(error, { 
+          service: 'IBKROptionsService', 
+          method: 'getOptions',
+          connectionMethod: this.connectionMethod 
+        });
       }
       
-      // Rethrow for upstream handling
-      throw error;
+      // Return empty array instead of failing to be consistent with getOptionChain
+      return [];
     }
   }
   
   /**
-   * Get option chain
+   * Get option chain for a specific symbol from Interactive Brokers
+   * @param symbol Stock symbol to get options for (e.g., "SPY")
+   * @returns Promise resolving to an array of options for the specified symbol
    */
   async getOptionChain(symbol: string): Promise<SpyOption[]> {
     try {
@@ -85,6 +95,13 @@ export class IBKROptionsService {
       console.error(`[IBKROptionsService] Error fetching option chain for ${symbol} from Interactive Brokers:`, error);
       if (error instanceof Error) {
         this.lastError = error;
+        // Log the error to our monitoring system
+        logError(error, { 
+          service: 'IBKROptionsService', 
+          method: 'getOptionChain',
+          symbol,
+          connectionMethod: this.connectionMethod 
+        });
       }
       
       // Return empty array and log error instead of failing completely
@@ -94,7 +111,8 @@ export class IBKROptionsService {
   }
   
   /**
-   * Get diagnostics information
+   * Get diagnostics information about the options service
+   * @returns Diagnostic information including connection method, last fetch time, and error state
    */
   getDiagnostics(): {
     connectionMethod: 'webapi' | 'tws';
