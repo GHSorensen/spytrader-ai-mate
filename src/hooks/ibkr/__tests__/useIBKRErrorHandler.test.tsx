@@ -1,7 +1,17 @@
 
 import { renderHook, act } from '@testing-library/react-hooks';
 import { useIBKRErrorHandler } from '../useIBKRErrorHandler';
-import { ClassifiedError } from '@/lib/errorMonitoring/types/errorClassification';
+import { ClassifiedError, ErrorType } from '@/lib/errorMonitoring/types/errorClassification';
+
+// Helper function to create properly typed test errors
+const createTestError = (message: string, errorType: ErrorType): ClassifiedError => {
+  const error = new Error(message) as ClassifiedError;
+  error.errorType = errorType;
+  // Add any custom properties as part of IBKRErrorContext
+  (error as any).service = 'test-service';
+  (error as any).method = 'test-method';
+  return error;
+};
 
 describe('useIBKRErrorHandler', () => {
   test('should initialize with empty internal errors', () => {
@@ -13,10 +23,7 @@ describe('useIBKRErrorHandler', () => {
   test('should allow adding internal errors', () => {
     const { result } = renderHook(() => useIBKRErrorHandler());
     
-    const testError = new Error('Test error') as ClassifiedError;
-    testError.errorType = 'TEST_ERROR';
-    testError.service = 'test-service';
-    testError.method = 'test-method';
+    const testError = createTestError('Test error', ErrorType.UNKNOWN);
     
     act(() => {
       result.current.setInternalErrors([testError]);
@@ -28,20 +35,17 @@ describe('useIBKRErrorHandler', () => {
   test('getActiveError should prioritize lastError', () => {
     const { result } = renderHook(() => useIBKRErrorHandler());
     
-    const testError1 = new Error('Last error') as ClassifiedError;
-    testError1.errorType = 'LAST_ERROR';
-    testError1.service = 'test-service';
-    testError1.method = 'test-method';
+    const testError1 = createTestError('Last error', ErrorType.API_ERROR);
+    (testError1 as any).service = 'test-service';
+    (testError1 as any).method = 'test-method';
     
-    const testError2 = new Error('Market data error') as ClassifiedError;
-    testError2.errorType = 'MARKET_DATA_ERROR';
-    testError2.service = 'market-data';
-    testError2.method = 'fetch';
+    const testError2 = createTestError('Market data error', ErrorType.INVALID_RESPONSE);
+    (testError2 as any).service = 'market-data';
+    (testError2 as any).method = 'fetch';
     
-    const testError3 = new Error('Internal error') as ClassifiedError;
-    testError3.errorType = 'INTERNAL_ERROR';
-    testError3.service = 'internal';
-    testError3.method = 'process';
+    const testError3 = createTestError('Internal error', ErrorType.CLIENT_ERROR);
+    (testError3 as any).service = 'internal';
+    (testError3 as any).method = 'process';
     
     act(() => {
       result.current.setInternalErrors([testError3]);
@@ -59,15 +63,13 @@ describe('useIBKRErrorHandler', () => {
   test('getActiveError should use market data error if no lastError', () => {
     const { result } = renderHook(() => useIBKRErrorHandler());
     
-    const testError1 = new Error('Market data error') as ClassifiedError;
-    testError1.errorType = 'MARKET_DATA_ERROR';
-    testError1.service = 'market-data';
-    testError1.method = 'fetch';
+    const testError1 = createTestError('Market data error', ErrorType.INVALID_RESPONSE);
+    (testError1 as any).service = 'market-data';
+    (testError1 as any).method = 'fetch';
     
-    const testError2 = new Error('Internal error') as ClassifiedError;
-    testError2.errorType = 'INTERNAL_ERROR';
-    testError2.service = 'internal';
-    testError2.method = 'process';
+    const testError2 = createTestError('Internal error', ErrorType.CLIENT_ERROR);
+    (testError2 as any).service = 'internal';
+    (testError2 as any).method = 'process';
     
     act(() => {
       result.current.setInternalErrors([testError2]);
@@ -85,15 +87,13 @@ describe('useIBKRErrorHandler', () => {
   test('getActiveError should use options error if no lastError or market data error', () => {
     const { result } = renderHook(() => useIBKRErrorHandler());
     
-    const testError1 = new Error('Options error') as ClassifiedError;
-    testError1.errorType = 'OPTIONS_ERROR';
-    testError1.service = 'options';
-    testError1.method = 'fetch';
+    const testError1 = createTestError('Options error', ErrorType.DATA_CORRUPTED);
+    (testError1 as any).service = 'options';
+    (testError1 as any).method = 'fetch';
     
-    const testError2 = new Error('Internal error') as ClassifiedError;
-    testError2.errorType = 'INTERNAL_ERROR';
-    testError2.service = 'internal';
-    testError2.method = 'process';
+    const testError2 = createTestError('Internal error', ErrorType.CLIENT_ERROR);
+    (testError2 as any).service = 'internal';
+    (testError2 as any).method = 'process';
     
     act(() => {
       result.current.setInternalErrors([testError2]);
@@ -111,10 +111,9 @@ describe('useIBKRErrorHandler', () => {
   test('getActiveError should use internal error if no other errors', () => {
     const { result } = renderHook(() => useIBKRErrorHandler());
     
-    const testError = new Error('Internal error') as ClassifiedError;
-    testError.errorType = 'INTERNAL_ERROR';
-    testError.service = 'internal';
-    testError.method = 'process';
+    const testError = createTestError('Internal error', ErrorType.CLIENT_ERROR);
+    (testError as any).service = 'internal';
+    (testError as any).method = 'process';
     
     act(() => {
       result.current.setInternalErrors([testError]);

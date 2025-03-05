@@ -1,7 +1,7 @@
 
 import { SpyMarketData } from "@/lib/types/spy/marketData";
 import { SpyOption } from "@/lib/types/spy/options";
-import { ClassifiedError, ErrorCategory } from "@/lib/errorMonitoring/types/errorClassification";
+import { ClassifiedError, ErrorCategory, ErrorType } from "@/lib/errorMonitoring/types/errorClassification";
 
 /**
  * Creates mock market data for testing
@@ -95,11 +95,13 @@ export const createMockSetInternalErrorsFn = () => jest.fn();
  */
 export const createTestErrors = (): ClassifiedError[] => {
   const error = new Error("Test error for testing") as ClassifiedError;
-  error.errorType = "TEST_ERROR";
-  error.method = "testMethod";
+  error.errorType = ErrorType.UNKNOWN;
   error.category = ErrorCategory.API;
-  error.timestamp = new Date();
-  error.details = { additionalInfo: "test details" };
+  
+  // Use type assertion for custom properties that aren't in the ClassifiedError interface
+  (error as any).method = "testMethod";
+  (error as any).timestamp = new Date();
+  (error as any).details = { additionalInfo: "test details" };
   
   return [error];
 };
