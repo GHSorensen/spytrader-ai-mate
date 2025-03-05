@@ -1,10 +1,8 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { getDataProvider } from '@/services/dataProviders/dataProviderFactory';
 import { SpyMarketData } from '@/lib/types/spy';
 import { logError } from '@/lib/errorMonitoring/core/logger';
 import { handleIBKRError } from '@/services/dataProviders/interactiveBrokers/utils/errorHandler';
-import { DataProviderInterface } from '@/lib/types/spy/dataProvider';
 import { getProviderErrorContext } from '@/services/dataProviders/interactiveBrokers/utils/providerUtils';
 
 // Default polling interval for market data

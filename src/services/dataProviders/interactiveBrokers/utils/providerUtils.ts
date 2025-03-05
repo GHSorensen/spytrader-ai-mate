@@ -9,10 +9,10 @@ import { DataProviderInterface } from "@/lib/types/spy/dataProvider";
  * @param propertyName The name of the configuration property to extract
  * @returns The configuration property value or undefined if not available
  */
-export function getProviderConfigProperty(
+export function getProviderConfigProperty<T = any>(
   provider: DataProviderInterface | null | undefined,
   propertyName: string
-): any | undefined {
+): T | undefined {
   if (!provider) {
     return undefined;
   }
@@ -23,10 +23,38 @@ export function getProviderConfigProperty(
     provider.config && 
     typeof provider.config === 'object'
   ) {
-    return (provider.config as any)[propertyName];
+    return (provider.config as any)[propertyName] as T;
   }
   
   return undefined;
+}
+
+/**
+ * Extracts connection method from provider config with type safety
+ * 
+ * @param provider The data provider
+ * @returns The connection method or undefined if not valid
+ */
+export function getConnectionMethod(
+  provider: DataProviderInterface | null | undefined
+): "webapi" | "tws" | undefined {
+  const connectionMethod = getProviderConfigProperty<string>(provider, 'connectionMethod');
+  
+  return (connectionMethod === 'webapi' || connectionMethod === 'tws') 
+    ? connectionMethod 
+    : undefined;
+}
+
+/**
+ * Gets paper trading status from provider config
+ * 
+ * @param provider The data provider
+ * @returns Boolean indicating if paper trading is enabled or undefined
+ */
+export function getPaperTradingStatus(
+  provider: DataProviderInterface | null | undefined
+): boolean | undefined {
+  return getProviderConfigProperty<boolean>(provider, 'paperTrading');
 }
 
 /**
@@ -39,12 +67,8 @@ export function getProviderErrorContext(provider: DataProviderInterface | null |
   connectionMethod: "webapi" | "tws" | undefined;
   paperTrading: boolean | undefined;
 } {
-  const connectionMethod = getProviderConfigProperty(provider, 'connectionMethod');
-  
   return {
-    connectionMethod: (connectionMethod === 'webapi' || connectionMethod === 'tws') 
-      ? connectionMethod 
-      : undefined,
-    paperTrading: getProviderConfigProperty(provider, 'paperTrading')
+    connectionMethod: getConnectionMethod(provider),
+    paperTrading: getPaperTradingStatus(provider)
   };
 }
