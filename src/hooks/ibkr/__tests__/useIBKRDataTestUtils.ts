@@ -1,97 +1,73 @@
 
-import { SpyMarketData, SpyOption } from '@/lib/types/spy';
+/**
+ * Test utilities for IBKR data hooks
+ */
+
+import { SpyMarketData } from "@/lib/types/spy/marketData";
+import { SpyOption } from "@/lib/types/spy/options";
 
 /**
  * Creates mock market data for testing
  */
-export const createMockMarketData = (): SpyMarketData => ({
-  symbol: 'SPY',
-  price: 458.92,
-  change: 1.23,
-  changePercent: 0.27,
-  high: 460.45,
-  low: 457.12,
-  open: 458.11,
-  previousClose: 457.69,
-  volume: 67584200,
-  timestamp: new Date().toISOString(),
-});
+export const createMockMarketData = (): SpyMarketData => {
+  return {
+    price: 498.75,
+    previousClose: 497.82,
+    change: 0.93,
+    changePercent: 0.19,
+    volume: 31840213,
+    averageVolume: 42615200,
+    high: 501.15,
+    low: 498.12,
+    open: 498.45,
+    timestamp: new Date(), // Fixed: Using Date object instead of string
+    vix: 15.23,
+    paperTrading: false,
+  };
+};
 
 /**
- * Creates mock options data for testing
+ * Creates mock options for testing
  */
-export const createMockOptions = (count = 10): SpyOption[] => {
-  const result: SpyOption[] = [];
+export const createMockOptions = (): SpyOption[] => {
   const today = new Date();
-  
-  // Create expiry dates (weekly options)
-  const expiryDates = Array.from({ length: 4 }).map((_, i) => {
-    const date = new Date(today);
-    date.setDate(date.getDate() + ((5 - date.getDay()) % 7) + 7 * i); // Next 4 Fridays
-    return date.toISOString().split('T')[0];
-  });
-  
-  // Mock strike prices around current SPY price
-  const baseStrike = 460;
-  const strikeRange = Array.from({ length: 5 }).map((_, i) => baseStrike - 10 + i * 5);
-  
-  // Generate options with different strikes and expiries
-  for (let i = 0; i < count; i++) {
-    const isCall = i % 2 === 0;
-    const strikeIndex = i % strikeRange.length;
-    const expiryIndex = Math.floor(i / (strikeRange.length * 2)) % expiryDates.length;
-    
-    const strike = strikeRange[strikeIndex];
-    const expiryDate = expiryDates[expiryIndex];
-    
-    // Calculate some reasonable option prices
-    const daysToExpiry = Math.floor((new Date(expiryDate).getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    const intrinsicValue = isCall ? Math.max(0, 458.92 - strike) : Math.max(0, strike - 458.92);
-    const timeValue = (daysToExpiry / 30) * 5 * (1 - Math.abs(strike - 458.92) / 50);
-    
-    result.push({
-      id: `SPY_${expiryDate}_${strike}_${isCall ? 'C' : 'P'}_${i}`,
-      symbol: 'SPY',
-      strikePrice: strike,
-      expirationDate: expiryDate,
-      type: isCall ? 'CALL' : 'PUT',
-      bidPrice: Math.round((intrinsicValue + timeValue - 0.25) * 100) / 100,
-      askPrice: Math.round((intrinsicValue + timeValue + 0.25) * 100) / 100,
-      lastPrice: Math.round((intrinsicValue + timeValue) * 100) / 100,
-      volume: Math.floor(1000 * Math.random()),
-      openInterest: Math.floor(10000 * Math.random()),
-      delta: isCall ? 0.5 + (458.92 - strike) / 50 : 0.5 - (458.92 - strike) / 50,
-      gamma: 0.05,
-      theta: -0.03 * (30 / daysToExpiry),
-      vega: 0.1,
-      impliedVolatility: 0.2 + (Math.abs(strike - 458.92) / 100),
-      inTheMoney: isCall ? 458.92 > strike : 458.92 < strike,
-    });
-  }
-  
-  return result;
-};
+  const nextWeek = new Date(today);
+  nextWeek.setDate(today.getDate() + 7);
+  const nextMonth = new Date(today);
+  nextMonth.setDate(today.getDate() + 30);
 
-/**
- * Helper function to simulate network latency
- */
-export const simulateNetworkLatency = async (minMs = 100, maxMs = 500): Promise<void> => {
-  const delay = Math.floor(Math.random() * (maxMs - minMs)) + minMs;
-  await new Promise(resolve => setTimeout(resolve, delay));
-};
-
-/**
- * Helper to generate random error for testing
- */
-export const generateRandomError = (): Error => {
-  const errorMessages = [
-    'Network connection failed',
-    'API rate limit exceeded',
-    'Authentication error',
-    'Server timeout',
-    'Invalid response format',
+  return [
+    {
+      id: "test-opt-1",
+      symbol: "SPY",
+      strikePrice: 500,
+      expirationDate: nextWeek, // Fixed: Using Date object instead of string
+      type: "CALL",
+      premium: 3.45,
+      impliedVolatility: 0.21,
+      openInterest: 12543,
+      volume: 3421,
+      delta: 0.56,
+      gamma: 0.08,
+      theta: -0.15,
+      vega: 0.12,
+      paperTrading: false,
+    },
+    {
+      id: "test-opt-2",
+      symbol: "SPY",
+      strikePrice: 495,
+      expirationDate: nextMonth, // Fixed: Using Date object instead of string
+      type: "PUT",
+      premium: 2.87,
+      impliedVolatility: 0.19,
+      openInterest: 9876,
+      volume: 2198,
+      delta: -0.48,
+      gamma: 0.07,
+      theta: -0.14,
+      vega: 0.11,
+      paperTrading: false,
+    }
   ];
-  
-  const randomIndex = Math.floor(Math.random() * errorMessages.length);
-  return new Error(errorMessages[randomIndex]);
 };
