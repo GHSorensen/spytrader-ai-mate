@@ -94,14 +94,12 @@ export const createMockSetInternalErrorsFn = () => jest.fn();
  * Test utility to create initial test errors
  */
 export const createTestErrors = (): ClassifiedError[] => {
-  return [
-    {
-      message: "Test error for testing",
-      errorType: "TEST_ERROR",
-      method: "testMethod",
-      category: ErrorCategory.API,
-      timestamp: new Date(),
-      details: { additionalInfo: "test details" }
-    } as ClassifiedError
-  ];
+  const error = new Error("Test error for testing") as ClassifiedError;
+  error.errorType = "TEST_ERROR";
+  error.method = "testMethod";
+  error.category = ErrorCategory.API;
+  error.timestamp = new Date();
+  error.details = { additionalInfo: "test details" };
+  
+  return [error];
 };
