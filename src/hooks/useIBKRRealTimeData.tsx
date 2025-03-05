@@ -7,6 +7,8 @@ import { useIBKRRetryPolicy } from './ibkr/useIBKRRetryPolicy';
 import { SpyMarketData, SpyOption } from '@/lib/types/spy';
 import { ClassifiedError } from '@/lib/errorMonitoring/types/errorClassification';
 import { handleIBKRError } from '@/services/dataProviders/interactiveBrokers/utils/errorHandler';
+import { getDataProvider } from '@/services/dataProviders/dataProviderFactory';
+import { getProviderErrorContext } from '@/services/dataProviders/interactiveBrokers/utils/providerUtils';
 
 /**
  * Hook to provide consolidated access to IBKR real-time data
@@ -106,9 +108,14 @@ export const useIBKRRealTimeData = () => {
     } catch (error) {
       console.error("Error refreshing market data:", error);
       // Classify the error for better handling
+      const provider = getDataProvider();
+      const { connectionMethod, paperTrading } = getProviderErrorContext(provider);
+      
       const classifiedError = handleIBKRError(error, {
         service: 'useIBKRRealTimeData',
-        method: 'refreshAllData.marketData'
+        method: 'refreshAllData.marketData',
+        connectionMethod,
+        paperTrading
       });
       refreshErrors.push(classifiedError);
     }
@@ -126,9 +133,14 @@ export const useIBKRRealTimeData = () => {
     } catch (error) {
       console.error("Error refreshing options data:", error);
       // Classify the error for better handling
+      const provider = getDataProvider();
+      const { connectionMethod, paperTrading } = getProviderErrorContext(provider);
+      
       const classifiedError = handleIBKRError(error, {
         service: 'useIBKRRealTimeData',
-        method: 'refreshAllData.options'
+        method: 'refreshAllData.options',
+        connectionMethod,
+        paperTrading
       });
       refreshErrors.push(classifiedError);
     }
@@ -158,9 +170,14 @@ export const useIBKRRealTimeData = () => {
     } catch (error) {
       console.error("Error checking connection:", error);
       // Classify the error for better handling
+      const provider = getDataProvider();
+      const { connectionMethod, paperTrading } = getProviderErrorContext(provider);
+      
       const classifiedError = handleIBKRError(error, {
         service: 'useIBKRRealTimeData',
-        method: 'forceConnectionCheck'
+        method: 'forceConnectionCheck',
+        connectionMethod,
+        paperTrading
       });
       setInternalErrors(prev => [...prev, classifiedError]);
     }

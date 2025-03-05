@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getDataProvider } from '@/services/dataProviders/dataProviderFactory';
 import { SpyOption } from '@/lib/types/spy';
 import { handleIBKRError } from '@/services/dataProviders/interactiveBrokers/utils/errorHandler';
+import { getProviderErrorContext } from '@/services/dataProviders/interactiveBrokers/utils/providerUtils';
 
 interface OptionChainOptions {
   symbol: string;
@@ -50,18 +51,7 @@ export const useIBKROptionChain = ({
         console.error(`[useIBKROptionChain] Error fetching option chain for ${symbol}:`, error);
         
         const provider = getDataProvider();
-        // Extract connection details from provider with proper type checking
-        const connectionMethod = provider && 
-          'config' in provider && 
-          provider.config && 
-          typeof provider.config === 'object' ? 
-          (provider.config as any).connectionMethod : undefined;
-          
-        const paperTrading = provider && 
-          'config' in provider && 
-          provider.config && 
-          typeof provider.config === 'object' ? 
-          (provider.config as any).paperTrading : undefined;
+        const { connectionMethod, paperTrading } = getProviderErrorContext(provider);
         
         const classifiedError = handleIBKRError(error, {
           service: 'useIBKROptionChain', 

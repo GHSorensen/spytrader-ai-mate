@@ -42,7 +42,7 @@ const IBKRErrorDisplay: React.FC<IBKRErrorDisplayProps> = ({
   let variant: "default" | "destructive" = "destructive";
   let actionText = "Try again";
   
-  if ((error as ClassifiedError).category) {
+  if ('category' in error && error.category) {
     const classifiedError = error as ClassifiedError;
     
     switch (classifiedError.category) {

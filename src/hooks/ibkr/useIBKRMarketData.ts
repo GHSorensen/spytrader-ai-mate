@@ -5,6 +5,7 @@ import { SpyMarketData } from '@/lib/types/spy';
 import { logError } from '@/lib/errorMonitoring/core/logger';
 import { handleIBKRError } from '@/services/dataProviders/interactiveBrokers/utils/errorHandler';
 import { DataProviderInterface } from '@/lib/types/spy/dataProvider';
+import { getProviderErrorContext } from '@/services/dataProviders/interactiveBrokers/utils/providerUtils';
 
 // Default polling interval for market data
 const DEFAULT_POLLING_INTERVAL = 3000;
@@ -70,18 +71,7 @@ export const useIBKRMarketData = ({
         console.error("[useIBKRMarketData] Error fetching market data:", error);
         
         const provider = getDataProvider();
-        // Extract connection details from provider with proper type checking
-        const connectionMethod = provider && 
-          'config' in provider && 
-          provider.config && 
-          typeof provider.config === 'object' ? 
-          (provider.config as any).connectionMethod : undefined;
-          
-        const paperTrading = provider && 
-          'config' in provider && 
-          provider.config && 
-          typeof provider.config === 'object' ? 
-          (provider.config as any).paperTrading : undefined;
+        const { connectionMethod, paperTrading } = getProviderErrorContext(provider);
         
         const classifiedError = handleIBKRError(error, {
           service: 'useIBKRMarketData',
