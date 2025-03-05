@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { getDataProvider } from '@/services/dataProviders/dataProviderFactory';
 import { SpyOption } from '@/lib/types/spy';

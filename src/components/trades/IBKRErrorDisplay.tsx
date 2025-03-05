@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { 
@@ -67,26 +68,26 @@ const IBKRErrorDisplay: React.FC<IBKRErrorDisplayProps> = ({
       case ErrorCategory.TIMEOUT:
         icon = <Clock className="h-4 w-4" />;
         title = "Timeout Error";
-        variant = "warning";
+        variant = "destructive";
         break;
         
       case ErrorCategory.RATE_LIMIT:
         icon = <AlertTriangle className="h-4 w-4" />;
         title = "Rate Limit Exceeded";
-        variant = "warning";
+        variant = "destructive";
         actionText = "Try again later";
         break;
         
       case ErrorCategory.DATA:
         icon = <DatabaseIcon className="h-4 w-4" />;
         title = "Data Error";
-        variant = "warning";
+        variant = "destructive";
         break;
         
       case ErrorCategory.API:
         icon = <ServerIcon className="h-4 w-4" />;
         title = "API Error";
-        variant = "warning";
+        variant = "destructive";
         break;
     }
     
@@ -109,18 +110,14 @@ const IBKRErrorDisplay: React.FC<IBKRErrorDisplayProps> = ({
       <AlertTitle className={
         variant === "destructive" 
           ? "text-red-800" 
-          : variant === "warning" 
-            ? "text-amber-800" 
-            : ""
+          : ""
       }>
         {title}
       </AlertTitle>
       <AlertDescription className={
         variant === "destructive"
           ? "mt-2 text-sm text-red-700"
-          : variant === "warning"
-            ? "mt-2 text-sm text-amber-700"
-            : "mt-2 text-sm"
+          : "mt-2 text-sm"
       }>
         <div className="mb-2">
           {description}
@@ -142,9 +139,7 @@ const IBKRErrorDisplay: React.FC<IBKRErrorDisplayProps> = ({
               className={
                 variant === "destructive"
                   ? "bg-white border-red-400 text-red-700 hover:bg-red-50"
-                  : variant === "warning"
-                    ? "bg-white border-amber-400 text-amber-700 hover:bg-amber-50"
-                    : ""
+                  : ""
               }
             >
               {isRetrying && <RefreshCw className="h-3 w-3 mr-2 animate-spin" />}
