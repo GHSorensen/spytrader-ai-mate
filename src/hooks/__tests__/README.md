@@ -48,6 +48,13 @@ The tests cover the following aspects of the `useIBKRRealTimeData` hook:
    - `refreshAllData`
    - `forceConnectionCheck`
    - `reconnect`
+5. Edge cases:
+   - All hooks in loading state
+   - All hooks in error state
+   - Disconnected state
+   - Delayed data source
+6. Error handling:
+   - Graceful handling of refetch errors
 
 ## Future Tests
 
@@ -57,3 +64,5 @@ When making changes to the real-time data system, consider adding tests for:
 2. Modified state handling
 3. Additional action functions
 4. Edge cases and error handling
+5. Performance optimization
+
