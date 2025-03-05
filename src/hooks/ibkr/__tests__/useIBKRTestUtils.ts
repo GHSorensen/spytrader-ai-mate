@@ -1,7 +1,7 @@
 
 import { SpyMarketData } from "@/lib/types/spy/marketData";
 import { SpyOption } from "@/lib/types/spy/options";
-import { ClassifiedError } from "@/lib/errorMonitoring/types/errorClassification";
+import { ClassifiedError, ErrorCategory } from "@/lib/errorMonitoring/types/errorClassification";
 
 /**
  * Creates mock market data for testing
@@ -96,13 +96,12 @@ export const createMockSetInternalErrorsFn = () => jest.fn();
 export const createTestErrors = (): ClassifiedError[] => {
   return [
     {
-      code: "TEST_ERROR",
       message: "Test error for testing",
-      component: "TestComponent",
+      errorType: "TEST_ERROR",
       method: "testMethod",
-      category: "API_ERROR",
+      category: ErrorCategory.API,
       timestamp: new Date(),
       details: { additionalInfo: "test details" }
-    }
+    } as ClassifiedError
   ];
 };

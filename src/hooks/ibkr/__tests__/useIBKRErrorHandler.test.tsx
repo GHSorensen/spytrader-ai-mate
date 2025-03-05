@@ -15,10 +15,10 @@ describe('useIBKRErrorHandler', () => {
     
     const testError: ClassifiedError = {
       message: 'Test error',
-      code: 'TEST_ERROR',
+      errorType: 'TEST_ERROR',
       service: 'test-service',
       method: 'test-method'
-    };
+    } as ClassifiedError;
     
     act(() => {
       result.current.setInternalErrors([testError]);
@@ -32,24 +32,24 @@ describe('useIBKRErrorHandler', () => {
     
     const testError1: ClassifiedError = {
       message: 'Last error',
-      code: 'LAST_ERROR',
+      errorType: 'LAST_ERROR',
       service: 'test-service',
       method: 'test-method'
-    };
+    } as ClassifiedError;
     
     const testError2: ClassifiedError = {
       message: 'Market data error',
-      code: 'MARKET_DATA_ERROR',
+      errorType: 'MARKET_DATA_ERROR',
       service: 'market-data',
       method: 'fetch'
-    };
+    } as ClassifiedError;
     
     const testError3: ClassifiedError = {
       message: 'Internal error',
-      code: 'INTERNAL_ERROR',
+      errorType: 'INTERNAL_ERROR',
       service: 'internal',
       method: 'process'
-    };
+    } as ClassifiedError;
     
     act(() => {
       result.current.setInternalErrors([testError3]);
@@ -69,17 +69,17 @@ describe('useIBKRErrorHandler', () => {
     
     const testError1: ClassifiedError = {
       message: 'Market data error',
-      code: 'MARKET_DATA_ERROR',
+      errorType: 'MARKET_DATA_ERROR',
       service: 'market-data',
       method: 'fetch'
-    };
+    } as ClassifiedError;
     
     const testError2: ClassifiedError = {
       message: 'Internal error',
-      code: 'INTERNAL_ERROR',
+      errorType: 'INTERNAL_ERROR',
       service: 'internal',
       method: 'process'
-    };
+    } as ClassifiedError;
     
     act(() => {
       result.current.setInternalErrors([testError2]);
@@ -99,17 +99,17 @@ describe('useIBKRErrorHandler', () => {
     
     const testError1: ClassifiedError = {
       message: 'Options error',
-      code: 'OPTIONS_ERROR',
+      errorType: 'OPTIONS_ERROR',
       service: 'options',
       method: 'fetch'
-    };
+    } as ClassifiedError;
     
     const testError2: ClassifiedError = {
       message: 'Internal error',
-      code: 'INTERNAL_ERROR',
+      errorType: 'INTERNAL_ERROR',
       service: 'internal',
       method: 'process'
-    };
+    } as ClassifiedError;
     
     act(() => {
       result.current.setInternalErrors([testError2]);
@@ -129,10 +129,10 @@ describe('useIBKRErrorHandler', () => {
     
     const testError: ClassifiedError = {
       message: 'Internal error',
-      code: 'INTERNAL_ERROR',
+      errorType: 'INTERNAL_ERROR',
       service: 'internal',
       method: 'process'
-    };
+    } as ClassifiedError;
     
     act(() => {
       result.current.setInternalErrors([testError]);
