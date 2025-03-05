@@ -4,6 +4,9 @@ import { useFetchTrades } from './trades/useFetchTrades';
 import { useCreateTrade } from './trades/useCreateTrade';
 import { useState, useEffect } from 'react';
 import { getDataProvider } from '@/services/dataProviders/dataProviderFactory';
+import { toast } from 'sonner';
+import { classifyError } from '@/lib/errorMonitoring/utils/errorClassifier';
+import { ErrorCategory } from '@/lib/errorMonitoring/types/errorClassification';
 
 export const useTrades = (activeTab: string) => {
   // Get authentication state
@@ -36,11 +39,19 @@ export const useTrades = (activeTab: string) => {
             console.log("Provider disconnected, attempting to reconnect...");
             setReconnectAttempts(prev => prev + 1);
             
+            // Show reconnection toast
+            toast.loading(`Reconnecting (attempt ${reconnectAttempts + 1})...`);
+            
             // Try to reconnect
             const connected = await provider.connect();
             if (connected) {
               console.log("Provider reconnected successfully");
               setConnectionDiagnostics("Connection restored");
+              
+              // Show success toast
+              toast.success("Connection Restored", {
+                description: "Successfully reconnected to the data provider."
+              });
               
               // Refresh data after successful reconnection
               setTimeout(() => {
@@ -50,9 +61,30 @@ export const useTrades = (activeTab: string) => {
             } else {
               console.error("Failed to reconnect to provider");
               setConnectionDiagnostics("Reconnect failed, will retry automatically");
+              
+              // Show error toast
+              toast.error("Reconnection Failed", {
+                description: "Could not reconnect to data provider. Will retry automatically."
+              });
             }
           } else {
-            setConnectionDiagnostics("Connection issues detected, but provider reports connected");
+            // Classify the error for better context
+            const classifiedError = classifyError(lastError);
+            
+            // Handle according to error category
+            if (classifiedError.category === ErrorCategory.TIMEOUT) {
+              setConnectionDiagnostics("Request timed out, retrying...");
+              toast.warning("Request Timeout", {
+                description: "The request timed out. Retrying..."
+              });
+            } else if (classifiedError.category === ErrorCategory.RATE_LIMIT) {
+              setConnectionDiagnostics("Rate limit exceeded, please wait before retrying");
+              toast.warning("Rate Limit Exceeded", {
+                description: "Too many requests. Please wait before trying again."
+              });
+            } else {
+              setConnectionDiagnostics("Connection issues detected, but provider reports connected");
+            }
           }
         } catch (error) {
           console.error("Error during reconnect:", error);
@@ -61,12 +93,17 @@ export const useTrades = (activeTab: string) => {
               ? `Connection error: ${error.message}` 
               : "Unknown connection error"
           );
+          
+          // Show error toast
+          toast.error("Reconnection Error", {
+            description: error instanceof Error ? error.message : "Unknown error during reconnection"
+          });
         }
       };
       
       checkConnection();
     }
-  }, [lastError, isAuthenticated, isRetrying, refetch]);
+  }, [lastError, isAuthenticated, isRetrying, refetch, reconnectAttempts]);
   
   // Reset reconnect attempts when connection is successful
   useEffect(() => {

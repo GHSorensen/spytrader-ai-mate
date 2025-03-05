@@ -5,7 +5,7 @@
 
 import { config, environment, isProduction } from '@/config/environment';
 import { ErrorContext } from '../types';
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { classifyError, getUserFriendlyMessage } from '../utils/errorClassifier';
 import { ClassifiedError, ErrorCategory } from '../types/errorClassification';
 
@@ -125,17 +125,21 @@ export const showErrorToast = (error: Error | ClassifiedError, details?: string)
       }
       
       // Show toast with different variants based on error category
-      let variant: 'default' | 'destructive' | 'warning' = 'destructive';
+      const classifiedError = (error as ClassifiedError);
       
-      if ((error as ClassifiedError).category === ErrorCategory.RATE_LIMIT) {
-        variant = 'warning';
+      if (classifiedError.category === ErrorCategory.RATE_LIMIT) {
+        toast.warning('Rate Limit Exceeded', {
+          description: details ? `${message}: ${details}` : message,
+        });
+      } else if (classifiedError.category === ErrorCategory.AUTHENTICATION) {
+        toast.error('Authentication Error', {
+          description: details ? `${message}: ${details}` : message,
+        });
+      } else {
+        toast.error('An error occurred', {
+          description: details ? `${message}: ${details}` : message,
+        });
       }
-      
-      toast({
-        title: 'An error occurred',
-        description: details ? `${message}: ${details}` : message,
-        variant,
-      });
     }
   } catch (e) {
     console.error('Failed to show error toast', e);

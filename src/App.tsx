@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import Dashboard from './components/Dashboard';
@@ -9,12 +10,13 @@ import PerformanceDashboard from './components/spy/PerformanceDashboard';
 import RiskMonitoringTest from './pages/RiskMonitoringTest';
 import notificationService from './services/notification/notificationService';
 import ErrorBoundary from './components/ErrorBoundary';
+import RouterErrorBoundary from './components/RouterErrorBoundary';
 import SchwabIntegrationPage from './pages/SchwabIntegrationPage';
 import IBKRIntegrationPage from './pages/IBKRIntegrationPage';
 import IBKRCallbackPage from './pages/IBKRCallbackPage';
 import DetailedPerformancePage from './components/performance/DetailedPerformancePage';
-import { Toaster } from './components/ui/toaster';
-import { toast } from './hooks/use-toast';
+import { Toaster } from './components/ui/sonner';
+import { toast } from 'sonner';
 import AuthenticationPage from './components/auth/AuthenticationPage';
 import UserProfilePage from './components/auth/UserProfilePage';
 import { supabase } from './integrations/supabase/client';
@@ -121,7 +123,9 @@ function App() {
   const AuthenticatedRoute = ({ element }) => {
     return session ? (
       <AuthenticatedLayout>
-        {element}
+        <ErrorBoundary>
+          {element}
+        </ErrorBoundary>
       </AuthenticatedLayout>
     ) : (
       <Navigate to="/auth" replace />
@@ -147,7 +151,7 @@ function App() {
         <Route path="/not-found" element={<NotFound />} />
         <Route path="*" element={<Navigate to="/not-found" replace />} />
       </Routes>
-      <Toaster />
+      <Toaster richColors closeButton />
     </ErrorBoundary>
   );
 }

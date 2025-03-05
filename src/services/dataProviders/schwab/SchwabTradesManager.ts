@@ -2,7 +2,7 @@
 import { SpyTrade } from "@/lib/types/spy";
 import { SchwabService } from "../schwabService";
 import { generateMockTrades } from "./utils";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 
 export class SchwabTradesManager {
   private service: SchwabService;
@@ -21,10 +21,8 @@ export class SchwabTradesManager {
         const connected = await this.service.connect();
         
         if (!connected) {
-          toast({
-            title: "Connection Failed",
+          toast.error("Connection Failed", {
             description: "Could not connect to Schwab API. Please check your credentials in the settings.",
-            variant: "destructive",
           });
           throw new Error("Failed to connect to Schwab API");
         }
@@ -40,8 +38,7 @@ export class SchwabTradesManager {
       console.log("Returning mock Schwab trade data for development");
       const mockTrades = generateMockTrades();
       
-      toast({
-        title: "Trades Retrieved",
+      toast.success("Trades Retrieved", {
         description: `Retrieved ${mockTrades.length} trades from Schwab`,
       });
       
@@ -49,10 +46,8 @@ export class SchwabTradesManager {
     } catch (error) {
       console.error("Error fetching Schwab trades:", error);
       
-      toast({
-        title: "Trade Fetch Error",
+      toast.error("Trade Fetch Error", {
         description: error instanceof Error ? error.message : "Unknown error retrieving trades",
-        variant: "destructive",
       });
       
       throw error;
@@ -80,8 +75,7 @@ export class SchwabTradesManager {
       console.log("Simulating placing order with Schwab:", order);
       
       // For development, return a mock order confirmation
-      toast({
-        title: "Order Placed (Simulated)",
+      toast.success("Order Placed (Simulated)", {
         description: `${order.action} ${order.quantity} ${order.symbol} at ${order.orderType}`,
       });
       
@@ -92,10 +86,8 @@ export class SchwabTradesManager {
     } catch (error) {
       console.error("Error placing Schwab trade:", error);
       
-      toast({
-        title: "Order Error",
+      toast.error("Order Error", {
         description: error instanceof Error ? error.message : "Unknown error placing order",
-        variant: "destructive",
       });
       
       throw error;
