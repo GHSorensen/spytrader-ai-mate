@@ -4,9 +4,10 @@ import { CheckCircle, AlertCircle, Loader2, MinusCircle } from 'lucide-react';
 
 interface ConnectionStatusProps {
   status: 'disconnected' | 'connecting' | 'connected' | 'error';
+  source?: 'live' | 'delayed' | 'mock';
 }
 
-const ConnectionStatus: React.FC<ConnectionStatusProps> = ({ status }) => {
+const ConnectionStatus: React.FC<ConnectionStatusProps> = ({ status, source }) => {
   let statusColor = 'bg-gray-100 text-gray-600';
   let statusText = 'Not Connected';
   let StatusIcon = MinusCircle;
@@ -14,7 +15,7 @@ const ConnectionStatus: React.FC<ConnectionStatusProps> = ({ status }) => {
   switch (status) {
     case 'connected':
       statusColor = 'bg-green-100 text-green-700';
-      statusText = 'Connected';
+      statusText = source ? `Connected (${source})` : 'Connected';
       StatusIcon = CheckCircle;
       break;
     case 'connecting':

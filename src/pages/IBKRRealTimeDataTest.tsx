@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { IBKRRealTimeDataTestView } from '@/components/ibkr/test/IBKRRealTimeDataTestView';
+import IBKRRealTimeDataTestView from '@/components/ibkr/test/IBKRRealTimeDataTestView';
 
 const IBKRRealTimeDataTest: React.FC = () => {
   return (

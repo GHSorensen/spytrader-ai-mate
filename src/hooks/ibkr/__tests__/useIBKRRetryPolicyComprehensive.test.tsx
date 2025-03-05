@@ -115,7 +115,8 @@ describe('useIBKRRetryPolicy Comprehensive', () => {
         }
         
         await promise;
-        fail('Should have thrown an error');
+        // If the promise doesn't reject, we should fail the test
+        expect('This should not be reached').toBe('Promise should have rejected');
       } catch (error) {
         expect(error).toBe(persistentError);
         expect(mockOperation).toHaveBeenCalledTimes(maxRetries + 1); // Initial + retries
@@ -144,7 +145,8 @@ describe('useIBKRRetryPolicy Comprehensive', () => {
     await act(async () => {
       try {
         await result.current.executeWithRetry(mockOperation);
-        fail('Should have thrown an error');
+        // If the promise doesn't reject, we should fail the test
+        expect('This should not be reached').toBe('Promise should have rejected');
       } catch (error) {
         expect(error).toBe(nonRetriableError);
         expect(mockOperation).toHaveBeenCalledTimes(1); // No retries

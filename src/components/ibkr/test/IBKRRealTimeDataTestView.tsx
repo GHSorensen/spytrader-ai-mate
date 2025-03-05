@@ -47,6 +47,9 @@ const IBKRRealTimeDataTestView: React.FC = () => {
     reconnect();
   };
 
+  // Map connection status for the component
+  const connectionStatus = isConnected ? 'connected' : 'disconnected';
+
   return (
     <div className="container py-8">
       <div className="mb-8 flex items-center justify-between">
@@ -56,7 +59,7 @@ const IBKRRealTimeDataTestView: React.FC = () => {
         </div>
         
         <div className="flex items-center gap-4">
-          <ConnectionStatus isConnected={isConnected} source={dataSource} />
+          <ConnectionStatus status={connectionStatus} source={dataSource} />
           <RetryStatusIndicator isRetrying={isRetrying} retryCount={retryCount} />
         </div>
       </div>
@@ -162,7 +165,7 @@ const IBKRRealTimeDataTestView: React.FC = () => {
                       <th className="text-left p-2">Type</th>
                       <th className="text-left p-2">Strike</th>
                       <th className="text-left p-2">Expiry</th>
-                      <th className="text-right p-2">Bid/Ask</th>
+                      <th className="text-right p-2">Premium</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -172,7 +175,7 @@ const IBKRRealTimeDataTestView: React.FC = () => {
                         <td className="p-2">${option.strikePrice.toFixed(1)}</td>
                         <td className="p-2">{new Date(option.expirationDate).toLocaleDateString()}</td>
                         <td className="p-2 text-right">
-                          ${option.bidPrice.toFixed(2)} / ${option.askPrice.toFixed(2)}
+                          ${option.premium.toFixed(2)}
                         </td>
                       </tr>
                     ))}

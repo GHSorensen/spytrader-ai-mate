@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import { logError } from '@/lib/errorMonitoring';
 
@@ -6,6 +7,7 @@ interface RetryConfig {
   initialDelay?: number;
   backoffFactor?: number;
   maxDelay?: number;
+  retryOnCodes?: number[];
 }
 
 /**
@@ -19,6 +21,7 @@ export const useIBKRRetryPolicy = (config?: RetryConfig) => {
     initialDelay = 1000,
     backoffFactor = 2,
     maxDelay = 30000,
+    retryOnCodes = []
   } = config || {};
   
   // Track retry state
@@ -83,8 +86,12 @@ export const useIBKRRetryPolicy = (config?: RetryConfig) => {
           });
         }
         
+        // Check if the error has a status code that should be retried
+        const errorStatus = (error as any)?.status;
+        const shouldRetryStatus = errorStatus && retryOnCodes.includes(errorStatus);
+        
         // If we've exceeded max retries, rethrow the error
-        if (attempts >= maxRetries) {
+        if (attempts >= maxRetries || (!shouldRetryStatus && errorStatus)) {
           setIsRetrying(false);
           console.error(`Operation failed after ${attempts} retries`);
           throw error;
@@ -98,7 +105,7 @@ export const useIBKRRetryPolicy = (config?: RetryConfig) => {
         await new Promise(resolve => setTimeout(resolve, backoffDelay));
       }
     }
-  }, [maxRetries, calculateBackoff]);
+  }, [maxRetries, calculateBackoff, retryOnCodes]);
   
   return {
     executeWithRetry,
