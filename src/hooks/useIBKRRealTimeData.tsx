@@ -1,77 +1,129 @@
 
-import { useCallback } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { useState, useCallback } from 'react';
 import { useIBKRConnectionStatus } from './ibkr/useIBKRConnectionStatus';
 import { useIBKRMarketData } from './ibkr/useIBKRMarketData';
 import { useIBKROptionChain } from './ibkr/useIBKROptionChain';
+import { SpyMarketData, SpyOption } from '@/lib/types/spy';
+import { logError } from '@/lib/errorMonitoring';
 
-// Polling intervals in milliseconds
-const MARKET_DATA_POLLING_INTERVAL = 3000;
-const OPTION_CHAIN_POLLING_INTERVAL = 6000;
-
+/**
+ * Hook to provide consolidated access to IBKR real-time data
+ * including market data, options, and connection status
+ */
 export const useIBKRRealTimeData = () => {
-  const queryClient = useQueryClient();
-  
-  // Use the refactored connection hook
+  // Track any internal errors in state
+  const [internalErrors, setInternalErrors] = useState<Error[]>([]);
+
+  // Get connection status from IBKR
   const { 
     isConnected, 
     dataSource, 
-    connectionDiagnostics,
-    checkConnection: forceConnectionCheck,
+    connectionDiagnostics, 
+    checkConnection, 
     reconnect 
   } = useIBKRConnectionStatus();
-  
-  // Use the market data hook with polling based on connection status
-  const { 
-    marketData,
-    isLoading: isMarketDataLoading,
-    isError: isMarketDataError,
-    lastUpdated: marketDataLastUpdated,
-    refetch: refetchMarketData
-  } = useIBKRMarketData({
-    enabled: true, // Always enabled to show at least mock data
-    pollingInterval: MARKET_DATA_POLLING_INTERVAL
-  });
-  
-  // Use the option chain hook for SPY with enabled based on connection status
-  const {
-    options,
-    isLoading: isOptionsLoading,
-    isError: isOptionsError,
-    refetch: refetchOptions
-  } = useIBKROptionChain({
-    symbol: 'SPY',
-    enabled: isConnected,
-    pollingInterval: OPTION_CHAIN_POLLING_INTERVAL
-  });
 
-  // Manually trigger a refresh of all data
-  const refreshAllData = useCallback(() => {
+  // Get market data from IBKR
+  const { 
+    marketData, 
+    isLoading: marketDataLoading, 
+    isError: marketDataError,
+    lastUpdated,
+    refetch: refetchMarketData 
+  } = useIBKRMarketData();
+
+  // Get options data from IBKR
+  const { 
+    options, 
+    isLoading: optionsLoading, 
+    isError: optionsError,
+    refetch: refetchOptions 
+  } = useIBKROptionChain();
+
+  // Combine loading states
+  const isLoading = marketDataLoading || optionsLoading;
+
+  // Combine error states
+  const isError = marketDataError || optionsError || internalErrors.length > 0;
+
+  /**
+   * Refresh all data from IBKR
+   * Handles errors gracefully to ensure all data sources are attempted
+   * even if one fails
+   */
+  const refreshAllData = useCallback(async () => {
+    console.log("Refreshing all IBKR data sources");
+    const refreshErrors: Error[] = [];
+    
     try {
-      console.log("[useIBKRRealTimeData] Manually refreshing all data");
-      queryClient.invalidateQueries({ queryKey: ['marketData'] });
-      queryClient.invalidateQueries({ queryKey: ['optionChain'] });
-      queryClient.invalidateQueries({ queryKey: ['trades'] });
-      queryClient.invalidateQueries({ queryKey: ['accountData'] });
-      toast.success("Refreshing market data...");
+      // Attempt to refresh market data
+      await refetchMarketData();
     } catch (error) {
-      console.error("[useIBKRRealTimeData] Error refreshing data:", error);
-      toast.error("Failed to refresh data");
+      console.error("Error refreshing market data:", error);
+      if (error instanceof Error) {
+        refreshErrors.push(error);
+        // Log the error to monitoring system
+        logError(error, { 
+          component: 'useIBKRRealTimeData', 
+          method: 'refreshAllData',
+          subMethod: 'refetchMarketData'
+        });
+      }
     }
-  }, [queryClient]);
+    
+    try {
+      // Attempt to refresh options data
+      await refetchOptions();
+    } catch (error) {
+      console.error("Error refreshing options data:", error);
+      if (error instanceof Error) {
+        refreshErrors.push(error);
+        // Log the error to monitoring system
+        logError(error, { 
+          component: 'useIBKRRealTimeData', 
+          method: 'refreshAllData',
+          subMethod: 'refetchOptions'
+        });
+      }
+    }
+    
+    if (refreshErrors.length > 0) {
+      setInternalErrors(prev => [...prev, ...refreshErrors]);
+    }
+  }, [refetchMarketData, refetchOptions]);
+
+  /**
+   * Force a connection check with IBKR
+   * Useful when connection status might be stale
+   */
+  const forceConnectionCheck = useCallback(() => {
+    console.log("Forcing IBKR connection check");
+    try {
+      checkConnection();
+    } catch (error) {
+      console.error("Error checking connection:", error);
+      if (error instanceof Error) {
+        setInternalErrors(prev => [...prev, error]);
+        // Log the error to monitoring system
+        logError(error, { 
+          component: 'useIBKRRealTimeData', 
+          method: 'forceConnectionCheck'
+        });
+      }
+    }
+  }, [checkConnection]);
 
   return {
     // Data
-    marketData,
-    options,
+    marketData: marketData as SpyMarketData | null,
+    options: options as SpyOption[] | [],
     
     // Status
     isConnected,
     dataSource,
     connectionDiagnostics,
-    isLoading: isMarketDataLoading || isOptionsLoading,
-    isError: isMarketDataError || isOptionsError,
+    isLoading,
+    isError,
     
     // Actions
     refreshAllData,
@@ -79,6 +131,6 @@ export const useIBKRRealTimeData = () => {
     reconnect,
     
     // Timestamps
-    lastUpdated: marketDataLastUpdated
+    lastUpdated
   };
 };
