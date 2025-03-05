@@ -3,6 +3,7 @@ import { useState, useCallback } from 'react';
 import { useIBKRConnectionStatus } from './ibkr/useIBKRConnectionStatus';
 import { useIBKRMarketData } from './ibkr/useIBKRMarketData';
 import { useIBKROptionChain } from './ibkr/useIBKROptionChain';
+import { useIBKRRetryPolicy } from './ibkr/useIBKRRetryPolicy';
 import { SpyMarketData, SpyOption } from '@/lib/types/spy';
 import { logError } from '@/lib/errorMonitoring';
 
@@ -32,22 +33,33 @@ export const useIBKRRealTimeData = () => {
     refetch: refetchMarketData 
   } = useIBKRMarketData();
 
-  // Get options data from IBKR - fix here: pass required symbol parameter
+  // Get options data from IBKR
   const { 
     options, 
     isLoading: optionsLoading, 
     isError: optionsError,
     refetch: refetchOptions 
-  } = useIBKROptionChain({ symbol: 'SPY' });  // Adding required symbol parameter
+  } = useIBKROptionChain({ symbol: 'SPY' });
+
+  // Setup retry policy for data operations
+  const {
+    executeWithRetry,
+    isRetrying,
+    retryCount
+  } = useIBKRRetryPolicy({
+    maxRetries: 3,
+    initialDelay: 1000,
+    backoffFactor: 1.5,
+  });
 
   // Combine loading states
-  const isLoading = marketDataLoading || optionsLoading;
+  const isLoading = marketDataLoading || optionsLoading || isRetrying;
 
   // Combine error states
   const isError = marketDataError || optionsError || internalErrors.length > 0;
 
   /**
-   * Refresh all data from IBKR
+   * Refresh all data from IBKR with retry capability
    * Handles errors gracefully to ensure all data sources are attempted
    * even if one fails
    */
@@ -56,62 +68,70 @@ export const useIBKRRealTimeData = () => {
     const refreshErrors: Error[] = [];
     
     try {
-      // Attempt to refresh market data
-      await refetchMarketData();
+      // Attempt to refresh market data with retry policy
+      await executeWithRetry(
+        () => refetchMarketData(),
+        { 
+          component: 'useIBKRRealTimeData', 
+          method: 'refreshAllData',
+          subMethod: 'refetchMarketData'
+        }
+      );
     } catch (error) {
       console.error("Error refreshing market data:", error);
       if (error instanceof Error) {
         refreshErrors.push(error);
-        // Log the error to monitoring system
-        logError(error, { 
-          component: 'useIBKRRealTimeData', 
-          method: 'refreshAllData',
-          subMethod: 'refetchMarketData'
-        });
+        // No need to log here as executeWithRetry already logs errors
       }
     }
     
     try {
-      // Attempt to refresh options data
-      await refetchOptions();
+      // Attempt to refresh options data with retry policy
+      await executeWithRetry(
+        () => refetchOptions(),
+        { 
+          component: 'useIBKRRealTimeData', 
+          method: 'refreshAllData',
+          subMethod: 'refetchOptions'
+        }
+      );
     } catch (error) {
       console.error("Error refreshing options data:", error);
       if (error instanceof Error) {
         refreshErrors.push(error);
-        // Log the error to monitoring system
-        logError(error, { 
-          component: 'useIBKRRealTimeData', 
-          method: 'refreshAllData',
-          subMethod: 'refetchOptions'
-        });
+        // No need to log here as executeWithRetry already logs errors
       }
     }
     
     if (refreshErrors.length > 0) {
       setInternalErrors(prev => [...prev, ...refreshErrors]);
     }
-  }, [refetchMarketData, refetchOptions]);
+  }, [refetchMarketData, refetchOptions, executeWithRetry]);
 
   /**
-   * Force a connection check with IBKR
+   * Force a connection check with IBKR with retry capability
    * Useful when connection status might be stale
    */
   const forceConnectionCheck = useCallback(() => {
     console.log("Forcing IBKR connection check");
     try {
-      checkConnection();
+      executeWithRetry(
+        async () => {
+          checkConnection();
+          return true;
+        },
+        { 
+          component: 'useIBKRRealTimeData', 
+          method: 'forceConnectionCheck'
+        }
+      );
     } catch (error) {
       console.error("Error checking connection:", error);
       if (error instanceof Error) {
         setInternalErrors(prev => [...prev, error]);
-        // Log the error to monitoring system
-        logError(error, { 
-          component: 'useIBKRRealTimeData', 
-          method: 'forceConnectionCheck'
-        });
       }
     }
-  }, [checkConnection]);
+  }, [checkConnection, executeWithRetry]);
 
   return {
     // Data
@@ -124,6 +144,8 @@ export const useIBKRRealTimeData = () => {
     connectionDiagnostics,
     isLoading,
     isError,
+    retryCount,
+    isRetrying,
     
     // Actions
     refreshAllData,
