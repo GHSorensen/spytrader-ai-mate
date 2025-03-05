@@ -8,10 +8,10 @@ export const useTrades = (activeTab: string) => {
   const { isAuthenticated } = useTradesAuth();
   
   // Fetch trades based on active tab
-  const { trades, isLoading, refetch } = useFetchTrades(activeTab, isAuthenticated);
+  const { trades, isLoading, refetch, isRetrying, lastError, retryCount } = useFetchTrades(activeTab, isAuthenticated);
   
   // Handle trade creation
-  const { handleCreateTestTrade, isPending, lastError } = useCreateTrade(isAuthenticated, refetch);
+  const { handleCreateTestTrade, isPending } = useCreateTrade(isAuthenticated, refetch);
 
   return {
     trades,
@@ -20,6 +20,8 @@ export const useTrades = (activeTab: string) => {
     isPending,
     isAuthenticated,
     lastError,
-    refetch
+    refetch,
+    isRetrying,
+    retryCount
   };
 };

@@ -1,10 +1,7 @@
 
-import React, { useCallback } from 'react';
+import React from 'react';
 import { Button } from "@/components/ui/button";
-import { PlusCircle, RefreshCw } from "lucide-react";
-import { IBKRStatusIndicator } from '@/components/ibkr/IBKRStatusIndicator';
-import { toast } from "sonner";
-import { useAccountBalance } from '@/hooks/useAccountBalance';
+import { Plus, RefreshCw } from "lucide-react";
 
 interface TradePageHeaderProps {
   isAuthenticated: boolean;
@@ -12,6 +9,8 @@ interface TradePageHeaderProps {
   onCreateTestTrade: () => void;
   onRefreshTrades: () => void;
   isLoading: boolean;
+  isRetrying?: boolean;
+  retryCount?: number;
 }
 
 const TradePageHeader: React.FC<TradePageHeaderProps> = ({
@@ -19,64 +18,38 @@ const TradePageHeader: React.FC<TradePageHeaderProps> = ({
   isPending,
   onCreateTestTrade,
   onRefreshTrades,
-  isLoading
+  isLoading,
+  isRetrying = false,
+  retryCount = 0
 }) => {
-  const accountData = useAccountBalance();
-
-  const onRefreshBalance = useCallback(() => {
-    console.log("Refreshing account balance", "Authentication state:", accountData.isAuthenticated);
-    try {
-      accountData.refreshBalance?.();
-    } catch (error) {
-      console.error("Error refreshing balance:", error);
-      toast.error("Failed to refresh account balance");
-    }
-  }, [accountData]);
-
   return (
-    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-4">
+    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
       <div>
-        <h1 className="text-xl md:text-2xl font-bold tracking-tight">Trades</h1>
-        <p className="text-sm text-muted-foreground">
-          Manage your trading activity and orders
+        <h1 className="text-2xl font-bold tracking-tight">Trades</h1>
+        <p className="text-muted-foreground mt-1">
+          View and manage your current trades
+          {isRetrying && <span className="ml-2 text-amber-600 text-sm">(Reconnecting... Attempt {retryCount})</span>}
         </p>
       </div>
-      <div className="flex flex-wrap items-center gap-2 mt-2 md:mt-0">
-        <div className="px-2 md:px-3 py-1 rounded-md bg-muted text-xs md:text-sm flex items-center">
-          <span>Balance: ${accountData.balance?.toLocaleString() || "0"}</span>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-5 w-5 md:h-6 md:w-6 ml-1"
-            onClick={onRefreshBalance}
-            disabled={accountData.isLoading}
-          >
-            <RefreshCw className={`h-3 w-3 ${accountData.isLoading ? 'animate-spin' : ''}`} />
-          </Button>
-        </div>
-        <IBKRStatusIndicator showDetails={true} />
-        {isAuthenticated && (
-          <>
-            <Button 
-              onClick={onCreateTestTrade} 
-              disabled={isPending}
-              size="sm"
-              className="flex items-center gap-1 text-xs md:text-sm"
-            >
-              <PlusCircle className="h-3 w-3 md:h-4 md:w-4" />
-              {isPending ? "Creating..." : "Create Test Trade"}
-            </Button>
-            <Button
-              onClick={onRefreshTrades}
-              size="sm"
-              variant="outline"
-              className="flex items-center gap-1 text-xs md:text-sm"
-            >
-              <RefreshCw className={`h-3 w-3 md:h-4 md:w-4 ${isLoading ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
-          </>
-        )}
+      <div className="flex items-center gap-2 self-end sm:self-auto">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={onRefreshTrades}
+          disabled={isLoading || !isAuthenticated}
+          className={isLoading ? "animate-pulse" : ""}
+        >
+          <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
+          Refresh
+        </Button>
+        <Button 
+          size="sm" 
+          onClick={onCreateTestTrade}
+          disabled={isPending || !isAuthenticated}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Create Test Trade
+        </Button>
       </div>
     </div>
   );

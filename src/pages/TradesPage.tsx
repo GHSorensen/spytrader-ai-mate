@@ -11,7 +11,7 @@ import { RefreshCw } from "lucide-react";
 
 const TradesPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('active');
-  const { trades, isLoading, handleCreateTestTrade, isPending, isAuthenticated, refetch, lastError } = useTrades(activeTab);
+  const { trades, isLoading, handleCreateTestTrade, isPending, isAuthenticated, refetch, lastError, isRetrying, retryCount } = useTrades(activeTab);
   const [connectionDiagnostics, setConnectionDiagnostics] = useState<string | null>(null);
 
   // Log component mounting to debug
@@ -84,11 +84,15 @@ const TradesPage: React.FC = () => {
         onCreateTestTrade={onCreateTestTrade}
         onRefreshTrades={onRefreshTrades}
         isLoading={isLoading}
+        isRetrying={isRetrying}
+        retryCount={retryCount}
       />
 
       <ConnectionStatus 
         connectionDiagnostics={connectionDiagnostics}
         lastError={lastError}
+        isRetrying={isRetrying}
+        retryCount={retryCount}
       />
 
       <TradeTabs 
