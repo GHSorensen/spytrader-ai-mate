@@ -50,12 +50,25 @@ export const useIBKROptionChain = ({
         console.error(`[useIBKROptionChain] Error fetching option chain for ${symbol}:`, error);
         
         const provider = getDataProvider();
+        // Extract connection details from provider with proper type checking
+        const connectionMethod = provider && 
+          'config' in provider && 
+          provider.config && 
+          typeof provider.config === 'object' ? 
+          (provider.config as any).connectionMethod : undefined;
+          
+        const paperTrading = provider && 
+          'config' in provider && 
+          provider.config && 
+          typeof provider.config === 'object' ? 
+          (provider.config as any).paperTrading : undefined;
+        
         const classifiedError = handleIBKRError(error, {
           service: 'useIBKROptionChain', 
           method: 'getOptionChain',
           symbol,
-          connectionMethod: provider && 'config' in provider ? provider.config?.connectionMethod : undefined,
-          paperTrading: provider && 'config' in provider ? provider.config?.paperTrading : undefined
+          connectionMethod,
+          paperTrading
         });
         
         throw classifiedError;
