@@ -68,6 +68,7 @@ export const useIBKRMarketData = ({
       } catch (error) {
         console.error("[useIBKRMarketData] Error fetching market data:", error);
         
+        const provider = getDataProvider();
         const classifiedError = handleIBKRError(error, {
           service: 'useIBKRMarketData',
           method: 'getMarketData',

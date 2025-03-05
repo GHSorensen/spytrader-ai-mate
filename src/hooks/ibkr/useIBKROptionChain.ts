@@ -49,6 +49,7 @@ export const useIBKROptionChain = ({
       } catch (error) {
         console.error(`[useIBKROptionChain] Error fetching option chain for ${symbol}:`, error);
         
+        const provider = getDataProvider();
         const classifiedError = handleIBKRError(error, {
           service: 'useIBKROptionChain', 
           method: 'getOptionChain',

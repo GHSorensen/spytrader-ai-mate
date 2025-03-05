@@ -1,9 +1,9 @@
 
 import { 
-  createClassifiedError, 
   ClassifiedError, 
   ErrorType
 } from '@/lib/errorMonitoring/types/errorClassification';
+import { createClassifiedError } from '@/lib/errorMonitoring/utils/errorClassifier';
 import { IBKRErrorContext } from '../errorHandler';
 
 /**

@@ -3,6 +3,16 @@
  * Error classification system for better error handling and reporting
  */
 
+import { ErrorCategory } from './errorCategories';
+import { ErrorType } from './errorTypes';
+import {
+  HTTP_STATUS_TO_CATEGORY,
+  HTTP_STATUS_TO_ERROR_TYPE,
+  ERROR_MESSAGES,
+  RETRYABLE_ERROR_TYPES
+} from './errorMappings';
+
+// Re-export imported types
 export { ErrorCategory } from './errorCategories';
 export { ErrorType } from './errorTypes';
 export {
