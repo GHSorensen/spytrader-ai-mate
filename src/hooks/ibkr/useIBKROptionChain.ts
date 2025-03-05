@@ -54,8 +54,8 @@ export const useIBKROptionChain = ({
           service: 'useIBKROptionChain', 
           method: 'getOptionChain',
           symbol,
-          connectionMethod: provider?.config?.connectionMethod,
-          paperTrading: provider?.config?.paperTrading
+          connectionMethod: provider && 'config' in provider ? provider.config?.connectionMethod : undefined,
+          paperTrading: provider && 'config' in provider ? provider.config?.paperTrading : undefined
         });
         
         throw classifiedError;

@@ -1,3 +1,4 @@
+
 import { 
   ClassifiedError, 
   ErrorCategory, 
@@ -8,8 +9,10 @@ import {
   RETRYABLE_ERROR_TYPES,
   ErrorClassificationOptions
 } from '../types/errorClassification';
-import { classifyErrorByCode } from './errorClassification/errorCodeClassifier';
-import { classifyErrorByMessage } from './errorClassification/errorMessageClassifier';
+import { 
+  classifyErrorByCode, 
+  classifyErrorByMessage 
+} from './errorClassification';
 import { getErrorCategoryFromType } from './errorClassification/categoryMapper';
 
 /**
