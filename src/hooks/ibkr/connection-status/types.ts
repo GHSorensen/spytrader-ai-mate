@@ -59,3 +59,64 @@ export interface UseIBKRConnectionMonitorReturn {
   forceConnectionCheck: () => Promise<void>;
   getDetailedDiagnostics: () => any;
 }
+
+// Define TestType enum to fix the type errors in the component
+export enum TestType {
+  CONNECTION = 'connection',
+  AUTHENTICATION = 'authentication',
+  MARKET_DATA = 'market-data',
+  RECONNECT = 'reconnect',
+  COMPREHENSIVE = 'comprehensive'
+}
+
+// Define ConnectionTestResult interface
+export interface ConnectionTestResult {
+  testType: TestType;
+  status: 'success' | 'failure' | 'running' | 'not-run';
+  message: string;
+  error?: Error | null;
+  timestamp: Date;
+  durationMs?: number;
+  details?: Record<string, any>;
+}
+
+// Interface for useIBKRConnectionTest hook
+export interface UseIBKRConnectionTestReturn {
+  testConnection: () => Promise<ConnectionTestResult>;
+  testAuthentication: () => Promise<ConnectionTestResult>;
+  testMarketData: () => Promise<ConnectionTestResult>;
+  testReconnect: () => Promise<ConnectionTestResult>;
+  runComprehensiveTest: () => Promise<ConnectionTestResult[]>;
+  isTestRunning: boolean;
+  testResults: ConnectionTestResult[];
+  getDiagnostics: () => any;
+  clearTestResults: () => void;
+}
+
+// Update the return type of getDetailedDiagnostics
+export interface DetailedDiagnostics {
+  timestamp: string;
+  browser: {
+    userAgent: string;
+    language: string;
+    platform: string;
+    timeZone: string;
+  };
+  connection: {
+    isConnected: boolean;
+    dataSource: 'live' | 'delayed' | 'mock';
+    lastChecked: string;
+    provider: string;
+    providerStatus: any;
+    reconnectAttempts: number;
+    isReconnecting: boolean;
+    connectionLostTime: string | null;
+    lastError: string | null;
+  };
+  history: ConnectionHistoryEvent[];
+  detailedProvider: any;
+  connectionDuration?: number | null;
+  connectionCheckCount?: number;
+  lastSuccessfulConnection?: Date | null;
+  lastCheckTime?: Date | null;
+}

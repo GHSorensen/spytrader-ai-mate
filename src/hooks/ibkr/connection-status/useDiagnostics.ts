@@ -1,6 +1,6 @@
 
 import { useCallback } from 'react';
-import { ConnectionDiagnostics, ConnectionHistoryEvent } from './types';
+import { ConnectionDiagnostics, ConnectionHistoryEvent, DetailedDiagnostics } from './types';
 import { debugIBKRConnection } from './utils';
 
 /**
@@ -15,9 +15,9 @@ export function useDiagnostics() {
     reconnectAttempts?: number;
     isReconnecting?: boolean;
     connectionLostTime?: Date | null;
-  }) => {
+  }): DetailedDiagnostics => {
     // Record all the diagnostic info we can gather
-    const diagnostics = {
+    const diagnostics: DetailedDiagnostics = {
       timestamp: new Date().toISOString(),
       browser: {
         userAgent: navigator.userAgent,

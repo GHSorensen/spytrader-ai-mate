@@ -6,7 +6,7 @@ import { useConnectionHistory } from './useConnectionHistory';
 import { useReconnectLogic } from './useReconnectLogic';
 import { useDiagnostics } from './useDiagnostics';
 import { useConnectionLogger } from './useConnectionLogger';
-import { UseIBKRConnectionMonitorOptions, UseIBKRConnectionMonitorReturn } from './types';
+import { UseIBKRConnectionMonitorOptions, UseIBKRConnectionMonitorReturn, DetailedDiagnostics } from './types';
 import { logConnectionError, debugIBKRConnection } from './utils';
 
 /**
@@ -260,14 +260,17 @@ export function useIBKRConnectionMonitor(
       connectionHistory
     });
     
-    // Include connection duration and check count data
-    diagnostics.connectionDuration = connectionDuration;
-    diagnostics.connectionCheckCount = connectionCheckCount;
-    diagnostics.lastSuccessfulConnection = lastSuccessfulConnection;
-    diagnostics.lastCheckTime = lastCheckTime;
+    // Add additional diagnostic data
+    const enhancedDiagnostics: DetailedDiagnostics = {
+      ...diagnostics,
+      connectionDuration,
+      connectionCheckCount,
+      lastSuccessfulConnection,
+      lastCheckTime
+    };
     
-    logInfo('Generated detailed diagnostics', diagnostics);
-    return diagnostics;
+    logInfo('Generated detailed diagnostics', enhancedDiagnostics);
+    return enhancedDiagnostics;
   }, [
     getDetailedDiagnostics,
     isConnected,

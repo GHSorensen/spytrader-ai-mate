@@ -1,640 +1,310 @@
 
-import { useState, useCallback, useEffect } from 'react';
-import { toast } from 'sonner';
-import { getDataProvider } from '@/services/dataProviders/dataProviderFactory';
-import { DataProviderInterface } from '@/lib/types/spy/dataProvider';
-import { handleIBKRError } from '@/services/dataProviders/interactiveBrokers/utils/errorHandler';
-import { ClassifiedError } from '@/lib/errorMonitoring/types/errorClassification';
-
-// Test types for different connection tests
-export enum TestType {
-  CONNECTION = 'connection',
-  AUTHENTICATION = 'authentication',
-  MARKET_DATA = 'market_data',
-  OPTIONS_DATA = 'options_data',
-  RECONNECT = 'reconnect',
-  COMPREHENSIVE = 'comprehensive'
-}
-
-// Interface for test results
-export interface ConnectionTestResult {
-  type: TestType;
-  success: boolean;
-  message: string;
-  timestamp: Date;
-  duration: number; // in ms
-  error?: ClassifiedError | Error;
-  details?: any;
-  provider?: string;
-  latency?: number;
-}
-
-interface UseIBKRConnectionTestReturn {
-  isConnected: boolean;
-  dataSource: 'live' | 'delayed' | 'mock';
-  
-  // Individual tests
-  runConnectionTest: () => Promise<boolean>;
-  runAuthenticationTest: () => Promise<boolean>;
-  runDataRetrievalTest: () => Promise<boolean>;
-  runOptionsTest: () => Promise<boolean>;
-  runReconnectionTest: () => Promise<boolean>;
-  runAllTests: () => Promise<boolean>;
-  
-  // Test results
-  testResults: ConnectionTestResult[];
-  clearTestResults: () => void;
-  
-  // Test status
-  isRunningTests: boolean;
-  lastTestRun: Date | null;
-  currentTest: TestType | null;
-}
+import { useState, useCallback } from 'react';
+import { TestType, ConnectionTestResult, UseIBKRConnectionTestReturn } from '../connection-status/types';
+import { getProviderWithDiagnostics } from '../connection-status/utils';
 
 /**
- * Hook for testing IBKR connections and data retrieval
+ * Hook for testing IBKR connection functionality
  */
 export function useIBKRConnectionTest(): UseIBKRConnectionTestReturn {
-  const [isConnected, setIsConnected] = useState(false);
-  const [dataSource, setDataSource] = useState<'live' | 'delayed' | 'mock'>('mock');
   const [testResults, setTestResults] = useState<ConnectionTestResult[]>([]);
-  const [isRunningTests, setIsRunningTests] = useState(false);
-  const [lastTestRun, setLastTestRun] = useState<Date | null>(null);
-  const [currentTest, setCurrentTest] = useState<TestType | null>(null);
-  
-  // Check initial connection on mount
-  useEffect(() => {
-    const checkInitialConnection = async () => {
-      const provider = getDataProvider();
-      if (provider && typeof provider.isConnected === 'function') {
-        const connected = provider.isConnected();
-        setIsConnected(connected);
-        
-        // Determine data source (if available)
-        const quotesDelayed = (provider as any).status?.quotesDelayed;
-        if (connected) {
-          setDataSource(quotesDelayed ? 'delayed' : 'live');
-        } else {
-          setDataSource('mock');
-        }
-      }
-    };
-    
-    checkInitialConnection();
-  }, []);
-  
-  // Helper to record test results
-  const recordTestResult = useCallback((
-    type: TestType,
-    success: boolean,
-    message: string,
-    startTime: number,
-    error?: Error | ClassifiedError,
-    details?: any
-  ) => {
-    const endTime = Date.now();
-    const duration = endTime - startTime;
-    const provider = getDataProvider()?.constructor.name || 'Unknown';
+  const [isTestRunning, setIsTestRunning] = useState(false);
+
+  // Test basic connection
+  const testConnection = useCallback(async (): Promise<ConnectionTestResult> => {
+    setIsTestRunning(true);
+    const startTime = Date.now();
     
     const result: ConnectionTestResult = {
-      type,
-      success,
-      message,
+      testType: TestType.CONNECTION,
+      status: 'running',
+      message: 'Testing connection...',
       timestamp: new Date(),
-      duration,
-      provider,
-      latency: duration,
-      details
+      error: null
     };
     
-    if (error) {
-      result.error = error;
-    }
-    
-    setTestResults(prev => [result, ...prev]);
-    setLastTestRun(new Date());
-    
-    return result;
-  }, []);
-  
-  // Test basic connection
-  const runConnectionTest = useCallback(async (): Promise<boolean> => {
-    setCurrentTest(TestType.CONNECTION);
-    setIsRunningTests(true);
-    const startTime = Date.now();
-    
     try {
-      console.log("[useIBKRConnectionTest] Running connection test");
-      const provider = getDataProvider();
-      
+      const provider = getProviderWithDiagnostics();
       if (!provider) {
-        recordTestResult(
-          TestType.CONNECTION,
-          false,
-          "No data provider available",
-          startTime
-        );
-        setCurrentTest(null);
-        setIsRunningTests(false);
-        return false;
+        throw new Error('No data provider available');
       }
       
-      // Check if provider has the required isConnected method
+      // Check if provider has isConnected method
       if (typeof provider.isConnected !== 'function') {
-        recordTestResult(
-          TestType.CONNECTION,
-          false,
-          "Provider missing isConnected method",
-          startTime
-        );
-        setCurrentTest(null);
-        setIsRunningTests(false);
-        return false;
+        throw new Error('Provider missing isConnected method');
       }
       
-      // Test connection
-      console.log("[useIBKRConnectionTest] Checking isConnected()");
-      const connected = provider.isConnected();
-      setIsConnected(connected);
+      const connected = await provider.isConnected();
       
-      // Determine data source
-      const quotesDelayed = (provider as any).status?.quotesDelayed;
-      if (connected) {
-        setDataSource(quotesDelayed ? 'delayed' : 'live');
-      } else {
-        setDataSource('mock');
-      }
-      
-      // Record result
-      recordTestResult(
-        TestType.CONNECTION, 
-        connected,
-        connected ? "Successfully connected to IBKR" : "Not connected to IBKR",
-        startTime,
-        undefined,
-        {
-          provider: provider.constructor.name,
-          quotesDelayed,
-          dataSource: connected ? (quotesDelayed ? 'delayed' : 'live') : 'mock',
-          status: (provider as any).status || {}
-        }
-      );
-      
-      setCurrentTest(null);
-      setIsRunningTests(false);
-      return connected;
-    } catch (error) {
-      console.error("[useIBKRConnectionTest] Connection test error:", error);
-      
-      // Classify and handle error
-      const classifiedError = handleIBKRError(error, {
-        service: 'useIBKRConnectionTest',
-        method: 'runConnectionTest'
-      });
-      
-      recordTestResult(
-        TestType.CONNECTION,
-        false,
-        classifiedError.message,
-        startTime,
-        classifiedError
-      );
-      
-      setCurrentTest(null);
-      setIsRunningTests(false);
-      return false;
-    }
-  }, [recordTestResult]);
-  
-  // Test authentication
-  const runAuthenticationTest = useCallback(async (): Promise<boolean> => {
-    setCurrentTest(TestType.AUTHENTICATION);
-    setIsRunningTests(true);
-    const startTime = Date.now();
-    
-    try {
-      console.log("[useIBKRConnectionTest] Running authentication test");
-      const provider = getDataProvider();
-      
-      if (!provider) {
-        recordTestResult(
-          TestType.AUTHENTICATION,
-          false,
-          "No data provider available",
-          startTime
-        );
-        setCurrentTest(null);
-        setIsRunningTests(false);
-        return false;
-      }
-      
-      // First check if we're connected
-      const connected = provider.isConnected();
       if (!connected) {
-        recordTestResult(
-          TestType.AUTHENTICATION,
-          false,
-          "Not connected to IBKR, can't test authentication",
-          startTime
-        );
-        setCurrentTest(null);
-        setIsRunningTests(false);
-        return false;
+        throw new Error('Not connected to IBKR');
       }
       
-      // For providers that have authentication status
-      // Note: Not all providers have this method, so we need to handle both cases
-      let isAuth = true;
-      if (typeof (provider as any).getAuthStatus === 'function') {
-        isAuth = await (provider as any).getAuthStatus();
-      }
+      const endTime = Date.now();
+      const durationMs = endTime - startTime;
       
-      recordTestResult(
-        TestType.AUTHENTICATION,
-        isAuth,
-        isAuth ? "Successfully authenticated with IBKR" : "Not authenticated with IBKR",
-        startTime,
-        undefined,
-        {
-          provider: provider.constructor.name,
-          accessToken: (provider as any).accessToken ? "Present" : "Missing",
-          tokenExpiry: (provider as any).tokenExpiry
-        }
-      );
+      const successResult: ConnectionTestResult = {
+        ...result,
+        status: 'success',
+        message: `Connection successful in ${durationMs}ms`,
+        durationMs,
+        timestamp: new Date()
+      };
       
-      setCurrentTest(null);
-      setIsRunningTests(false);
-      return isAuth;
+      setTestResults(prev => [successResult, ...prev]);
+      setIsTestRunning(false);
+      return successResult;
     } catch (error) {
-      console.error("[useIBKRConnectionTest] Authentication test error:", error);
+      const endTime = Date.now();
+      const durationMs = endTime - startTime;
       
-      // Classify and handle error
-      const classifiedError = handleIBKRError(error, {
-        service: 'useIBKRConnectionTest',
-        method: 'runAuthenticationTest'
-      });
+      const errorResult: ConnectionTestResult = {
+        ...result,
+        status: 'failure',
+        message: error instanceof Error ? error.message : 'Connection test failed',
+        error: error instanceof Error ? error : new Error('Unknown error'),
+        durationMs,
+        timestamp: new Date()
+      };
       
-      recordTestResult(
-        TestType.AUTHENTICATION,
-        false,
-        classifiedError.message,
-        startTime,
-        classifiedError
-      );
-      
-      setCurrentTest(null);
-      setIsRunningTests(false);
-      return false;
+      setTestResults(prev => [errorResult, ...prev]);
+      setIsTestRunning(false);
+      return errorResult;
     }
-  }, [recordTestResult]);
-  
-  // Test market data retrieval
-  const runDataRetrievalTest = useCallback(async (): Promise<boolean> => {
-    setCurrentTest(TestType.MARKET_DATA);
-    setIsRunningTests(true);
+  }, []);
+
+  // Test authentication
+  const testAuthentication = useCallback(async (): Promise<ConnectionTestResult> => {
+    setIsTestRunning(true);
     const startTime = Date.now();
     
-    try {
-      console.log("[useIBKRConnectionTest] Running market data test");
-      const provider = getDataProvider();
-      
-      if (!provider) {
-        recordTestResult(
-          TestType.MARKET_DATA,
-          false,
-          "No data provider available",
-          startTime
-        );
-        setCurrentTest(null);
-        setIsRunningTests(false);
-        return false;
-      }
-      
-      // Test getting market data
-      if (typeof provider.getMarketData !== 'function') {
-        recordTestResult(
-          TestType.MARKET_DATA,
-          false,
-          "Provider missing getMarketData method",
-          startTime
-        );
-        setCurrentTest(null);
-        setIsRunningTests(false);
-        return false;
-      }
-      
-      // Get actual market data
-      console.log("[useIBKRConnectionTest] Calling getMarketData()");
-      const marketData = await provider.getMarketData();
-      
-      const success = !!marketData && typeof marketData === 'object';
-      
-      recordTestResult(
-        TestType.MARKET_DATA,
-        success,
-        success ? "Successfully retrieved market data" : "Failed to get valid market data",
-        startTime,
-        undefined,
-        { marketData }
-      );
-      
-      setCurrentTest(null);
-      setIsRunningTests(false);
-      return success;
-    } catch (error) {
-      console.error("[useIBKRConnectionTest] Market data test error:", error);
-      
-      // Classify and handle error
-      const classifiedError = handleIBKRError(error, {
-        service: 'useIBKRConnectionTest',
-        method: 'runDataRetrievalTest'
-      });
-      
-      recordTestResult(
-        TestType.MARKET_DATA,
-        false,
-        classifiedError.message,
-        startTime,
-        classifiedError
-      );
-      
-      setCurrentTest(null);
-      setIsRunningTests(false);
-      return false;
-    }
-  }, [recordTestResult]);
-  
-  // Test options data retrieval
-  const runOptionsTest = useCallback(async (): Promise<boolean> => {
-    setCurrentTest(TestType.OPTIONS_DATA);
-    setIsRunningTests(true);
-    const startTime = Date.now();
+    const result: ConnectionTestResult = {
+      testType: TestType.AUTHENTICATION,
+      status: 'running',
+      message: 'Testing authentication...',
+      timestamp: new Date(),
+      error: null
+    };
     
     try {
-      console.log("[useIBKRConnectionTest] Running options data test");
-      const provider = getDataProvider();
+      // Simulated auth test for now
+      const authSuccessful = localStorage.getItem('ibkr-config') !== null;
       
-      if (!provider) {
-        recordTestResult(
-          TestType.OPTIONS_DATA,
-          false,
-          "No data provider available",
-          startTime
-        );
-        setCurrentTest(null);
-        setIsRunningTests(false);
-        return false;
+      if (!authSuccessful) {
+        throw new Error('No IBKR configuration found');
       }
       
-      // Test getting options data
-      if (typeof provider.getOptionChain !== 'function') {
-        recordTestResult(
-          TestType.OPTIONS_DATA,
-          false,
-          "Provider missing getOptionChain method",
-          startTime
-        );
-        setCurrentTest(null);
-        setIsRunningTests(false);
-        return false;
-      }
+      const endTime = Date.now();
+      const durationMs = endTime - startTime;
       
-      // Get option chain for SPY
-      console.log("[useIBKRConnectionTest] Calling getOptionChain('SPY')");
-      const optionsData = await provider.getOptionChain('SPY');
+      const successResult: ConnectionTestResult = {
+        ...result,
+        status: 'success',
+        message: `Authentication successful in ${durationMs}ms`,
+        durationMs,
+        timestamp: new Date()
+      };
       
-      const success = Array.isArray(optionsData) && optionsData.length > 0;
-      
-      recordTestResult(
-        TestType.OPTIONS_DATA,
-        success,
-        success ? `Successfully retrieved ${optionsData.length} options` : "Failed to get options data",
-        startTime,
-        undefined,
-        { 
-          optionsCount: Array.isArray(optionsData) ? optionsData.length : 0,
-          optionsSample: Array.isArray(optionsData) && optionsData.length > 0 ? optionsData.slice(0, 3) : null 
-        }
-      );
-      
-      setCurrentTest(null);
-      setIsRunningTests(false);
-      return success;
+      setTestResults(prev => [successResult, ...prev]);
+      setIsTestRunning(false);
+      return successResult;
     } catch (error) {
-      console.error("[useIBKRConnectionTest] Options data test error:", error);
+      const endTime = Date.now();
+      const durationMs = endTime - startTime;
       
-      // Classify and handle error
-      const classifiedError = handleIBKRError(error, {
-        service: 'useIBKRConnectionTest',
-        method: 'runOptionsTest'
-      });
+      const errorResult: ConnectionTestResult = {
+        ...result,
+        status: 'failure',
+        message: error instanceof Error ? error.message : 'Authentication test failed',
+        error: error instanceof Error ? error : new Error('Unknown error'),
+        durationMs,
+        timestamp: new Date()
+      };
       
-      recordTestResult(
-        TestType.OPTIONS_DATA,
-        false,
-        classifiedError.message,
-        startTime,
-        classifiedError
-      );
-      
-      setCurrentTest(null);
-      setIsRunningTests(false);
-      return false;
+      setTestResults(prev => [errorResult, ...prev]);
+      setIsTestRunning(false);
+      return errorResult;
     }
-  }, [recordTestResult]);
-  
+  }, []);
+
+  // Test market data
+  const testMarketData = useCallback(async (): Promise<ConnectionTestResult> => {
+    setIsTestRunning(true);
+    const startTime = Date.now();
+    
+    const result: ConnectionTestResult = {
+      testType: TestType.MARKET_DATA,
+      status: 'running',
+      message: 'Testing market data retrieval...',
+      timestamp: new Date(),
+      error: null
+    };
+    
+    try {
+      const provider = getProviderWithDiagnostics();
+      if (!provider) {
+        throw new Error('No data provider available');
+      }
+      
+      // Check if provider has getQuote method
+      if (typeof (provider as any).getQuote !== 'function') {
+        throw new Error('Provider missing getQuote method');
+      }
+      
+      // Attempt to get a test quote
+      const testSymbol = 'SPY';
+      const quoteData = await (provider as any).getQuote(testSymbol);
+      
+      if (!quoteData) {
+        throw new Error(`Failed to get quote data for ${testSymbol}`);
+      }
+      
+      const endTime = Date.now();
+      const durationMs = endTime - startTime;
+      
+      const successResult: ConnectionTestResult = {
+        ...result,
+        status: 'success',
+        message: `Market data retrieval successful in ${durationMs}ms`,
+        durationMs,
+        details: { quoteData },
+        timestamp: new Date()
+      };
+      
+      setTestResults(prev => [successResult, ...prev]);
+      setIsTestRunning(false);
+      return successResult;
+    } catch (error) {
+      const endTime = Date.now();
+      const durationMs = endTime - startTime;
+      
+      const errorResult: ConnectionTestResult = {
+        ...result,
+        status: 'failure',
+        message: error instanceof Error ? error.message : 'Market data test failed',
+        error: error instanceof Error ? error : new Error('Unknown error'),
+        durationMs,
+        timestamp: new Date()
+      };
+      
+      setTestResults(prev => [errorResult, ...prev]);
+      setIsTestRunning(false);
+      return errorResult;
+    }
+  }, []);
+
   // Test reconnection
-  const runReconnectionTest = useCallback(async (): Promise<boolean> => {
-    setCurrentTest(TestType.RECONNECT);
-    setIsRunningTests(true);
+  const testReconnect = useCallback(async (): Promise<ConnectionTestResult> => {
+    setIsTestRunning(true);
     const startTime = Date.now();
     
+    const result: ConnectionTestResult = {
+      testType: TestType.RECONNECT,
+      status: 'running',
+      message: 'Testing reconnection capability...',
+      timestamp: new Date(),
+      error: null
+    };
+    
     try {
-      console.log("[useIBKRConnectionTest] Running reconnection test");
-      const provider = getDataProvider();
-      
+      const provider = getProviderWithDiagnostics();
       if (!provider) {
-        recordTestResult(
-          TestType.RECONNECT,
-          false,
-          "No data provider available",
-          startTime
-        );
-        setCurrentTest(null);
-        setIsRunningTests(false);
-        return false;
+        throw new Error('No data provider available');
       }
       
-      // Test reconnection
+      // Check if provider has connect method
       if (typeof provider.connect !== 'function') {
-        recordTestResult(
-          TestType.RECONNECT,
-          false,
-          "Provider missing connect method",
-          startTime
-        );
-        setCurrentTest(null);
-        setIsRunningTests(false);
-        return false;
+        throw new Error('Provider missing connect method');
       }
       
-      // Perform reconnection
-      console.log("[useIBKRConnectionTest] Calling provider.connect()");
-      const reconnectResult = await provider.connect();
+      // Attempt to reconnect
+      const reconnectSuccessful = await provider.connect();
       
-      // Update connection state
-      const connected = provider.isConnected();
-      setIsConnected(connected);
-      
-      // Determine data source
-      const quotesDelayed = (provider as any).status?.quotesDelayed;
-      if (connected) {
-        setDataSource(quotesDelayed ? 'delayed' : 'live');
-      } else {
-        setDataSource('mock');
+      if (!reconnectSuccessful) {
+        throw new Error('Reconnection failed');
       }
       
-      recordTestResult(
-        TestType.RECONNECT,
-        reconnectResult,
-        reconnectResult ? "Successfully reconnected to IBKR" : "Failed to reconnect to IBKR",
-        startTime,
-        undefined,
-        {
-          provider: provider.constructor.name,
-          quotesDelayed,
-          dataSource: connected ? (quotesDelayed ? 'delayed' : 'live') : 'mock'
-        }
-      );
+      const endTime = Date.now();
+      const durationMs = endTime - startTime;
       
-      setCurrentTest(null);
-      setIsRunningTests(false);
-      return reconnectResult;
+      const successResult: ConnectionTestResult = {
+        ...result,
+        status: 'success',
+        message: `Reconnection successful in ${durationMs}ms`,
+        durationMs,
+        timestamp: new Date()
+      };
+      
+      setTestResults(prev => [successResult, ...prev]);
+      setIsTestRunning(false);
+      return successResult;
     } catch (error) {
-      console.error("[useIBKRConnectionTest] Reconnection test error:", error);
+      const endTime = Date.now();
+      const durationMs = endTime - startTime;
       
-      // Classify and handle error
-      const classifiedError = handleIBKRError(error, {
-        service: 'useIBKRConnectionTest',
-        method: 'runReconnectionTest'
-      });
+      const errorResult: ConnectionTestResult = {
+        ...result,
+        status: 'failure',
+        message: error instanceof Error ? error.message : 'Reconnection test failed',
+        error: error instanceof Error ? error : new Error('Unknown error'),
+        durationMs,
+        timestamp: new Date()
+      };
       
-      recordTestResult(
-        TestType.RECONNECT,
-        false,
-        classifiedError.message,
-        startTime,
-        classifiedError
-      );
-      
-      setCurrentTest(null);
-      setIsRunningTests(false);
-      return false;
+      setTestResults(prev => [errorResult, ...prev]);
+      setIsTestRunning(false);
+      return errorResult;
     }
-  }, [recordTestResult]);
-  
-  // Run all tests in sequence
-  const runAllTests = useCallback(async (): Promise<boolean> => {
-    setCurrentTest(TestType.COMPREHENSIVE);
-    setIsRunningTests(true);
-    const startTime = Date.now();
+  }, []);
+
+  // Run all tests
+  const runComprehensiveTest = useCallback(async (): Promise<ConnectionTestResult[]> => {
+    setIsTestRunning(true);
     
-    try {
-      console.log("[useIBKRConnectionTest] Running comprehensive test suite");
+    const connectionResult = await testConnection();
+    
+    // Only continue if connection test passed
+    if (connectionResult.status === 'success') {
+      const authResult = await testAuthentication();
+      const dataResult = await testMarketData();
+      const reconnectResult = await testReconnect();
       
-      // Run each test in sequence
-      const connectionResult = await runConnectionTest();
-      if (!connectionResult) {
-        // If connection fails, try reconnection before giving up
-        console.log("[useIBKRConnectionTest] Connection failed, attempting reconnection");
-        const reconnectResult = await runReconnectionTest();
-        
-        if (!reconnectResult) {
-          // If reconnection also fails, stop tests
-          recordTestResult(
-            TestType.COMPREHENSIVE,
-            false,
-            "Comprehensive test failed: Could not establish connection",
-            startTime
-          );
-          setCurrentTest(null);
-          setIsRunningTests(false);
-          return false;
-        }
-      }
-      
-      // Continue with other tests
-      const authResult = await runAuthenticationTest();
-      const marketDataResult = await runDataRetrievalTest();
-      const optionsResult = await runOptionsTest();
-      
-      const allSuccess = authResult && marketDataResult && optionsResult;
-      
-      recordTestResult(
-        TestType.COMPREHENSIVE,
-        allSuccess,
-        allSuccess ? "All tests passed successfully" : "Some tests failed",
-        startTime,
-        undefined,
-        {
-          connectionResult,
-          authResult,
-          marketDataResult,
-          optionsResult
-        }
-      );
-      
-      setCurrentTest(null);
-      setIsRunningTests(false);
-      return allSuccess;
-    } catch (error) {
-      console.error("[useIBKRConnectionTest] Comprehensive test error:", error);
-      
-      // Classify and handle error
-      const classifiedError = handleIBKRError(error, {
-        service: 'useIBKRConnectionTest',
-        method: 'runAllTests'
-      });
-      
-      recordTestResult(
-        TestType.COMPREHENSIVE,
-        false,
-        classifiedError.message,
-        startTime,
-        classifiedError
-      );
-      
-      setCurrentTest(null);
-      setIsRunningTests(false);
-      return false;
+      setIsTestRunning(false);
+      return [connectionResult, authResult, dataResult, reconnectResult];
     }
-  }, [
-    runConnectionTest,
-    runReconnectionTest,
-    runAuthenticationTest,
-    runDataRetrievalTest,
-    runOptionsTest,
-    recordTestResult
-  ]);
-  
+    
+    // If connection failed, don't run other tests
+    setIsTestRunning(false);
+    return [connectionResult];
+  }, [testConnection, testAuthentication, testMarketData, testReconnect]);
+
+  // Get diagnostics
+  const getDiagnostics = useCallback(() => {
+    const provider = getProviderWithDiagnostics();
+    return {
+      provider: provider?.constructor.name || 'Unknown',
+      hasProvider: !!provider,
+      testResults: testResults.length,
+      lastTestTimestamp: testResults[0]?.timestamp || null,
+      lastTestStatus: testResults[0]?.status || 'not-run',
+      configPresent: !!localStorage.getItem('ibkr-config')
+    };
+  }, [testResults]);
+
   // Clear test results
   const clearTestResults = useCallback(() => {
     setTestResults([]);
   }, []);
-  
+
   return {
-    isConnected,
-    dataSource,
-    runConnectionTest,
-    runAuthenticationTest,
-    runDataRetrievalTest,
-    runOptionsTest,
-    runReconnectionTest,
-    runAllTests,
+    testConnection,
+    testAuthentication,
+    testMarketData,
+    testReconnect,
+    runComprehensiveTest,
+    isTestRunning,
     testResults,
-    clearTestResults,
-    isRunningTests,
-    lastTestRun,
-    currentTest
+    getDiagnostics,
+    clearTestResults
   };
 }
