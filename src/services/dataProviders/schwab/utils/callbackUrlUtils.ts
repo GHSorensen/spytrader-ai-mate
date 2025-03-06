@@ -1,44 +1,31 @@
 
 import { DataProviderConfig } from "@/lib/types/spy/dataProvider";
-import { toast } from "@/hooks/use-toast";
 
 /**
- * Ensures the callbackUrl is properly set for Schwab's HTTPS requirement
+ * Ensure callback URL is HTTPS for production and valid for Schwab
  */
 export function ensureSecureCallbackUrl(config: DataProviderConfig): string {
-  // If a valid HTTPS callback URL is already set, use it
-  if (config.callbackUrl && config.callbackUrl.startsWith('https://')) {
-    return config.callbackUrl;
+  if (!config.callbackUrl) {
+    // Default callback URL if none provided
+    const baseUrl = window.location.origin;
+    return `${baseUrl}/auth/schwab`;
   }
   
-  console.warn('[callbackUrlUtils] Schwab requires HTTPS for callback URLs. Updating config with secure URL.');
-  
-  // Use the current origin if in production, or development placeholder otherwise
-  const origin = typeof window !== 'undefined' ? window.location.origin : '';
-  const callbackPath = '/auth/callback';
-  
-  let secureCallbackUrl: string;
-  
-  if (origin && (origin.startsWith('https://') || origin.includes('render.com'))) {
-    // In production or Render deployment, use the actual window origin
-    secureCallbackUrl = origin + callbackPath;
-    console.log(`[callbackUrlUtils] Using production domain for callback URL: ${secureCallbackUrl}`);
-  } else {
-    // In development, use a placeholder or localhost with forced HTTPS
-    secureCallbackUrl = 'https://spy-v2.onrender.com/auth/callback';
-    console.log('[callbackUrlUtils] Using production placeholder for callback URL.');
-  }
-  
-  // Show a toast to notify the user about the callback URL
   try {
-    // Use the proper toast function from hooks
-    toast({
-      title: "Callback URL Notice",
-      description: `Using ${secureCallbackUrl} for Schwab authentication.`,
-    });
+    const url = new URL(config.callbackUrl);
+    
+    // In production, ensure HTTPS
+    if (process.env.NODE_ENV === 'production' && url.protocol !== 'https:') {
+      console.warn('[callbackUrlUtils] Forcing HTTPS for callback URL in production');
+      url.protocol = 'https:';
+    }
+    
+    return url.toString();
   } catch (error) {
-    console.error("Failed to show toast notification:", error);
+    console.error('[callbackUrlUtils] Invalid callback URL:', config.callbackUrl);
+    
+    // Return a fallback URL
+    const baseUrl = window.location.origin;
+    return `${baseUrl}/auth/schwab`;
   }
-  
-  return secureCallbackUrl;
 }

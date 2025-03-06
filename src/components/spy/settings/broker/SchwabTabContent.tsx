@@ -1,77 +1,63 @@
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+import { SchwabCredentialsForm } from './SchwabCredentialsForm';
+import { Button } from '@/components/ui/button';
+import { getSchwabCredentials } from '@/services/dataProviders/schwab/utils/credentialUtils';
+import { SchwabService } from '@/services/dataProviders/schwab/SchwabService';
+import { useNavigate } from 'react-router-dom';
 
-interface SchwabTabContentProps {
-  isConnecting: boolean;
-  brokerStatus: string;
-  onConnect: () => Promise<boolean>;
-  onDisconnect: () => Promise<boolean>;
-}
-
-const SchwabTabContent: React.FC<SchwabTabContentProps> = ({
-  isConnecting,
-  brokerStatus,
-  onConnect,
-  onDisconnect
-}) => {
+const SchwabTabContent: React.FC = () => {
+  const navigate = useNavigate();
+  const credentials = getSchwabCredentials();
+  
+  // Handle connect to Schwab
+  const handleConnect = () => {
+    if (!credentials) {
+      console.error('Schwab credentials not found');
+      return;
+    }
+    
+    try {
+      const schwabService = new SchwabService(credentials);
+      const authUrl = schwabService.getAuthorizationUrl();
+      
+      // Redirect to Schwab authorization page
+      window.location.href = authUrl;
+    } catch (error) {
+      console.error('Error starting Schwab OAuth flow:', error);
+    }
+  };
+  
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Schwab Integration</CardTitle>
-        <CardDescription>
-          Connect to your Schwab account for live trading and market data
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="clientId">Client ID</Label>
-            <Input 
-              id="clientId" 
-              placeholder="Enter your Schwab client ID" 
-              disabled={brokerStatus === 'connected' || isConnecting}
-            />
-            <p className="text-xs text-muted-foreground">
-              Get your client ID from the Schwab Developer Portal
-            </p>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="schwabCallbackUrl">Callback URL</Label>
-            <Input 
-              id="schwabCallbackUrl" 
-              defaultValue={`${window.location.origin}/auth/schwab/callback`}
-              disabled={brokerStatus === 'connected' || isConnecting}
-            />
-            <p className="text-xs text-muted-foreground">
-              This must match the redirect URI in your Schwab app settings
-            </p>
-          </div>
+    <div className="space-y-6">
+      <div className="flex flex-col space-y-4">
+        <h3 className="text-lg font-medium">Schwab API Integration</h3>
+        <p className="text-sm text-muted-foreground">
+          Connect to Charles Schwab for trading and account management
+        </p>
+      </div>
+      
+      <SchwabCredentialsForm />
+      
+      {credentials && credentials.apiKey && (
+        <div className="flex justify-end">
+          <Button onClick={handleConnect}>
+            Connect to Schwab
+          </Button>
         </div>
-      </CardContent>
-      <CardFooter>
-        {brokerStatus === 'connected' ? (
-          <Button 
-            variant="destructive" 
-            onClick={onDisconnect}
-            disabled={isConnecting}
-          >
-            Disconnect
-          </Button>
-        ) : (
-          <Button 
-            onClick={onConnect}
-            disabled={isConnecting}
-          >
-            {isConnecting ? 'Connecting...' : 'Connect to Schwab'}
-          </Button>
-        )}
-      </CardFooter>
-    </Card>
+      )}
+      
+      <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+        <h4 className="font-semibold text-blue-700 dark:text-blue-300 mb-2">Setting up Schwab API</h4>
+        <ol className="list-decimal pl-5 text-sm text-blue-600 dark:text-blue-400 space-y-1">
+          <li>Register as a developer on the Schwab Developer Portal</li>
+          <li>Create a new application to get your API Key and Secret Key</li>
+          <li>Set up the OAuth Callback URL in your Schwab Developer Portal settings</li>
+          <li>Enter these credentials above and click "Save Credentials"</li>
+          <li>Once credentials are saved, click "Connect to Schwab" to authorize the application</li>
+        </ol>
+      </div>
+    </div>
   );
 };
 
