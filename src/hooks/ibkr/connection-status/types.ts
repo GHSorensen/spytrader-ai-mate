@@ -23,6 +23,13 @@ export interface ConnectionHistoryEvent {
   details?: string;
 }
 
+export interface ConnectionLogEntry {
+  timestamp: Date;
+  level: 'info' | 'warning' | 'error' | 'success';
+  message: string;
+  data?: any;
+}
+
 export interface UseIBKRConnectionStatusReturn {
   isConnected: boolean;
   dataSource: 'live' | 'delayed' | 'mock';
@@ -45,6 +52,7 @@ export interface UseIBKRConnectionMonitorReturn {
   reconnectAttempts: number;
   connectionLostTime: Date | null;
   connectionHistory: ConnectionHistoryEvent[];
+  connectionLogs: ConnectionLogEntry[];
   handleManualReconnect: () => Promise<void>;
   forceConnectionCheck: () => Promise<void>;
   getDetailedDiagnostics: () => any;

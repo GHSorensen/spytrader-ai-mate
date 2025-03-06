@@ -16,8 +16,16 @@ export function useConnectionCheck() {
       
       // Create base diagnostics
       const diagnostics = createConnectionDiagnostics(
-        provider?.constructor.name
+        provider?.constructor.name || "Unknown"
       );
+      
+      // Enhanced provider info logging
+      console.log("[useConnectionCheck] Provider details:", {
+        name: provider?.constructor.name,
+        exists: !!provider,
+        hasIsConnected: typeof provider?.isConnected === 'function',
+        hasConnect: typeof provider?.connect === 'function'
+      });
       
       // Test if provider exists and has required methods
       if (!provider) {
@@ -45,17 +53,35 @@ export function useConnectionCheck() {
         // Check if data is live or delayed
         const status = (provider as any).status || { quotesDelayed: true };
         console.log("[useConnectionCheck] Provider status:", JSON.stringify(status, null, 2));
+        
+        // More detailed status information for debugging
         diagnostics.status = status;
         quotesDelayed = status.quotesDelayed;
         diagnostics.dataSource = quotesDelayed ? 'delayed' : 'live';
+        
+        console.log(`[useConnectionCheck] Data source: ${quotesDelayed ? 'delayed' : 'live'}`);
+        console.log(`[useConnectionCheck] Connected to: ${provider.constructor.name}`);
+        console.log(`[useConnectionCheck] Last updated: ${status.lastUpdated}`);
+        
+        // Additional provider-specific diagnostics
+        if ((provider as any).getDiagnostics) {
+          try {
+            const providerDiagnostics = (provider as any).getDiagnostics();
+            console.log("[useConnectionCheck] Provider diagnostics:", providerDiagnostics);
+          } catch (err) {
+            console.error("[useConnectionCheck] Error getting provider diagnostics:", err);
+          }
+        }
       } else {
-        console.log("[useConnectionCheck] Provider not connected");
+        console.log("[useConnectionCheck] Provider not connected, using mock data");
         diagnostics.dataSource = 'mock';
       }
       
       setConnectionDiagnostics(diagnostics);
       return { connected, quotesDelayed };
     } catch (error) {
+      console.error("[useConnectionCheck] Error checking connection:", error);
+      
       logConnectionError(error, { 
         service: 'useConnectionCheck', 
         method: 'checkConnection'

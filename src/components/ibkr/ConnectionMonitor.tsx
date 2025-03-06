@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { AlertCircle, CheckCircle, RefreshCw, Info, WifiOff, Clock, Activity } from 'lucide-react';
+import { AlertCircle, CheckCircle, RefreshCw, Info, WifiOff, Clock, Activity, List, FileText, Database } from 'lucide-react';
 import { toast } from 'sonner';
 import { useIBKRConnectionMonitor } from '@/hooks/ibkr/useIBKRConnectionMonitor';
 import {
@@ -14,7 +14,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ConnectionMonitorProps {
   showDetails?: boolean;
@@ -34,6 +37,7 @@ const ConnectionMonitor: React.FC<ConnectionMonitorProps> = ({
     reconnectAttempts,
     connectionLostTime,
     connectionHistory,
+    connectionLogs,
     handleManualReconnect,
     forceConnectionCheck,
     getDetailedDiagnostics
@@ -42,6 +46,7 @@ const ConnectionMonitor: React.FC<ConnectionMonitorProps> = ({
   });
 
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("status");
   const [timeSinceConnection, setTimeSinceConnection] = useState<string>('');
 
   // Update time since connection loss
@@ -118,6 +123,28 @@ const ConnectionMonitor: React.FC<ConnectionMonitorProps> = ({
       });
   };
 
+  // Get color for log level
+  const getLogLevelColor = (level: string) => {
+    switch (level) {
+      case 'info': return 'text-blue-600';
+      case 'warning': return 'text-yellow-600';
+      case 'error': return 'text-red-600';
+      case 'success': return 'text-green-600';
+      default: return 'text-gray-600';
+    }
+  };
+
+  // Get icon for log level
+  const getLogLevelIcon = (level: string) => {
+    switch (level) {
+      case 'info': return <Info className="h-3.5 w-3.5" />;
+      case 'warning': return <AlertCircle className="h-3.5 w-3.5" />;
+      case 'error': return <AlertCircle className="h-3.5 w-3.5" />;
+      case 'success': return <CheckCircle className="h-3.5 w-3.5" />;
+      default: return <Info className="h-3.5 w-3.5" />;
+    }
+  };
+
   // Simple indicator component for compact display
   if (!showDetails) {
     return (
@@ -147,63 +174,174 @@ const ConnectionMonitor: React.FC<ConnectionMonitorProps> = ({
         </span>
         
         <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-3xl">
             <DialogHeader>
-              <DialogTitle>Connection Status</DialogTitle>
+              <DialogTitle>IBKR Connection Status</DialogTitle>
               <DialogDescription>
-                Details about your Interactive Brokers connection
+                Detailed information about your Interactive Brokers connection
               </DialogDescription>
             </DialogHeader>
-            <div className="py-4">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold">Status:</span>
-                  {getStatusBadge()}
+            
+            <Tabs 
+              defaultValue="status" 
+              value={activeTab} 
+              onValueChange={setActiveTab}
+              className="w-full"
+            >
+              <TabsList className="grid grid-cols-3 mb-4">
+                <TabsTrigger value="status">
+                  <span className="flex items-center gap-2">
+                    <Activity className="h-4 w-4" />
+                    Current Status
+                  </span>
+                </TabsTrigger>
+                <TabsTrigger value="history">
+                  <span className="flex items-center gap-2">
+                    <List className="h-4 w-4" />
+                    Connection History
+                  </span>
+                </TabsTrigger>
+                <TabsTrigger value="logs">
+                  <span className="flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Connection Logs
+                  </span>
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="status" className="border rounded-md p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold">Status:</span>
+                    {getStatusBadge()}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={isReconnecting}
+                    onClick={handleManualReconnect}
+                  >
+                    {isReconnecting ? (
+                      <>
+                        <RefreshCw className="h-3.5 w-3.5 mr-2 animate-spin" />
+                        Reconnecting...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="h-3.5 w-3.5 mr-2" />
+                        Reconnect
+                      </>
+                    )}
+                  </Button>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={isReconnecting}
-                  onClick={handleManualReconnect}
-                >
-                  {isReconnecting ? (
-                    <>
-                      <RefreshCw className="h-3.5 w-3.5 mr-2 animate-spin" />
-                      Reconnecting...
-                    </>
-                  ) : (
-                    <>
-                      <RefreshCw className="h-3.5 w-3.5 mr-2" />
-                      Reconnect
-                    </>
+                
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="font-medium w-32">Connection:</span>
+                    <span>{isConnected ? 'Connected' : 'Disconnected'}</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="font-medium w-32">Data Source:</span>
+                    <span>{dataSource}</span>
+                  </div>
+                  
+                  {!isConnected && reconnectAttempts > 0 && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="font-medium w-32">Reconnect Attempts:</span>
+                      <span className="text-yellow-700">{reconnectAttempts}</span>
+                    </div>
                   )}
-                </Button>
-              </div>
-              
-              {!isConnected && reconnectAttempts > 0 && (
-                <div className="flex items-center gap-2 mb-4 text-yellow-700 text-sm">
-                  <Activity className="h-4 w-4" />
-                  <span>Reconnect attempts: {reconnectAttempts}</span>
+                  
+                  {connectionLostTime && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="font-medium w-32">Connection Lost:</span>
+                      <span className="text-red-700">{timeSinceConnection}</span>
+                    </div>
+                  )}
                 </div>
-              )}
-              
-              {connectionLostTime && (
-                <div className="flex items-center gap-2 mb-4 text-red-700 text-sm">
-                  <Clock className="h-4 w-4" />
-                  <span>Connection lost {timeSinceConnection}</span>
+                
+                <div className="mt-4 pt-4 border-t">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={forceConnectionCheck}
+                    className="w-full"
+                  >
+                    <Database className="h-3.5 w-3.5 mr-2" />
+                    Check Connection Status
+                  </Button>
                 </div>
-              )}
+              </TabsContent>
               
+              <TabsContent value="history" className="border rounded-md p-4">
+                <h4 className="font-medium mb-3">Connection History</h4>
+                <ScrollArea className="h-[300px] pr-4">
+                  <div className="space-y-2">
+                    {connectionHistory.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">No connection events recorded</p>
+                    ) : (
+                      connectionHistory.slice().reverse().map((event, i) => (
+                        <div key={i} className="text-xs border-l-2 pl-3 py-1.5 border-gray-200">
+                          <div className="font-medium">
+                            {event.event === 'connected' && 'Connected'}
+                            {event.event === 'disconnected' && 'Disconnected'}
+                            {event.event === 'reconnect_attempt' && 'Reconnect Attempt'}
+                            {event.event === 'reconnect_success' && 'Reconnect Successful'}
+                            {event.event === 'reconnect_failure' && 'Reconnect Failed'}
+                          </div>
+                          <div className="text-muted-foreground flex justify-between">
+                            <span>{event.timestamp.toLocaleTimeString()}</span>
+                            {event.details && <span>{event.details}</span>}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </ScrollArea>
+              </TabsContent>
+              
+              <TabsContent value="logs" className="border rounded-md p-4">
+                <h4 className="font-medium mb-3">Connection Logs</h4>
+                <ScrollArea className="h-[300px] pr-4">
+                  <div className="space-y-2">
+                    {connectionLogs.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">No connection logs recorded</p>
+                    ) : (
+                      connectionLogs.slice().reverse().map((log, i) => (
+                        <div key={i} className="text-xs border-l-2 pl-3 py-1.5 border-gray-200">
+                          <div className={`font-medium flex items-center gap-1.5 ${getLogLevelColor(log.level)}`}>
+                            {getLogLevelIcon(log.level)}
+                            <span>{log.message}</span>
+                          </div>
+                          <div className="text-muted-foreground text-[11px] mt-0.5">
+                            {log.timestamp.toLocaleTimeString()}
+                          </div>
+                          {log.data && (
+                            <div className="mt-1 text-[11px] bg-gray-50 p-1 rounded overflow-x-auto">
+                              {typeof log.data === 'object' 
+                                ? JSON.stringify(log.data) 
+                                : String(log.data)}
+                            </div>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </ScrollArea>
+              </TabsContent>
+            </Tabs>
+            
+            <DialogFooter>
               <Button
                 variant="secondary"
                 size="sm"
-                className="w-full mt-2"
                 onClick={handleShareDiagnostics}
               >
-                <Info className="h-3.5 w-3.5 mr-2" />
+                <FileText className="h-3.5 w-3.5 mr-2" />
                 Copy Diagnostic Info
               </Button>
-            </div>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </button>

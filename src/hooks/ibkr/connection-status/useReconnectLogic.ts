@@ -1,122 +1,130 @@
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 interface ReconnectOptions {
-  autoReconnect: boolean;
-  maxReconnectAttempts: number;
-  reconnectInterval: number;
-  onAttempt?: (attempt: number, max: number) => void;
+  autoReconnect?: boolean;
+  maxReconnectAttempts?: number;
+  reconnectInterval?: number;
+  onAttempt?: (attempt: number, maxAttempts: number) => void;
   onFailure?: (attempt: number) => void;
 }
 
 /**
- * Hook for handling reconnection logic
+ * Hook for IBKR reconnection logic with improved logging
  */
 export function useReconnectLogic(
   isConnected: boolean,
   connectionLostTime: Date | null,
   reconnectFn: () => Promise<boolean>,
-  options: ReconnectOptions
+  options: ReconnectOptions = {}
 ) {
-  const [isReconnecting, setIsReconnecting] = useState(false);
-  const [reconnectAttempts, setReconnectAttempts] = useState(0);
-  const reconnectTimerRef = useRef<number | null>(null);
-  
   const {
-    autoReconnect,
-    maxReconnectAttempts,
-    reconnectInterval,
+    autoReconnect = true,
+    maxReconnectAttempts = 5,
+    reconnectInterval = 30000,
     onAttempt,
     onFailure
   } = options;
   
-  // Reset reconnect attempts when connected
-  useEffect(() => {
-    if (isConnected) {
-      setReconnectAttempts(0);
-    }
-  }, [isConnected]);
+  const [isReconnecting, setIsReconnecting] = useState(false);
+  const [reconnectAttempts, setReconnectAttempts] = useState(0);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const wasConnected = useRef(isConnected);
   
-  // Clean up timer on unmount
-  useEffect(() => {
-    return () => {
-      if (reconnectTimerRef.current !== null) {
-        window.clearTimeout(reconnectTimerRef.current);
-      }
-    };
+  // Reset reconnect attempts
+  const resetReconnectAttempts = useCallback(() => {
+    setReconnectAttempts(0);
+    
+    // Clear any existing timeout
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
+    
+    setIsReconnecting(false);
+    console.log("[useReconnectLogic] Reset reconnect attempts");
   }, []);
   
-  // Handle auto-reconnect
+  // Handle auto reconnect logic
   useEffect(() => {
-    if (
-      autoReconnect && 
-      !isConnected && 
-      connectionLostTime && 
-      !isReconnecting && 
-      reconnectAttempts < maxReconnectAttempts
-    ) {
-      const attemptReconnect = async () => {
-        const nextAttempt = reconnectAttempts + 1;
-        setReconnectAttempts(nextAttempt);
-        setIsReconnecting(true);
-        
-        if (onAttempt) {
-          onAttempt(nextAttempt, maxReconnectAttempts);
-        }
-        
-        try {
-          console.log(`[useReconnectLogic] Attempting reconnect ${nextAttempt}/${maxReconnectAttempts}`);
-          const success = await reconnectFn();
+    // Check if connection status changed
+    if (wasConnected.current !== isConnected) {
+      console.log(`[useReconnectLogic] Connection status changed: ${wasConnected.current} → ${isConnected}`);
+      wasConnected.current = isConnected;
+      
+      // If we reconnected successfully, reset attempts
+      if (isConnected) {
+        resetReconnectAttempts();
+      }
+    }
+    
+    // Only attempt reconnect if we're disconnected, auto-reconnect is enabled,
+    // and we haven't exceeded max attempts
+    if (!isConnected && autoReconnect && reconnectAttempts < maxReconnectAttempts) {
+      console.log(`[useReconnectLogic] Connection lost, will attempt reconnect in ${reconnectInterval/1000}s (attempt ${reconnectAttempts + 1} of ${maxReconnectAttempts})`);
+      
+      // Clear any existing timeout
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
+      
+      // Set timeout for next reconnect attempt
+      reconnectTimeoutRef.current = setTimeout(async () => {
+        if (!isConnected) {
+          setIsReconnecting(true);
+          const nextAttempt = reconnectAttempts + 1;
+          setReconnectAttempts(nextAttempt);
           
-          if (success) {
-            console.log(`[useReconnectLogic] Reconnection successful on attempt ${nextAttempt}`);
-          } else {
-            console.log(`[useReconnectLogic] Reconnection attempt ${nextAttempt} failed`);
+          console.log(`[useReconnectLogic] Attempting reconnect (attempt ${nextAttempt} of ${maxReconnectAttempts})`);
+          if (onAttempt) {
+            onAttempt(nextAttempt, maxReconnectAttempts);
+          }
+          
+          try {
+            const success = await reconnectFn();
+            console.log(`[useReconnectLogic] Reconnect attempt ${nextAttempt} result: ${success ? 'SUCCESS' : 'FAILED'}`);
             
+            // If reconnect failed and we've hit max attempts, call onFailure
+            if (!success && nextAttempt >= maxReconnectAttempts) {
+              console.log(`[useReconnectLogic] Max reconnect attempts (${maxReconnectAttempts}) reached`);
+              if (onFailure) {
+                onFailure(nextAttempt);
+              }
+            }
+            
+            // Reset reconnecting flag regardless of outcome
+            setIsReconnecting(false);
+          } catch (error) {
+            console.error(`[useReconnectLogic] Error during reconnect attempt ${nextAttempt}:`, error);
+            setIsReconnecting(false);
+            
+            // If we've hit max attempts, call onFailure
             if (nextAttempt >= maxReconnectAttempts) {
-              console.log(`[useReconnectLogic] Maximum reconnection attempts reached`);
               if (onFailure) {
                 onFailure(nextAttempt);
               }
             }
           }
-        } catch (error) {
-          console.error(`[useReconnectLogic] Error during reconnection attempt ${nextAttempt}:`, error);
-          
-          if (nextAttempt >= maxReconnectAttempts) {
-            console.log(`[useReconnectLogic] Maximum reconnection attempts reached with error`);
-            if (onFailure) {
-              onFailure(nextAttempt);
-            }
-          }
-        } finally {
-          setIsReconnecting(false);
         }
-      };
-      
-      // Schedule next reconnect attempt
-      reconnectTimerRef.current = window.setTimeout(
-        attemptReconnect,
-        reconnectInterval
-      );
+      }, reconnectInterval);
     }
+    
+    return () => {
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
+    };
   }, [
-    autoReconnect,
-    isConnected,
-    connectionLostTime,
-    isReconnecting,
-    reconnectAttempts,
+    isConnected, 
+    autoReconnect, 
+    reconnectAttempts, 
     maxReconnectAttempts,
     reconnectInterval,
     reconnectFn,
+    resetReconnectAttempts,
     onAttempt,
     onFailure
   ]);
-  
-  // Reset reconnect attempts
-  const resetReconnectAttempts = useCallback(() => {
-    setReconnectAttempts(0);
-  }, []);
   
   return {
     isReconnecting,
