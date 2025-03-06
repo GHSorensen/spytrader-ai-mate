@@ -1,13 +1,13 @@
 
-import { DataProviderConfig, DataProviderInterface, TradeOrder } from "@/lib/types/spy/dataProvider";
+import { DataProviderConfig } from "@/lib/types/spy/dataProvider";
 import { BaseDataProvider } from "../base/BaseDataProvider";
 import { SchwabAuthManager } from "./SchwabAuthManager";
 import { SchwabMarketDataManager } from "./SchwabMarketDataManager";
 import { SchwabOptionsManager } from "./SchwabOptionsManager";
 import { SchwabTradesManager } from "./SchwabTradesManager";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/use-toast";
 
-export class SchwabService extends BaseDataProvider implements DataProviderInterface {
+export class SchwabService extends BaseDataProvider {
   private authManager: SchwabAuthManager;
   private marketDataManager: SchwabMarketDataManager;
   private optionsManager: SchwabOptionsManager;
@@ -20,9 +20,12 @@ export class SchwabService extends BaseDataProvider implements DataProviderInter
       this.updateTokens.bind(this),
       this.updateConnectionStatus.bind(this)
     );
-    this.marketDataManager = new SchwabMarketDataManager(this);
-    this.optionsManager = new SchwabOptionsManager(this);
-    this.tradesManager = new SchwabTradesManager(this);
+    
+    // Pass this instance directly instead of 'this' keyword
+    const self = this;
+    this.marketDataManager = new SchwabMarketDataManager(self);
+    this.optionsManager = new SchwabOptionsManager(self);
+    this.tradesManager = new SchwabTradesManager(self);
   }
 
   /**
@@ -75,7 +78,8 @@ export class SchwabService extends BaseDataProvider implements DataProviderInter
     
     const result = await super.disconnect();
     
-    toast("Schwab Disconnected", {
+    toast({
+      title: "Schwab Disconnected",
       description: "Successfully disconnected from Schwab API",
     });
     
@@ -108,12 +112,5 @@ export class SchwabService extends BaseDataProvider implements DataProviderInter
    */
   async getTrades() {
     return this.tradesManager.getTrades();
-  }
-
-  /**
-   * Place a trade with Schwab
-   */
-  async placeTrade(order: TradeOrder) {
-    return this.tradesManager.placeTrade(order);
   }
 }

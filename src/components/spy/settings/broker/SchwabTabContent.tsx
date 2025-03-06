@@ -1,62 +1,112 @@
 
-import React from 'react';
-import { SchwabCredentialsForm } from './SchwabCredentialsForm';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle, CheckCircle, ExternalLink } from 'lucide-react';
+import { SchwabCredentialsForm } from './SchwabCredentialsForm';
+import { BrokerTabContentProps } from './types';
 import { getSchwabCredentials } from '@/services/dataProviders/schwab/utils/credentialUtils';
-import { SchwabService } from '@/services/dataProviders/schwab/SchwabService';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
-const SchwabTabContent: React.FC = () => {
-  const navigate = useNavigate();
+const SchwabTabContent: React.FC<BrokerTabContentProps> = ({
+  isConnecting = false,
+  brokerStatus = '',
+  onConnect,
+  onDisconnect
+}) => {
+  const [showForm, setShowForm] = useState(false);
   const credentials = getSchwabCredentials();
-  
-  // Handle connect to Schwab
-  const handleConnect = () => {
-    if (!credentials) {
-      console.error('Schwab credentials not found');
-      return;
-    }
-    
-    try {
-      const schwabService = new SchwabService(credentials);
-      const authUrl = schwabService.getAuthorizationUrl();
-      
-      // Redirect to Schwab authorization page
-      window.location.href = authUrl;
-    } catch (error) {
-      console.error('Error starting Schwab OAuth flow:', error);
-    }
-  };
+  const hasCredentials = !!credentials?.apiKey;
   
   return (
     <div className="space-y-6">
-      <div className="flex flex-col space-y-4">
-        <h3 className="text-lg font-medium">Schwab API Integration</h3>
-        <p className="text-sm text-muted-foreground">
-          Connect to Charles Schwab for trading and account management
-        </p>
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-medium">Charles Schwab Integration</h3>
+        {hasCredentials && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setShowForm(!showForm)}
+          >
+            {showForm ? 'Hide Settings' : 'Edit Settings'}
+          </Button>
+        )}
       </div>
       
-      <SchwabCredentialsForm />
-      
-      {credentials && credentials.apiKey && (
-        <div className="flex justify-end">
-          <Button onClick={handleConnect}>
-            Connect to Schwab
-          </Button>
-        </div>
+      {brokerStatus === 'connected' && (
+        <Alert className="bg-green-50 border-green-300 text-green-900">
+          <CheckCircle className="h-4 w-4 text-green-600" />
+          <AlertTitle className="text-green-800">Connected</AlertTitle>
+          <AlertDescription className="text-green-700">
+            Successfully connected to Charles Schwab API.
+          </AlertDescription>
+        </Alert>
       )}
       
-      <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-        <h4 className="font-semibold text-blue-700 dark:text-blue-300 mb-2">Setting up Schwab API</h4>
-        <ol className="list-decimal pl-5 text-sm text-blue-600 dark:text-blue-400 space-y-1">
-          <li>Register as a developer on the Schwab Developer Portal</li>
-          <li>Create a new application to get your API Key and Secret Key</li>
-          <li>Set up the OAuth Callback URL in your Schwab Developer Portal settings</li>
-          <li>Enter these credentials above and click "Save Credentials"</li>
-          <li>Once credentials are saved, click "Connect to Schwab" to authorize the application</li>
-        </ol>
-      </div>
+      {brokerStatus === 'error' && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Connection Error</AlertTitle>
+          <AlertDescription>
+            Failed to connect to Charles Schwab API. Please check your credentials.
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      {(showForm || !hasCredentials) && (
+        <SchwabCredentialsForm />
+      )}
+      
+      {hasCredentials && !showForm && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Schwab API Credentials</CardTitle>
+            <CardDescription>
+              Your Schwab API connection is configured.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">API Key:</span>
+                <span className="font-mono">{credentials.apiKey.substring(0, 6)}...{credentials.apiKey.substring(credentials.apiKey.length - 4)}</span>
+              </div>
+              {credentials.paperTrading && (
+                <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-sm text-blue-700 dark:text-blue-300">
+                  Paper trading mode is enabled
+                </div>
+              )}
+            </div>
+          </CardContent>
+          <CardFooter className="flex justify-between">
+            <Button 
+              variant="outline" 
+              onClick={() => onDisconnect && onDisconnect()}
+              disabled={isConnecting}
+            >
+              Disconnect
+            </Button>
+            <Button 
+              onClick={() => onConnect && onConnect()}
+              disabled={isConnecting}
+            >
+              {isConnecting ? 'Connecting...' : 'Connect'}
+            </Button>
+          </CardFooter>
+        </Card>
+      )}
+      
+      {!hasCredentials && (
+        <div className="flex justify-center mt-6">
+          <Link to="/schwab-integration">
+            <Button className="flex items-center gap-2">
+              <span>Visit Schwab Integration Guide</span>
+              <ExternalLink size={16} />
+            </Button>
+          </Link>
+        </div>
+      )}
     </div>
   );
 };

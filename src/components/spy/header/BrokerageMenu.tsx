@@ -47,3 +47,5 @@ export function BrokerageMenu() {
     </DropdownMenu>
   );
 }
+
+export default BrokerageMenu;

@@ -1,11 +1,58 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-import { ArrowRight, HelpCircle } from 'lucide-react';
+import { Link, useNavigate } from "react-router-dom";
+import { ArrowRight, HelpCircle, Loader2 } from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
+import { useDataProvider } from '@/hooks/useDataProvider';
+import { SchwabService } from '@/services/dataProviders/schwab/SchwabService';
+import { DataProviderConfig } from '@/lib/types/spy/dataProvider';
 
 const SchwabIntegrationPage: React.FC = () => {
+  const navigate = useNavigate();
+  const { provider, setProvider } = useDataProvider();
+  const [isConnecting, setIsConnecting] = useState(false);
+  
+  const handleSetupSchwab = async () => {
+    setIsConnecting(true);
+    
+    try {
+      // Create a new Schwab provider
+      const config: DataProviderConfig = {
+        type: 'schwab',
+        apiKey: '', // Will be set in the form
+        secretKey: '',
+        callbackUrl: window.location.origin + '/auth/schwab',
+        paperTrading: true
+      };
+      
+      const schwabProvider = new SchwabService(config);
+      setProvider(schwabProvider);
+      
+      // Get the authorization URL and redirect
+      const authUrl = schwabProvider.getAuthorizationUrl();
+      
+      toast({
+        title: "Redirecting to Schwab",
+        description: "You'll be redirected to Schwab to authorize the application.",
+      });
+      
+      // Short delay before redirect for toast to be visible
+      setTimeout(() => {
+        window.location.href = authUrl;
+      }, 1000);
+    } catch (error) {
+      console.error("Error setting up Schwab:", error);
+      toast({
+        title: "Setup Failed",
+        description: error instanceof Error ? error.message : "Failed to set up Schwab integration",
+        variant: "destructive"
+      });
+      setIsConnecting(false);
+    }
+  };
+  
   return (
     <div className="container mx-auto p-6">
       <h1 className="text-2xl font-bold mb-6">Brokerage Integration</h1>
@@ -24,9 +71,22 @@ const SchwabIntegrationPage: React.FC = () => {
             </p>
           </CardContent>
           <CardFooter className="flex justify-end">
-            <Button className="flex items-center">
-              Set Up Schwab
-              <ArrowRight className="ml-2 h-4 w-4" />
+            <Button 
+              className="flex items-center" 
+              onClick={handleSetupSchwab}
+              disabled={isConnecting}
+            >
+              {isConnecting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Connecting...
+                </>
+              ) : (
+                <>
+                  Set Up Schwab
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </>
+              )}
             </Button>
           </CardFooter>
         </Card>

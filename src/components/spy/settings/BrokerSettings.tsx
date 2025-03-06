@@ -1,70 +1,93 @@
 
-import React from 'react';
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useBrokerSettings } from '@/hooks/useBrokerSettings';
-import { DataProviderType } from '@/lib/types/spy/dataProvider';
-import NoBrokerTabContent from './broker/NoBrokerTabContent';
-import TDAmeritradeTabContent from './broker/TDAmeritradeTabContent';
-import SchwabTabContent from './broker/SchwabTabContent';
+import React, { useState } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import InteractiveBrokersTabContent from './broker/InteractiveBrokersTabContent';
+import SchwabTabContent from './broker/SchwabTabContent';
+import TDAmeritradeTabContent from './broker/TDAmeritradeTabContent';
+import NoBrokerTabContent from './broker/NoBrokerTabContent';
+import { useDataProvider } from '@/hooks/useDataProvider';
 
-interface BrokerSettingsProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}
-
-const BrokerSettings: React.FC<BrokerSettingsProps> = ({
-  open,
-  onOpenChange
-}) => {
-  const brokerHook = useBrokerSettings();
-
+const BrokerSettings: React.FC = () => {
+  const { provider, connect, disconnect } = useDataProvider();
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [brokerStatus, setBrokerStatus] = useState<'connected' | 'error' | 'disconnected'>(
+    provider?.isConnected() ? 'connected' : 'disconnected'
+  );
+  
+  const handleConnect = async () => {
+    setIsConnecting(true);
+    try {
+      if (provider && typeof provider.connect === 'function') {
+        const success = await provider.connect();
+        setBrokerStatus(success ? 'connected' : 'error');
+        return success;
+      }
+      return false;
+    } catch (error) {
+      console.error('Failed to connect:', error);
+      setBrokerStatus('error');
+      return false;
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+  
+  const handleDisconnect = async () => {
+    try {
+      if (provider && typeof provider.disconnect === 'function') {
+        const success = await provider.disconnect();
+        if (success) {
+          setBrokerStatus('disconnected');
+        }
+        return success;
+      }
+      return false;
+    } catch (error) {
+      console.error('Failed to disconnect:', error);
+      return false;
+    }
+  };
+  
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl">
-        <Tabs defaultValue="interactive-brokers" className="w-full">
-          <TabsList className="grid grid-cols-4 mb-4">
-            <TabsTrigger value="td-ameritrade">TD Ameritrade</TabsTrigger>
-            <TabsTrigger value="schwab">Schwab</TabsTrigger>
-            <TabsTrigger value="interactive-brokers">Interactive Brokers</TabsTrigger>
-            <TabsTrigger value="none">None</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="td-ameritrade">
-            <TDAmeritradeTabContent 
-              isConnecting={brokerHook.isConnecting}
-              brokerStatus={brokerHook.brokerStatus}
-              onConnect={() => brokerHook.handleConnect('td-ameritrade')}
-              onDisconnect={brokerHook.handleDisconnect}
-            />
-          </TabsContent>
-          
-          <TabsContent value="schwab">
-            <SchwabTabContent 
-              isConnecting={brokerHook.isConnecting}
-              brokerStatus={brokerHook.brokerStatus}
-              onConnect={() => brokerHook.handleConnect('schwab')}
-              onDisconnect={brokerHook.handleDisconnect}
-            />
-          </TabsContent>
-          
-          <TabsContent value="interactive-brokers">
-            <InteractiveBrokersTabContent 
-              isConnecting={brokerHook.isConnecting}
-              brokerStatus={brokerHook.brokerStatus}
-              onConnect={() => brokerHook.handleConnect('interactive-brokers')}
-              onDisconnect={brokerHook.handleDisconnect}
-              dataProvider={brokerHook.dataProvider}
-            />
-          </TabsContent>
-          
-          <TabsContent value="none">
-            <NoBrokerTabContent />
-          </TabsContent>
-        </Tabs>
-      </DialogContent>
-    </Dialog>
+    <Tabs defaultValue="none" className="w-full">
+      <TabsList className="mb-4">
+        <TabsTrigger value="ibkr">Interactive Brokers</TabsTrigger>
+        <TabsTrigger value="schwab">Charles Schwab</TabsTrigger>
+        <TabsTrigger value="td">TD Ameritrade</TabsTrigger>
+        <TabsTrigger value="none">No Broker</TabsTrigger>
+      </TabsList>
+      
+      <TabsContent value="ibkr">
+        <InteractiveBrokersTabContent 
+          isConnecting={isConnecting}
+          brokerStatus={brokerStatus}
+          onConnect={handleConnect}
+          onDisconnect={handleDisconnect}
+        />
+      </TabsContent>
+      
+      <TabsContent value="schwab">
+        <SchwabTabContent 
+          isConnecting={isConnecting}
+          brokerStatus={brokerStatus}
+          onConnect={handleConnect}
+          onDisconnect={handleDisconnect}
+        />
+      </TabsContent>
+      
+      <TabsContent value="td">
+        <TDAmeritradeTabContent 
+          isConnecting={isConnecting}
+          brokerStatus={brokerStatus}
+          onConnect={handleConnect}
+          onDisconnect={handleDisconnect}
+        />
+      </TabsContent>
+      
+      <TabsContent value="none">
+        <NoBrokerTabContent />
+      </TabsContent>
+    </Tabs>
   );
 };
 

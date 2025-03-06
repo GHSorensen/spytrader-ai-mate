@@ -1,98 +1,75 @@
+
 import { SchwabAuth } from "./auth";
 import { TokenManager } from "./TokenManager";
+import { verifyStateParam } from "./utils/stateParamUtils";
 import { toast } from "@/components/ui/use-toast";
 
+/**
+ * Handles OAuth callback with authorization code
+ */
 export class OAuthCallbackHandler {
   private auth: SchwabAuth;
   private tokenManager: TokenManager;
   private stateParam: string | null = null;
-
-  constructor(auth: SchwabAuth, tokenManager: TokenManager) {
+  
+  constructor(
+    auth: SchwabAuth,
+    tokenManager: TokenManager
+  ) {
     this.auth = auth;
     this.tokenManager = tokenManager;
-    console.log("[OAuthCallbackHandler] Initialized");
   }
-
+  
   /**
-   * Set the state parameter for CSRF protection
+   * Set state parameter from URL generation
    */
   setStateParam(stateParam: string): void {
-    console.log(`[OAuthCallbackHandler] Setting state parameter: ${stateParam.substring(0, 5)}...`);
     this.stateParam = stateParam;
+    console.log(`[OAuthCallbackHandler] State parameter set: ${stateParam.substring(0, 5)}...`);
   }
-
+  
   /**
    * Handle OAuth callback with authorization code
    */
   async handleCallback(code: string, state?: string): Promise<boolean> {
     try {
-      console.log(`[OAuthCallbackHandler] Handling OAuth callback:
-        - Code: ${code.substring(0, 5)}...
-        - State: ${state ? state.substring(0, 5) + '...' : 'undefined'}
-        - Stored state: ${this.stateParam ? this.stateParam.substring(0, 5) + '...' : 'not set'}`);
+      console.log(`[OAuthCallbackHandler] Handling callback with code: ${code.substring(0, 5)}... and state: ${state ? state.substring(0, 5) + '...' : 'undefined'}`);
       
-      // Verify state parameter if both the received state and stored state exist
+      // Validate state parameter to prevent CSRF attacks
       if (state && this.stateParam) {
-        console.log("[OAuthCallbackHandler] Verifying state parameter for CSRF protection");
+        const validState = verifyStateParam(state, this.stateParam);
         
-        if (!this.auth.verifyStateParam(state, this.stateParam)) {
-          console.error("[OAuthCallbackHandler] State parameter verification failed", { 
-            received: state,
-            expected: this.stateParam
-          });
-          throw new Error("Invalid state parameter, possible CSRF attack");
+        if (!validState) {
+          const error = "Invalid state parameter in callback, possible CSRF attack";
+          console.error(`[OAuthCallbackHandler] ${error}`);
+          throw new Error(error);
         }
         
-        console.log("[OAuthCallbackHandler] State parameter verified successfully");
-      } else {
-        // Log a warning if state parameter is missing
-        if (!state) {
-          console.warn("[OAuthCallbackHandler] No state parameter received in callback");
-        }
-        if (!this.stateParam) {
-          console.warn("[OAuthCallbackHandler] No stored state parameter to verify against");
-        }
+        console.log(`[OAuthCallbackHandler] State parameter verified: ${state.substring(0, 5)}...`);
       }
-
-      console.log("[OAuthCallbackHandler] Exchanging authorization code for tokens");
+      
+      // Exchange code for access token
       const tokenResponse = await this.auth.getAccessToken(code);
-      console.log("[OAuthCallbackHandler] Token response received successfully");
+      console.log(`[OAuthCallbackHandler] Received token response, access token: ${tokenResponse.accessToken.substring(0, 5)}...`);
       
-      // Use token manager to handle the token update
+      // Handle token update and setup refresh
       this.tokenManager.handleTokenUpdate(tokenResponse);
-      console.log("[OAuthCallbackHandler] Token manager updated with new tokens");
       
+      // Show success toast
       toast({
-        title: "Schwab Connected",
+        title: "Authentication Successful",
         description: "Successfully authenticated with Schwab API",
       });
       
       return true;
     } catch (error) {
-      console.error("[OAuthCallbackHandler] OAuth callback error:", error);
+      console.error("[OAuthCallbackHandler] Error handling callback:", error);
       
-      const errorMessage = error instanceof Error ? error.message : "Authentication failed";
-      
-      // Show more detailed error toast with suggestions for common issues
-      if (errorMessage.includes("Invalid state parameter")) {
-        toast({
-          title: "Security Error",
-          description: "Authentication failed due to security verification. Please try again from the beginning.",
-          variant: "destructive",
-        });
-      } else if (errorMessage.includes("Token exchange failed")) {
-        toast({
-          title: "Authentication Failed",
-          description: "Could not exchange authorization code for access token. This could be due to an expired code or configuration issues.",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Authentication Failed",
-          description: errorMessage,
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Authentication Failed",
+        description: error instanceof Error ? error.message : "Unknown authentication error",
+        variant: "destructive",
+      });
       
       return false;
     }
