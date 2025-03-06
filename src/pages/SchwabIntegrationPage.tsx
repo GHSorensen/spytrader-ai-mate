@@ -11,7 +11,7 @@ import { DataProviderConfig } from '@/lib/types/spy/dataProvider';
 
 const SchwabIntegrationPage: React.FC = () => {
   const navigate = useNavigate();
-  const { provider, setProvider } = useDataProvider();
+  const { setProvider } = useDataProvider();
   const [isConnecting, setIsConnecting] = useState(false);
   
   const handleSetupSchwab = async () => {
@@ -28,10 +28,12 @@ const SchwabIntegrationPage: React.FC = () => {
       };
       
       const schwabProvider = new SchwabService(config);
-      setProvider(schwabProvider);
       
-      // Get the authorization URL and redirect
+      // Get the authorization URL before setting the provider
       const authUrl = schwabProvider.getAuthorizationUrl();
+      
+      // Now set the provider
+      setProvider(schwabProvider);
       
       toast({
         title: "Redirecting to Schwab",

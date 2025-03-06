@@ -21,11 +21,10 @@ export class SchwabService extends BaseDataProvider {
       this.updateConnectionStatus.bind(this)
     );
     
-    // Pass this instance directly instead of 'this' keyword
-    const self = this;
-    this.marketDataManager = new SchwabMarketDataManager(self);
-    this.optionsManager = new SchwabOptionsManager(self);
-    this.tradesManager = new SchwabTradesManager(self);
+    // Create instances passing the service reference properly
+    this.marketDataManager = new SchwabMarketDataManager(this);
+    this.optionsManager = new SchwabOptionsManager(this);
+    this.tradesManager = new SchwabTradesManager(this);
   }
 
   /**

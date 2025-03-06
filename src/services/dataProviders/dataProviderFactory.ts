@@ -1,7 +1,7 @@
 
 import { DataProviderInterface, DataProviderConfig } from "@/lib/types/spy/dataProvider";
 import { TDAmeritradeService } from "./tdAmeritradeService";
-import { SchwabService } from "./schwabService";
+import { SchwabService } from "./schwab/SchwabService"; // Updated import path
 import { InteractiveBrokersService } from "./interactiveBrokersService";
 import { toast } from "@/hooks/use-toast";
 

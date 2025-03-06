@@ -1,31 +1,25 @@
 
 import React, { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import InteractiveBrokersTabContent from './broker/InteractiveBrokersTabContent';
-import SchwabTabContent from './broker/SchwabTabContent';
-import TDAmeritradeTabContent from './broker/TDAmeritradeTabContent';
-import NoBrokerTabContent from './broker/NoBrokerTabContent';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useDataProvider } from '@/hooks/useDataProvider';
+import { InteractiveBrokersTabContent } from './broker/InteractiveBrokersTabContent';
+import { TDAmeritradeTabContent } from './broker/TDAmeritradeTabContent';
+import { SchwabTabContent } from './broker/SchwabTabContent';
+import { NoBrokerTabContent } from './broker/NoBrokerTabContent';
 
-const BrokerSettings: React.FC = () => {
-  const { provider, connect, disconnect } = useDataProvider();
+export const BrokerSettings = () => {
+  const { provider, isConnected, isLoading, error, connectToProvider, disconnectFromProvider } = useDataProvider();
   const [isConnecting, setIsConnecting] = useState(false);
-  const [brokerStatus, setBrokerStatus] = useState<'connected' | 'error' | 'disconnected'>(
-    provider?.isConnected() ? 'connected' : 'disconnected'
-  );
+  
+  const brokerStatus = isConnected ? "connected" : error ? "error" : "disconnected";
   
   const handleConnect = async () => {
     setIsConnecting(true);
     try {
-      if (provider && typeof provider.connect === 'function') {
-        const success = await provider.connect();
-        setBrokerStatus(success ? 'connected' : 'error');
-        return success;
-      }
-      return false;
+      await connectToProvider();
+      return true;
     } catch (error) {
-      console.error('Failed to connect:', error);
-      setBrokerStatus('error');
+      console.error("Connection error:", error);
       return false;
     } finally {
       setIsConnecting(false);
@@ -33,27 +27,33 @@ const BrokerSettings: React.FC = () => {
   };
   
   const handleDisconnect = async () => {
+    setIsConnecting(true);
     try {
-      if (provider && typeof provider.disconnect === 'function') {
-        const success = await provider.disconnect();
-        if (success) {
-          setBrokerStatus('disconnected');
-        }
-        return success;
-      }
-      return false;
+      await disconnectFromProvider();
+      return true;
     } catch (error) {
-      console.error('Failed to disconnect:', error);
+      console.error("Disconnection error:", error);
       return false;
+    } finally {
+      setIsConnecting(false);
     }
   };
   
+  // Determine which broker is active based on provider type
+  const getActiveBroker = () => {
+    if (!provider) return "none";
+    if (provider.config?.type === 'interactive-brokers') return "ibkr";
+    if (provider.config?.type === 'td-ameritrade') return "tdameritrade";
+    if (provider.config?.type === 'schwab') return "schwab";
+    return "none";
+  };
+  
   return (
-    <Tabs defaultValue="none" className="w-full">
+    <Tabs defaultValue={getActiveBroker()} className="w-full">
       <TabsList className="mb-4">
         <TabsTrigger value="ibkr">Interactive Brokers</TabsTrigger>
+        <TabsTrigger value="tdameritrade">TD Ameritrade</TabsTrigger>
         <TabsTrigger value="schwab">Charles Schwab</TabsTrigger>
-        <TabsTrigger value="td">TD Ameritrade</TabsTrigger>
         <TabsTrigger value="none">No Broker</TabsTrigger>
       </TabsList>
       
@@ -63,11 +63,12 @@ const BrokerSettings: React.FC = () => {
           brokerStatus={brokerStatus}
           onConnect={handleConnect}
           onDisconnect={handleDisconnect}
+          dataProvider={provider}
         />
       </TabsContent>
       
-      <TabsContent value="schwab">
-        <SchwabTabContent 
+      <TabsContent value="tdameritrade">
+        <TDAmeritradeTabContent 
           isConnecting={isConnecting}
           brokerStatus={brokerStatus}
           onConnect={handleConnect}
@@ -75,8 +76,8 @@ const BrokerSettings: React.FC = () => {
         />
       </TabsContent>
       
-      <TabsContent value="td">
-        <TDAmeritradeTabContent 
+      <TabsContent value="schwab">
+        <SchwabTabContent 
           isConnecting={isConnecting}
           brokerStatus={brokerStatus}
           onConnect={handleConnect}

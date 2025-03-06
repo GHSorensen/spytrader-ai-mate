@@ -89,6 +89,7 @@ export function useDataProvider() {
     isConnected,
     isLoading,
     error,
+    setProvider, // Added the missing setProvider method
     setupProvider,
     connectToProvider: () => provider && connectToProvider(provider),
     disconnectFromProvider
