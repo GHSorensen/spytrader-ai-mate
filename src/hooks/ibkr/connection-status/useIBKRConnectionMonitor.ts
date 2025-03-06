@@ -1,5 +1,5 @@
 
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { useIBKRConnectionStatus } from './useIBKRConnectionStatus';
 import { useConnectionHistory } from './useConnectionHistory';
@@ -7,11 +7,11 @@ import { useReconnectLogic } from './useReconnectLogic';
 import { useDiagnostics } from './useDiagnostics';
 import { useConnectionLogger } from './useConnectionLogger';
 import { UseIBKRConnectionMonitorOptions, UseIBKRConnectionMonitorReturn } from './types';
-import { logConnectionError } from './utils';
+import { logConnectionError, debugIBKRConnection } from './utils';
 
 /**
  * Enhanced connection monitoring hook for IBKR integration
- * with improved logging
+ * with improved logging and diagnostics
  */
 export function useIBKRConnectionMonitor(
   options: UseIBKRConnectionMonitorOptions = {}
@@ -32,13 +32,19 @@ export function useIBKRConnectionMonitor(
     logSuccess
   } = useConnectionLogger();
 
-  // Use the basic connection status
+  // Track connection duration
+  const [connectionDuration, setConnectionDuration] = useState<number | null>(null);
+  const [connectionCheckCount, setConnectionCheckCount] = useState(0);
+
+  // Use the basic connection status with enhanced logging
   const { 
     isConnected, 
     dataSource, 
     connectionDiagnostics, 
     checkConnection, 
-    reconnect 
+    reconnect,
+    lastSuccessfulConnection,
+    lastCheckTime
   } = useIBKRConnectionStatus();
   
   // Track connection history
@@ -76,6 +82,23 @@ export function useIBKRConnectionMonitor(
   // Diagnostics
   const { getDetailedDiagnostics } = useDiagnostics();
 
+  // Calculate connection duration when connection status changes
+  useEffect(() => {
+    if (isConnected && lastSuccessfulConnection) {
+      const updateDuration = () => {
+        const now = new Date();
+        const durationMs = now.getTime() - lastSuccessfulConnection.getTime();
+        setConnectionDuration(durationMs / 1000); // in seconds
+      };
+      
+      updateDuration();
+      const timer = setInterval(updateDuration, 1000);
+      return () => clearInterval(timer);
+    } else {
+      setConnectionDuration(null);
+    }
+  }, [isConnected, lastSuccessfulConnection]);
+
   // Log initial state on mount
   useEffect(() => {
     logInfo('Connection monitor initialized', { 
@@ -86,6 +109,16 @@ export function useIBKRConnectionMonitor(
       reconnectInterval
     });
     
+    // Check for IBKR configuration on mount
+    const config = localStorage.getItem('ibkr-config');
+    logInfo('IBKR configuration status', {
+      exists: !!config,
+      configContent: config ? JSON.parse(config) : null
+    });
+    
+    // Initial debug dump
+    debugIBKRConnection();
+    
     return () => {
       logInfo('Connection monitor unmounted');
     };
@@ -94,11 +127,48 @@ export function useIBKRConnectionMonitor(
   // Log whenever connection status changes
   useEffect(() => {
     if (isConnected) {
-      logSuccess(`Connected to IBKR (${dataSource} data)`, { dataSource });
+      logSuccess(`Connected to IBKR (${dataSource} data)`, { 
+        dataSource,
+        lastSuccessfulConnection,
+        lastCheckTime
+      });
+      
+      // If we just connected, capture detailed diagnostics
+      if (connectionHistory.length > 0 && connectionHistory[connectionHistory.length - 1].event === 'disconnected') {
+        logInfo('Detailed diagnostics after reconnection', getDetailedDiagnostics({
+          isConnected,
+          dataSource,
+          connectionDiagnostics,
+          reconnectAttempts,
+          isReconnecting,
+          connectionLostTime,
+          connectionHistory
+        }));
+      }
     } else if (isReconnecting) {
-      logWarning('Disconnected from IBKR, attempting to reconnect', { reconnectAttempts });
+      logWarning('Disconnected from IBKR, attempting to reconnect', { 
+        reconnectAttempts,
+        connectionLostTime,
+        lastCheckTime
+      });
     } else {
-      logError('Disconnected from IBKR', { connectionLostTime });
+      logError('Disconnected from IBKR', { 
+        connectionLostTime,
+        lastCheckTime
+      });
+      
+      // Detailed info for disconnections
+      if (connectionHistory.length > 0 && connectionHistory[connectionHistory.length - 1].event === 'connected') {
+        logError('Detailed diagnostics after disconnection', getDetailedDiagnostics({
+          isConnected,
+          dataSource,
+          connectionDiagnostics,
+          reconnectAttempts,
+          isReconnecting,
+          connectionLostTime,
+          connectionHistory
+        }));
+      }
     }
   }, [isConnected, isReconnecting, dataSource]);
 
@@ -109,7 +179,19 @@ export function useIBKRConnectionMonitor(
     }
     
     handleConnectionChange(isConnected, reconnectAttempts > 0);
-  }, [isConnected, dataSource, onStatusChange, reconnectAttempts, handleConnectionChange]);
+    
+    // Log any brief connections (less than 10 seconds)
+    if (!isConnected && lastSuccessfulConnection) {
+      const connectionTime = new Date().getTime() - lastSuccessfulConnection.getTime();
+      if (connectionTime < 10000) { // Less than 10 seconds
+        logWarning(`Brief connection detected (${(connectionTime/1000).toFixed(1)}s)`, {
+          connectedAt: lastSuccessfulConnection,
+          disconnectedAt: new Date(),
+          durationMs: connectionTime
+        });
+      }
+    }
+  }, [isConnected, dataSource, onStatusChange, reconnectAttempts, handleConnectionChange, lastSuccessfulConnection]);
 
   // Manual reconnect handler - reset attempt counter and try immediately
   const handleManualReconnect = useCallback(async (): Promise<void> => {
@@ -152,13 +234,19 @@ export function useIBKRConnectionMonitor(
   // Force connection check with logging
   const forceConnectionCheck = useCallback(async (): Promise<void> => {
     logInfo('Forcing connection check');
+    setConnectionCheckCount(prev => prev + 1);
+    
     try {
       await checkConnection();
-      logInfo('Connection check completed', { isConnected, dataSource });
+      logInfo('Connection check completed', { 
+        isConnected, 
+        dataSource,
+        checkCount: connectionCheckCount + 1
+      });
     } catch (error) {
       logError('Error during forced connection check', error);
     }
-  }, [checkConnection, isConnected, dataSource]);
+  }, [checkConnection, isConnected, dataSource, connectionCheckCount]);
 
   // Get detailed diagnostics wrapper
   const getDiagnosticsWrapper = useCallback(() => {
@@ -172,6 +260,12 @@ export function useIBKRConnectionMonitor(
       connectionHistory
     });
     
+    // Include connection duration and check count data
+    diagnostics.connectionDuration = connectionDuration;
+    diagnostics.connectionCheckCount = connectionCheckCount;
+    diagnostics.lastSuccessfulConnection = lastSuccessfulConnection;
+    diagnostics.lastCheckTime = lastCheckTime;
+    
     logInfo('Generated detailed diagnostics', diagnostics);
     return diagnostics;
   }, [
@@ -182,7 +276,11 @@ export function useIBKRConnectionMonitor(
     reconnectAttempts,
     isReconnecting,
     connectionLostTime,
-    connectionHistory
+    connectionHistory,
+    connectionDuration,
+    connectionCheckCount,
+    lastSuccessfulConnection,
+    lastCheckTime
   ]);
 
   return {

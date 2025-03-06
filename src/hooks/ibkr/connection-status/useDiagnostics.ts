@@ -1,47 +1,50 @@
 
 import { useCallback } from 'react';
 import { ConnectionDiagnostics, ConnectionHistoryEvent } from './types';
+import { debugIBKRConnection } from './utils';
 
 /**
  * Hook for generating detailed diagnostics information
  */
 export function useDiagnostics() {
-  /**
-   * Generate detailed diagnostics information
-   */
-  const getDetailedDiagnostics = useCallback((diagnosticInfo?: {
-    isConnected?: boolean;
-    dataSource?: 'live' | 'delayed' | 'mock';
+  const getDetailedDiagnostics = useCallback((data?: {
+    isConnected: boolean;
+    dataSource: 'live' | 'delayed' | 'mock';
     connectionDiagnostics?: ConnectionDiagnostics | null;
+    connectionHistory?: ConnectionHistoryEvent[];
     reconnectAttempts?: number;
     isReconnecting?: boolean;
     connectionLostTime?: Date | null;
-    connectionHistory?: ConnectionHistoryEvent[];
   }) => {
-    return {
-      status: {
-        isConnected: diagnosticInfo?.isConnected,
-        dataSource: diagnosticInfo?.dataSource,
-        reconnectAttempts: diagnosticInfo?.reconnectAttempts || 0,
-        isReconnecting: diagnosticInfo?.isReconnecting || false,
-        connectionLostTime: diagnosticInfo?.connectionLostTime?.toISOString(),
-        currentTime: new Date().toISOString()
-      },
-      connectionDiagnostics: diagnosticInfo?.connectionDiagnostics || null,
-      connectionHistory: diagnosticInfo?.connectionHistory?.map(event => ({
-        ...event,
-        timestamp: event.timestamp.toISOString()
-      })) || [],
+    // Record all the diagnostic info we can gather
+    const diagnostics = {
+      timestamp: new Date().toISOString(),
       browser: {
         userAgent: navigator.userAgent,
         language: navigator.language,
         platform: navigator.platform,
         timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
-      }
+      },
+      connection: {
+        isConnected: data?.isConnected || false,
+        dataSource: data?.dataSource || 'mock',
+        lastChecked: new Date().toISOString(),
+        provider: data?.connectionDiagnostics?.providerType || 'Unknown',
+        providerStatus: data?.connectionDiagnostics?.status || null,
+        reconnectAttempts: data?.reconnectAttempts || 0,
+        isReconnecting: data?.isReconnecting || false,
+        connectionLostTime: data?.connectionLostTime?.toISOString() || null,
+        lastError: data?.connectionDiagnostics?.error || null
+      },
+      history: data?.connectionHistory || [],
+      detailedProvider: null as any
     };
+    
+    // Run debug function to capture detailed provider state
+    debugIBKRConnection();
+    
+    return diagnostics;
   }, []);
   
-  return {
-    getDetailedDiagnostics
-  };
+  return { getDetailedDiagnostics };
 }

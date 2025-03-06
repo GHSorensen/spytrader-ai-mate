@@ -1,5 +1,7 @@
 
-// Export all IBKR components from here for easier imports
+// Export IBKR components
+export { default as ConnectionStatusPanel } from './ConnectionStatusPanel';
+export { default as MiniConnectionStatus } from './MiniConnectionStatus';
+export { default as ConnectionMonitor } from './ConnectionMonitor';
+export { default as ConnectionStatus } from './ConnectionStatus';
 export { default as IBKRStatusIndicator } from './IBKRStatusIndicator';
-export { default as IBKRIntegrationView } from './IBKRIntegrationView';
-export { default as IBKRIntegrationContainer } from './IBKRIntegrationContainer';

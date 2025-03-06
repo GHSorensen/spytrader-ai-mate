@@ -1,6 +1,6 @@
 
 import { useState, useCallback } from 'react';
-import { getProviderWithDiagnostics, createConnectionDiagnostics, logConnectionError } from './utils';
+import { getProviderWithDiagnostics, createConnectionDiagnostics, logConnectionError, debugIBKRConnection } from './utils';
 import { ConnectionDiagnostics } from './types';
 
 /**
@@ -10,9 +10,12 @@ export function useConnectionCheck() {
   const [connectionDiagnostics, setConnectionDiagnostics] = useState<ConnectionDiagnostics | null>(null);
 
   const checkConnection = useCallback(async () => {
+    console.group("[useConnectionCheck] Checking IBKR connection status");
     try {
-      console.log("[useConnectionCheck] Checking IBKR connection status...");
       const provider = getProviderWithDiagnostics();
+      
+      // Log more details for debugging
+      console.log("[useConnectionCheck] Checking connection at:", new Date().toISOString());
       
       // Create base diagnostics
       const diagnostics = createConnectionDiagnostics(
@@ -32,6 +35,7 @@ export function useConnectionCheck() {
         console.error("[useConnectionCheck] No data provider available");
         diagnostics.error = "No data provider available";
         setConnectionDiagnostics(diagnostics);
+        console.groupEnd();
         return { connected: false, quotesDelayed: true };
       }
       
@@ -40,11 +44,12 @@ export function useConnectionCheck() {
         console.error("[useConnectionCheck] Provider missing isConnected method");
         diagnostics.error = "Provider missing isConnected method";
         setConnectionDiagnostics(diagnostics);
+        console.groupEnd();
         return { connected: false, quotesDelayed: true };
       }
       
       const connected = provider.isConnected();
-      console.log("[useConnectionCheck] Provider connected:", connected);
+      console.log("[useConnectionCheck] Provider isConnected() returned:", connected);
       diagnostics.connected = connected;
       
       let quotesDelayed = true;
@@ -75,9 +80,20 @@ export function useConnectionCheck() {
       } else {
         console.log("[useConnectionCheck] Provider not connected, using mock data");
         diagnostics.dataSource = 'mock';
+        
+        // Check if there's a stored config but provider isn't connected
+        if (localStorage.getItem('ibkr-config')) {
+          console.warn("[useConnectionCheck] IBKR config exists in localStorage but provider is not connected");
+          console.log("[useConnectionCheck] Stored config:", localStorage.getItem('ibkr-config'));
+          diagnostics.error = "Config exists but provider not connected";
+        }
+        
+        // Additional debugging
+        debugIBKRConnection();
       }
       
       setConnectionDiagnostics(diagnostics);
+      console.groupEnd();
       return { connected, quotesDelayed };
     } catch (error) {
       console.error("[useConnectionCheck] Error checking connection:", error);
@@ -90,6 +106,7 @@ export function useConnectionCheck() {
       const diagnostics = createConnectionDiagnostics('Unknown', error instanceof Error ? error : new Error('Unknown error'));
       setConnectionDiagnostics(diagnostics);
       
+      console.groupEnd();
       return { connected: false, quotesDelayed: true };
     }
   }, []);

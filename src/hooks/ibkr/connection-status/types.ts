@@ -36,6 +36,8 @@ export interface UseIBKRConnectionStatusReturn {
   connectionDiagnostics: ConnectionDiagnostics | null;
   checkConnection: () => Promise<void>;
   reconnect: () => Promise<boolean>;
+  lastSuccessfulConnection: Date | null;
+  lastCheckTime: Date | null;
 }
 
 export interface UseIBKRConnectionMonitorOptions {
