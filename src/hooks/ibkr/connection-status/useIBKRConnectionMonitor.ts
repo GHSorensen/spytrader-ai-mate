@@ -1,4 +1,3 @@
-
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { useIBKRConnectionStatus } from './useIBKRConnectionStatus';
@@ -142,7 +141,11 @@ export function useIBKRConnectionMonitor(
           reconnectAttempts,
           isReconnecting,
           connectionLostTime,
-          connectionHistory
+          connectionHistory,
+          connectionDuration,
+          connectionCheckCount,
+          lastSuccessfulConnection,
+          lastCheckTime
         }));
       }
     } else if (isReconnecting) {
@@ -166,7 +169,11 @@ export function useIBKRConnectionMonitor(
           reconnectAttempts,
           isReconnecting,
           connectionLostTime,
-          connectionHistory
+          connectionHistory,
+          connectionDuration,
+          connectionCheckCount,
+          lastSuccessfulConnection,
+          lastCheckTime
         }));
       }
     }
@@ -257,20 +264,15 @@ export function useIBKRConnectionMonitor(
       reconnectAttempts,
       isReconnecting,
       connectionLostTime,
-      connectionHistory
-    });
-    
-    // Add additional diagnostic data
-    const enhancedDiagnostics: DetailedDiagnostics = {
-      ...diagnostics,
+      connectionHistory,
       connectionDuration,
       connectionCheckCount,
       lastSuccessfulConnection,
       lastCheckTime
-    };
+    });
     
-    logInfo('Generated detailed diagnostics', enhancedDiagnostics);
-    return enhancedDiagnostics;
+    logInfo('Generated detailed diagnostics', diagnostics);
+    return diagnostics;
   }, [
     getDetailedDiagnostics,
     isConnected,

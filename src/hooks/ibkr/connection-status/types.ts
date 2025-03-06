@@ -82,6 +82,8 @@ export interface ConnectionTestResult {
 
 // Interface for useIBKRConnectionTest hook
 export interface UseIBKRConnectionTestReturn {
+  isConnected: boolean;
+  dataSource: 'live' | 'delayed' | 'mock';
   testConnection: () => Promise<ConnectionTestResult>;
   testAuthentication: () => Promise<ConnectionTestResult>;
   testMarketData: () => Promise<ConnectionTestResult>;
@@ -119,4 +121,12 @@ export interface DetailedDiagnostics {
   connectionCheckCount?: number;
   lastSuccessfulConnection?: Date | null;
   lastCheckTime?: Date | null;
+}
+
+// Helper interface for test results filtering
+export interface TestResultsGrouped {
+  connection?: ConnectionTestResult;
+  authentication?: ConnectionTestResult;
+  'market-data'?: ConnectionTestResult;
+  reconnect?: ConnectionTestResult;
 }

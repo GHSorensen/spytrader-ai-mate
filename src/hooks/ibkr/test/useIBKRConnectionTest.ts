@@ -2,6 +2,7 @@
 import { useState, useCallback } from 'react';
 import { TestType, ConnectionTestResult, UseIBKRConnectionTestReturn } from '../connection-status/types';
 import { getProviderWithDiagnostics } from '../connection-status/utils';
+import { useIBKRConnectionStatus } from '../connection-status/useIBKRConnectionStatus';
 
 /**
  * Hook for testing IBKR connection functionality
@@ -9,6 +10,9 @@ import { getProviderWithDiagnostics } from '../connection-status/utils';
 export function useIBKRConnectionTest(): UseIBKRConnectionTestReturn {
   const [testResults, setTestResults] = useState<ConnectionTestResult[]>([]);
   const [isTestRunning, setIsTestRunning] = useState(false);
+  
+  // Get the base connection status from the connection status hook
+  const { isConnected, dataSource } = useIBKRConnectionStatus();
 
   // Test basic connection
   const testConnection = useCallback(async (): Promise<ConnectionTestResult> => {
@@ -297,6 +301,8 @@ export function useIBKRConnectionTest(): UseIBKRConnectionTestReturn {
   }, []);
 
   return {
+    isConnected,
+    dataSource,
     testConnection,
     testAuthentication,
     testMarketData,

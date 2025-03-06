@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { IBKRConnectionTests } from '@/components/ibkr/test/IBKRConnectionTests';
+import IBKRConnectionTests from '@/components/ibkr/test/IBKRConnectionTests';
 import { CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
 import { useIBKRConnectionMonitor } from '@/hooks/ibkr/connection-status/useIBKRConnectionMonitor';
 
@@ -48,7 +48,7 @@ const IBKRTestPage: React.FC = () => {
         </CardHeader>
         <CardContent>
           {isConnected ? (
-            <Alert variant={dataSource === 'live' ? 'default' : 'outline'} className="bg-green-50 border-green-200">
+            <Alert variant="default" className="bg-green-50 border-green-200">
               <CheckCircle className="h-4 w-4 text-green-500" />
               <AlertTitle className="text-green-700">Connected to IBKR</AlertTitle>
               <AlertDescription className="text-green-600">
@@ -57,7 +57,7 @@ const IBKRTestPage: React.FC = () => {
               </AlertDescription>
             </Alert>
           ) : (
-            <Alert variant={isReconnecting ? 'outline' : 'destructive'}>
+            <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>{isReconnecting ? 'Reconnecting...' : 'Not Connected'}</AlertTitle>
               <AlertDescription>

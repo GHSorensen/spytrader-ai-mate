@@ -1,471 +1,358 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertCircle, CheckCircle, Clock, WifiOff, Activity, RefreshCw, Share2, Copy, Database, Key, Lock } from 'lucide-react';
-import { Separator } from "@/components/ui/separator";
-import { toast } from 'sonner';
-import { useIBKRConnectionTest, ConnectionTestResult, TestType } from '@/hooks/ibkr/test/useIBKRConnectionTest';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { CheckCircle, XCircle, Clock, RefreshCw, AlertTriangle } from 'lucide-react';
+import { useIBKRConnectionTest } from '@/hooks/ibkr/test';
+import { TestType, ConnectionTestResult, TestResultsGrouped } from '@/hooks/ibkr/connection-status/types';
 
-interface TestCardProps {
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-  onRunTest: () => Promise<any>;
-  results: ConnectionTestResult[];
-  isRunning: boolean;
-}
-
-// Component to show test results
-const TestCard: React.FC<TestCardProps> = ({ 
-  title, 
-  description, 
-  icon, 
-  onRunTest, 
-  results, 
-  isRunning 
-}) => {
-  const latestResult = results.length > 0 ? results[results.length - 1] : null;
+// Helper function to group test results by test type
+const groupTestResults = (results: ConnectionTestResult[]): TestResultsGrouped => {
+  const grouped: TestResultsGrouped = {};
   
-  const handleRunTest = async () => {
-    try {
-      await onRunTest();
-    } catch (error) {
-      console.error(`Error running ${title} test:`, error);
-      toast.error(`Error running ${title} test`, {
-        description: error instanceof Error ? error.message : "Unknown error"
-      });
-    }
-  };
+  results.forEach(result => {
+    const key = result.testType as unknown as keyof TestResultsGrouped;
+    grouped[key] = result;
+  });
   
-  return (
-    <Card className="h-full">
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-start mb-1">
-          <div className="flex items-center gap-2">
-            {icon}
-            <CardTitle className="text-lg">{title}</CardTitle>
-          </div>
-          {latestResult && (
-            <Badge 
-              variant={latestResult.success ? "default" : "destructive"}
-              className="gap-1"
-            >
-              {latestResult.success ? (
-                <CheckCircle className="h-3 w-3" />
-              ) : (
-                <AlertCircle className="h-3 w-3" />
-              )}
-              {latestResult.success ? 'Success' : 'Failed'}
-            </Badge>
-          )}
-        </div>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent className="pb-2">
-        {latestResult ? (
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Time:</span>
-              <span>{latestResult.timestamp.toLocaleTimeString()}</span>
-            </div>
-            
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Latency:</span>
-              <span>{latestResult.latency}ms</span>
-            </div>
-            
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Provider:</span>
-              <span>{latestResult.provider}</span>
-            </div>
-            
-            {latestResult.error && (
-              <div className="pt-1">
-                <div className="text-muted-foreground mb-1">Error:</div>
-                <div className="text-xs text-destructive border border-destructive/30 rounded p-1.5 bg-destructive/10">
-                  {latestResult.error}
-                </div>
-              </div>
-            )}
-            
-            {latestResult.details && Object.keys(latestResult.details).length > 0 && (
-              <div className="pt-1">
-                <div className="text-muted-foreground mb-1">Details:</div>
-                <div className="text-xs border border-border rounded p-1.5 bg-muted/30 font-mono">
-                  {JSON.stringify(latestResult.details, null, 2)}
-                </div>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="py-4 text-center text-muted-foreground text-sm">
-            No test results yet
-          </div>
-        )}
-      </CardContent>
-      <CardFooter>
-        <Button 
-          className="w-full" 
-          size="sm"
-          onClick={handleRunTest}
-          disabled={isRunning}
-        >
-          {isRunning ? (
-            <>
-              <RefreshCw className="h-3.5 w-3.5 mr-2 animate-spin" />
-              Running...
-            </>
-          ) : (
-            <>
-              {icon}
-              Run Test
-            </>
-          )}
-        </Button>
-      </CardFooter>
-    </Card>
-  );
+  return grouped;
 };
 
-// Results timeline component
-const TestResultsTimeline: React.FC<{
-  results: ConnectionTestResult[];
-  testType: TestType;
-}> = ({ results, testType }) => {
-  if (results.length === 0) {
-    return (
-      <div className="py-6 text-center text-muted-foreground">
-        No test history available
-      </div>
-    );
-  }
-  
-  return (
-    <div className="space-y-3 my-2 max-h-[300px] overflow-y-auto pr-2">
-      {results.slice().reverse().map((result, index) => (
-        <div key={index} className={`border-l-2 pl-3 py-1 ${
-          result.success ? 'border-green-500' : 'border-red-500'
-        }`}>
-          <div className="flex justify-between items-center mb-1">
-            <div className="flex items-center gap-1.5">
-              {result.success ? (
-                <CheckCircle className="h-3.5 w-3.5 text-green-500" />
-              ) : (
-                <AlertCircle className="h-3.5 w-3.5 text-red-500" />
-              )}
-              <span className="font-medium text-sm">
-                {testType === 'connection' && 'Connection Test'}
-                {testType === 'authentication' && 'Authentication Test'}
-                {testType === 'market-data' && 'Market Data Test'}
-                {testType === 'reconnect' && 'Reconnection Test'}
-              </span>
-            </div>
-            <Badge variant="outline" className="text-xs gap-1">
-              <Clock className="h-3 w-3" />
-              {result.latency}ms
-            </Badge>
-          </div>
-          
-          <div className="text-xs text-muted-foreground mb-1">
-            {result.timestamp.toLocaleString()}
-          </div>
-          
-          {result.error && (
-            <div className="mt-1 p-1.5 text-xs bg-red-50 border border-red-200 rounded text-red-800">
-              {result.error}
-            </div>
-          )}
-          
-          {result.details && Object.keys(result.details).length > 0 && (
-            <div className="mt-1 p-1.5 text-xs bg-gray-50 border border-gray-200 rounded font-mono">
-              {JSON.stringify(result.details, null, 2)}
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-};
-
-// Main component
 const IBKRConnectionTests: React.FC = () => {
+  const [activeTab, setActiveTab] = useState('basic');
+  const [groupedResults, setGroupedResults] = useState<TestResultsGrouped>({});
+  
   const {
+    isConnected,
+    dataSource,
     testConnection,
     testAuthentication,
     testMarketData,
     testReconnect,
     runComprehensiveTest,
-    testResults,
     isTestRunning,
-    isConnected,
-    dataSource,
+    testResults,
     getDiagnostics,
     clearTestResults
   } = useIBKRConnectionTest();
   
-  const [activeTab, setActiveTab] = useState<'tests' | 'history' | 'diagnostics'>('tests');
+  // Update grouped results when test results change
+  useEffect(() => {
+    setGroupedResults(groupTestResults(testResults));
+  }, [testResults]);
   
-  const handleCopyDiagnostics = () => {
-    const diagnostics = getDiagnostics();
-    navigator.clipboard.writeText(JSON.stringify(diagnostics, null, 2))
-      .then(() => {
-        toast.success("Diagnostics copied to clipboard");
-      })
-      .catch((error) => {
-        console.error("Failed to copy diagnostics:", error);
-        toast.error("Failed to copy diagnostics");
-      });
-  };
-  
-  const handleRunAll = async () => {
-    try {
-      await runComprehensiveTest();
-    } catch (error) {
-      console.error("Failed to run comprehensive test:", error);
-      toast.error("Failed to run all tests", {
-        description: error instanceof Error ? error.message : "Unknown error"
-      });
+  // Status Badge component
+  const StatusBadge = ({ status }: { status: ConnectionTestResult['status'] }) => {
+    switch (status) {
+      case 'success':
+        return (
+          <Badge className="bg-green-100 text-green-800 border-green-300">
+            <CheckCircle className="w-3 h-3 mr-1" />
+            Success
+          </Badge>
+        );
+      case 'failure':
+        return (
+          <Badge className="bg-red-100 text-red-800 border-red-300">
+            <XCircle className="w-3 h-3 mr-1" />
+            Failed
+          </Badge>
+        );
+      case 'running':
+        return (
+          <Badge className="bg-blue-100 text-blue-800 border-blue-300">
+            <RefreshCw className="w-3 h-3 mr-1 animate-spin" />
+            Running
+          </Badge>
+        );
+      default:
+        return (
+          <Badge variant="outline" className="text-gray-500">
+            <Clock className="w-3 h-3 mr-1" />
+            Not Run
+          </Badge>
+        );
     }
   };
   
-  const handleClearResults = () => {
-    clearTestResults();
-    toast.success("Test results cleared");
+  // Test Result Item component
+  const TestResultItem = ({ result }: { result: ConnectionTestResult }) => {
+    if (!result) return null;
+    
+    return (
+      <Alert className="mb-2" variant={result.status === 'success' ? 'default' : 'destructive'}>
+        <div className="flex justify-between items-start">
+          <div>
+            <AlertTitle className="flex items-center">
+              {result.status === 'success' ? (
+                <CheckCircle className="w-4 h-4 mr-1 text-green-500" />
+              ) : (
+                <AlertTriangle className="w-4 h-4 mr-1" />
+              )}
+              {result.message}
+            </AlertTitle>
+            <AlertDescription className="mt-1">
+              {result.durationMs && <span className="block text-xs">Duration: {result.durationMs}ms</span>}
+              {result.timestamp && (
+                <span className="block text-xs">
+                  Time: {result.timestamp.toLocaleTimeString()}
+                </span>
+              )}
+              {result.error && (
+                <span className="block text-xs mt-1 text-red-600">
+                  Error: {result.error.message}
+                </span>
+              )}
+            </AlertDescription>
+          </div>
+          <StatusBadge status={result.status} />
+        </div>
+      </Alert>
+    );
+  };
+  
+  // Run the basic connection test
+  const handleBasicTest = async () => {
+    await testConnection();
+  };
+  
+  // Run all tests
+  const handleComprehensiveTest = async () => {
+    await runComprehensiveTest();
   };
   
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">IBKR Connection Tests</h2>
-          <p className="text-muted-foreground">
-            Diagnostic tools for monitoring and testing IBKR connectivity
-          </p>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <Badge 
-            variant={isConnected ? "default" : "destructive"}
-            className="gap-1 px-2 py-1"
-          >
-            {isConnected ? (
-              <CheckCircle className="h-3.5 w-3.5" />
-            ) : (
-              <WifiOff className="h-3.5 w-3.5" />
+    <Card>
+      <CardHeader className="pb-2">
+        <div className="flex justify-between items-center">
+          <h3 className="text-lg font-semibold">Connection Tests</h3>
+          <div className="flex items-center space-x-2">
+            <Badge 
+              variant={isConnected ? "default" : "outline"} 
+              className={isConnected ? "bg-green-500" : ""}
+            >
+              {isConnected ? 'Connected' : 'Disconnected'}
+            </Badge>
+            {isConnected && (
+              <Badge variant="outline" className="capitalize">
+                {dataSource} Data
+              </Badge>
             )}
-            {isConnected ? 
-              dataSource === 'live' ? 'Live' : 
-              dataSource === 'delayed' ? 'Delayed' : 'Connected' : 
-              'Disconnected'
-            }
-          </Badge>
-          
-          <Button 
-            variant="outline"
-            size="sm" 
-            onClick={handleRunAll}
-            disabled={Object.values(isTestRunning).some(v => v)}
-          >
-            <Activity className="h-4 w-4 mr-2" />
-            Run All Tests
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleCopyDiagnostics}
-          >
-            <Share2 className="h-4 w-4 mr-2" />
-            Share Diagnostics
-          </Button>
+          </div>
         </div>
-      </div>
+      </CardHeader>
       
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="tests">Tests</TabsTrigger>
-          <TabsTrigger value="history">History</TabsTrigger>
-          <TabsTrigger value="diagnostics">Diagnostics</TabsTrigger>
+      <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="w-full grid grid-cols-3">
+          <TabsTrigger value="basic">Basic Tests</TabsTrigger>
+          <TabsTrigger value="comprehensive">Comprehensive</TabsTrigger>
+          <TabsTrigger value="results">Results</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="tests" className="mt-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <TestCard
-              title="Basic Connection"
-              description="Tests basic connectivity to Interactive Brokers"
-              icon={<WifiOff className="h-4 w-4 mr-1" />}
-              onRunTest={testConnection}
-              results={testResults.connection}
-              isRunning={isTestRunning.connection}
-            />
-            
-            <TestCard
-              title="Authentication"
-              description="Verifies authentication with Interactive Brokers"
-              icon={<Key className="h-4 w-4 mr-1" />}
-              onRunTest={testAuthentication}
-              results={testResults.authentication}
-              isRunning={isTestRunning.authentication}
-            />
-            
-            <TestCard
-              title="Market Data"
-              description="Tests retrieval of market data from IBKR"
-              icon={<Database className="h-4 w-4 mr-1" />}
-              onRunTest={testMarketData}
-              results={testResults['market-data']}
-              isRunning={isTestRunning['market-data']}
-            />
-            
-            <TestCard
-              title="Reconnection"
-              description="Tests the ability to reconnect to IBKR"
-              icon={<RefreshCw className="h-4 w-4 mr-1" />}
-              onRunTest={testReconnect}
-              results={testResults.reconnect}
-              isRunning={isTestRunning.reconnect}
-            />
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="history" className="mt-4">
-          <Card>
-            <CardHeader>
+        <TabsContent value="basic">
+          <CardContent className="space-y-4 pt-4">
+            <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <CardTitle>Test History</CardTitle>
+                <div>
+                  <h4 className="font-medium">Connection Test</h4>
+                  <p className="text-sm text-gray-500">Test basic connectivity</p>
+                </div>
                 <Button 
                   variant="outline" 
-                  size="sm"
-                  onClick={handleClearResults}
-                  disabled={Object.values(testResults).every(r => r.length === 0)}
+                  size="sm" 
+                  onClick={handleBasicTest}
+                  disabled={isTestRunning}
                 >
-                  Clear History
+                  Run Test
                 </Button>
               </div>
-              <CardDescription>
-                History of all connection tests and their results
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Tabs defaultValue="connection">
-                <TabsList>
-                  <TabsTrigger value="connection">Connection</TabsTrigger>
-                  <TabsTrigger value="authentication">Authentication</TabsTrigger>
-                  <TabsTrigger value="market-data">Market Data</TabsTrigger>
-                  <TabsTrigger value="reconnect">Reconnection</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="connection">
-                  <TestResultsTimeline 
-                    results={testResults.connection} 
-                    testType="connection" 
-                  />
-                </TabsContent>
-                
-                <TabsContent value="authentication">
-                  <TestResultsTimeline 
-                    results={testResults.authentication} 
-                    testType="authentication" 
-                  />
-                </TabsContent>
-                
-                <TabsContent value="market-data">
-                  <TestResultsTimeline 
-                    results={testResults['market-data']} 
-                    testType="market-data" 
-                  />
-                </TabsContent>
-                
-                <TabsContent value="reconnect">
-                  <TestResultsTimeline 
-                    results={testResults.reconnect} 
-                    testType="reconnect" 
-                  />
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="diagnostics" className="mt-4">
-          <Card>
-            <CardHeader>
+              
+              {groupedResults.connection && (
+                <TestResultItem result={groupedResults.connection} />
+              )}
+            </div>
+            
+            <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <CardTitle>Diagnostic Information</CardTitle>
+                <div>
+                  <h4 className="font-medium">Authentication Test</h4>
+                  <p className="text-sm text-gray-500">Verify authentication status</p>
+                </div>
                 <Button 
                   variant="outline" 
-                  size="sm"
-                  onClick={handleCopyDiagnostics}
+                  size="sm" 
+                  onClick={testAuthentication}
+                  disabled={isTestRunning || !isConnected}
                 >
-                  <Copy className="h-4 w-4 mr-2" />
-                  Copy All
+                  Run Test
                 </Button>
               </div>
-              <CardDescription>
-                Detailed diagnostics for troubleshooting connection issues
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
+              
+              {groupedResults.authentication && (
+                <TestResultItem result={groupedResults.authentication} />
+              )}
+            </div>
+            
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
                 <div>
-                  <h3 className="text-sm font-medium mb-2">Connection Status</h3>
-                  <div className="bg-muted rounded-md p-3">
-                    <div className="grid grid-cols-2 gap-y-2 text-sm">
-                      <div className="text-muted-foreground">Connected:</div>
-                      <div className="font-mono">{isConnected ? 'Yes' : 'No'}</div>
-                      
-                      <div className="text-muted-foreground">Data Source:</div>
-                      <div className="font-mono">{dataSource}</div>
-                      
-                      <div className="text-muted-foreground">Provider:</div>
-                      <div className="font-mono">{getDiagnostics().provider.type}</div>
-                      
-                      <div className="text-muted-foreground">Connection Method:</div>
-                      <div className="font-mono">{getDiagnostics().provider.connectionMethod || 'Unknown'}</div>
-                      
-                      <div className="text-muted-foreground">Paper Trading:</div>
-                      <div className="font-mono">{getDiagnostics().provider.paperTrading ? 'Yes' : 'No'}</div>
-                    </div>
-                  </div>
+                  <h4 className="font-medium">Market Data Test</h4>
+                  <p className="text-sm text-gray-500">Test market data retrieval</p>
                 </div>
-                
-                <Separator />
-                
-                <div>
-                  <h3 className="text-sm font-medium mb-2">Browser & Environment</h3>
-                  <div className="bg-muted rounded-md p-3">
-                    <div className="grid grid-cols-2 gap-y-2 text-sm">
-                      <div className="text-muted-foreground">Timezone:</div>
-                      <div className="font-mono">{getDiagnostics().browser.timezone}</div>
-                      
-                      <div className="text-muted-foreground">Time:</div>
-                      <div className="font-mono">{new Date().toLocaleString()}</div>
-                      
-                      <div className="text-muted-foreground">Language:</div>
-                      <div className="font-mono">{getDiagnostics().browser.language}</div>
-                    </div>
-                  </div>
-                </div>
-                
-                <Separator />
-                
-                <div>
-                  <h3 className="text-sm font-medium mb-2">Full Diagnostics</h3>
-                  <div className="bg-muted rounded-md p-3 max-h-[300px] overflow-auto">
-                    <pre className="text-xs whitespace-pre-wrap break-all font-mono">
-                      {JSON.stringify(getDiagnostics(), null, 2)}
-                    </pre>
-                  </div>
-                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={testMarketData}
+                  disabled={isTestRunning || !isConnected}
+                >
+                  Run Test
+                </Button>
               </div>
-            </CardContent>
-          </Card>
+              
+              {groupedResults['market-data'] && (
+                <TestResultItem result={groupedResults['market-data']} />
+              )}
+            </div>
+            
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h4 className="font-medium">Reconnect Test</h4>
+                  <p className="text-sm text-gray-500">Test reconnection capability</p>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={testReconnect}
+                  disabled={isTestRunning}
+                >
+                  Run Test
+                </Button>
+              </div>
+              
+              {groupedResults.reconnect && (
+                <TestResultItem result={groupedResults.reconnect} />
+              )}
+            </div>
+          </CardContent>
+        </TabsContent>
+        
+        <TabsContent value="comprehensive">
+          <CardContent className="pt-4">
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-medium">Comprehensive Test Suite</h4>
+                <p className="text-sm text-gray-500">
+                  Run all tests in sequence to validate connection status, authentication, 
+                  market data retrieval, and reconnection capabilities.
+                </p>
+              </div>
+              
+              {testResults.length > 0 && (
+                <Alert className="mb-4" variant={
+                  testResults.every(r => r.status === 'success') ? 'default' : 'destructive'
+                }>
+                  <AlertTitle className="flex items-center">
+                    {testResults.every(r => r.status === 'success') ? (
+                      <>
+                        <CheckCircle className="w-4 h-4 mr-1 text-green-500" />
+                        All tests passed
+                      </>
+                    ) : (
+                      <>
+                        <AlertTriangle className="w-4 h-4 mr-1" />
+                        Some tests failed
+                      </>
+                    )}
+                  </AlertTitle>
+                  <AlertDescription>
+                    {testResults.length} test{testResults.length !== 1 ? 's' : ''} run
+                  </AlertDescription>
+                </Alert>
+              )}
+              
+              <div className="flex flex-col space-y-2">
+                {groupedResults.connection && (
+                  <TestResultItem result={groupedResults.connection} />
+                )}
+                {groupedResults.authentication && (
+                  <TestResultItem result={groupedResults.authentication} />
+                )}
+                {groupedResults['market-data'] && (
+                  <TestResultItem result={groupedResults['market-data']} />
+                )}
+                {groupedResults.reconnect && (
+                  <TestResultItem result={groupedResults.reconnect} />
+                )}
+              </div>
+            </div>
+          </CardContent>
+          
+          <CardFooter>
+            <div className="flex justify-end w-full gap-2">
+              <Button 
+                variant="outline"
+                onClick={clearTestResults}
+                disabled={testResults.length === 0 || isTestRunning}
+              >
+                Clear Results
+              </Button>
+              <Button 
+                onClick={handleComprehensiveTest}
+                disabled={isTestRunning}
+              >
+                {isTestRunning ? (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                    Running...
+                  </>
+                ) : 'Run All Tests'}
+              </Button>
+            </div>
+          </CardFooter>
+        </TabsContent>
+        
+        <TabsContent value="results">
+          <CardContent className="pt-4">
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-medium">Test Results</h4>
+                <p className="text-sm text-gray-500">
+                  History of test runs and their outcomes
+                </p>
+              </div>
+              
+              <div className="space-y-2 max-h-96 overflow-y-auto pr-2">
+                {testResults.length === 0 ? (
+                  <p className="text-sm text-gray-500 py-4 text-center">
+                    No test results available
+                  </p>
+                ) : (
+                  testResults.map((result, index) => (
+                    <TestResultItem key={index} result={result} />
+                  ))
+                )}
+              </div>
+            </div>
+          </CardContent>
+          
+          <CardFooter>
+            <div className="flex justify-end w-full">
+              <Button 
+                variant="outline"
+                onClick={clearTestResults}
+                disabled={testResults.length === 0}
+              >
+                Clear All Results
+              </Button>
+            </div>
+          </CardFooter>
         </TabsContent>
       </Tabs>
-    </div>
+    </Card>
   );
 };
 

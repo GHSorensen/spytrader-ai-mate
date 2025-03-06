@@ -15,6 +15,10 @@ export function useDiagnostics() {
     reconnectAttempts?: number;
     isReconnecting?: boolean;
     connectionLostTime?: Date | null;
+    connectionDuration?: number | null;
+    connectionCheckCount?: number;
+    lastSuccessfulConnection?: Date | null;
+    lastCheckTime?: Date | null;
   }): DetailedDiagnostics => {
     // Record all the diagnostic info we can gather
     const diagnostics: DetailedDiagnostics = {
@@ -37,7 +41,11 @@ export function useDiagnostics() {
         lastError: data?.connectionDiagnostics?.error || null
       },
       history: data?.connectionHistory || [],
-      detailedProvider: null as any
+      detailedProvider: null as any,
+      connectionDuration: data?.connectionDuration,
+      connectionCheckCount: data?.connectionCheckCount,
+      lastSuccessfulConnection: data?.lastSuccessfulConnection,
+      lastCheckTime: data?.lastCheckTime
     };
     
     // Run debug function to capture detailed provider state
